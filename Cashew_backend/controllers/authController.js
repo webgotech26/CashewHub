@@ -56,43 +56,66 @@ const register = async (req, res) => {
 
 /**
  * POST /api/auth/login
- * Accepts: identifier, password, role
- *   - role === 'admin'    → queries `admins` table using `username` column
- *   - role === 'customer' → queries `customers` table using `email` column
- * Verifies password with bcrypt.compare.
- * Returns status 200 with user role and success message on success.
+ *
+ * Security improvement: client no longer sends 'role'.
+ * The backend queries both tables to find the user and
+ * determines the role from the database — not from user input.
+ *
+ * Accepts: { identifier, password }
+ *   identifier = email (customers) or username (admins)
+ *
+ * Flow:
+ *   1. Try admins table   by username
+ *   2. Try customers table by email
+ *   3. Verify password with bcrypt
+ *   4. Sign JWT with role embedded
+ *   5. Return token + user (including role)
  */
 const login = async (req, res) => {
   try {
-    const { identifier, password, role } = req.body;
+    const { identifier, password } = req.body;
 
-    if (!identifier || !password || !role) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Identifier, password, and role are required.',
+        message: 'Email/username and password are required.',
       });
     }
 
-    let rows;
+    let user = null;
+    let role = null;
 
-    if (role === 'admin') {
-      // Admin login: query admins table using username column
-      [rows] = await pool.query('SELECT * FROM admins WHERE username = ?', [identifier]);
+    // ── Step 1: Check admins table first (username match) ──────────
+    const [adminRows] = await pool.query(
+      'SELECT id, username AS name, username, password FROM admins WHERE username = ?',
+      [identifier.trim()]
+    );
+
+    if (adminRows.length > 0) {
+      user = adminRows[0];
+      role = 'admin';
     } else {
-      // Customer login: query customers table using email column
-      [rows] = await pool.query('SELECT * FROM customers WHERE email = ?', [identifier]);
+      // ── Step 2: Fall back to customers table (email match) ───────
+      const [customerRows] = await pool.query(
+        'SELECT id, name, email, password FROM customers WHERE email = ?',
+        [identifier.trim()]
+      );
+
+      if (customerRows.length > 0) {
+        user = customerRows[0];
+        role = 'customer';
+      }
     }
 
-    if (rows.length === 0) {
+    // ── Step 3: User not found in either table ────────────────────
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials.',
       });
     }
 
-    const user = rows[0];
-
-    // Verify password with bcrypt
+    // ── Step 4: Verify password with bcrypt ───────────────────────
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -101,26 +124,26 @@ const login = async (req, res) => {
       });
     }
 
-    // Generate JWT with role embedded
+    // ── Step 5: Sign JWT — role comes from DB, not from client ─────
     const token = jwt.sign(
       {
-        id: user.id,
+        id:         user.id,
         identifier: role === 'admin' ? user.username : user.email,
-        role,
+        role,               // role is DB-sourced, tamper-proof
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
+    // ── Step 6: Return token + user object (including role) ────────
     return res.status(200).json({
       success: true,
       message: 'Login successful.',
-      role,
       token,
       user: {
-        id: user.id,
+        id:   user.id,
         name: user.name,
-        role,
+        role,   // frontend uses this for redirection
       },
     });
   } catch (error) {

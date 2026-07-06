@@ -5,23 +5,19 @@ import '../styles/pages/login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [role, setRole]             = useState('customer');
-  const [identifier, setIdentifier] = useState('');
+
+  // ── State — no 'role' dropdown needed ───────────────────────────
+  const [identifier, setIdentifier] = useState('');   // email or username
   const [password, setPassword]     = useState('');
   const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
 
-  const handleRoleChange = (e) => {
-    setRole(e.target.value);
-    setIdentifier('');
-    setError('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Client-side validation
     if (!identifier.trim()) {
-      setError(role === 'admin' ? 'Username is required.' : 'Email is required.');
+      setError('Email or username is required.');
       return;
     }
     if (!password.trim()) {
@@ -31,23 +27,34 @@ export default function Login() {
 
     setError('');
     setLoading(true);
+
+    // Clear any stale session before new login
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
     try {
+      // ── Send only identifier + password (no role) ────────────────
+      // Backend auto-detects role by querying both admins + customers tables
       const res = await api.post('/api/auth/login', {
         identifier: identifier.trim(),
         password,
-        role,
       });
 
       const { token, user } = res.data;
+
+      // ── Store token and full user object (role included) ─────────
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      navigate(user.role === 'admin' ? '/admin/dashboard' : '/home');
+      // ── Role-based redirection — role comes from DB, not user input
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/home');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
+      const message = err.response?.data?.message || err.message || 'Login failed.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -55,6 +62,7 @@ export default function Login() {
 
   return (
     <div className="login-container">
+
       {/* ── Left: brand panel ─────────────────────────── */}
       <div className="login-brand-panel">
         <div className="login-brand-logo">🌰</div>
@@ -84,7 +92,9 @@ export default function Login() {
       <div className="login-form-panel">
         <div className="login-card">
           <h2 className="login-title">Welcome back</h2>
-          <p className="login-subtitle">Sign in to your account to continue</p>
+          <p className="login-subtitle">
+            Sign in with your email or username
+          </p>
 
           {error && (
             <div className="login-error" role="alert">
@@ -93,32 +103,19 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="login-form" noValidate>
-            {/* Role */}
-            <div className="login-input-group">
-              <label htmlFor="role" className="login-label">Login As</label>
-              <select
-                id="role"
-                value={role}
-                onChange={handleRoleChange}
-                className="login-select"
-              >
-                <option value="customer">Customer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
 
-            {/* Identifier */}
+            {/* Email / Username — single field, no role dropdown */}
             <div className="login-input-group">
               <label htmlFor="identifier" className="login-label">
-                {role === 'admin' ? 'Username' : 'Email Address'}
+                Email or Username
               </label>
               <input
                 id="identifier"
-                type={role === 'admin' ? 'text' : 'email'}
+                type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder={role === 'admin' ? 'Enter your username' : 'you@example.com'}
-                autoComplete={role === 'admin' ? 'username' : 'email'}
+                placeholder="you@example.com or username"
+                autoComplete="username email"
                 required
                 className="login-input"
               />

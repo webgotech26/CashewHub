@@ -1371,13 +1371,8 @@
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 64px;
+  gap: 60px;
   align-items: center;
-}
-
-@media (max-width: 900px) {
-  .about-grid { grid-template-columns: 1fr; gap: 36px; }
-  .about-visual { display: none; }
 }
 
 .about-content__text {
@@ -1421,11 +1416,15 @@
   margin-top: 5px;
 }
 
+/* Visual panel */
+.about-visual { display: block; }
+
 .about-visual__img-wrap {
   position: relative;
   height: 420px;
   border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.35);
 }
 
 .about-visual__badge {
@@ -1440,13 +1439,539 @@
   gap: 10px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--ch-charcoal);
-  box-shadow: var(--shadow-md);
+  color: #1A1A1A;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
-@media (max-width: 640px) {
-  .home-section__inner { padding: 0 20px; }
-  .home-section { padding: 44px 0; }
-  .home-section__title { font-size: 24px; }
-  .about-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+/* ── Responsive: tablet ──────────────────────────────────── */
+@media (max-width: 1024px) {
+  .about-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+  .about-visual__img-wrap { height: 340px; }
+}
+
+/* ── Responsive: mobile — stack vertically ───────────────── */
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Image shows BELOW content on mobile */
+  .about-visual {
+    display: block;
+    width: 100%;
+  }
+
+  .about-visual__img-wrap {
+    height: 260px;
+    border-radius: 16px;
+  }
+
+  .about-content__text {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .about-stat__val { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .about-visual__img-wrap { height: 220px; }
+  .about-stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRODUCT CATALOG — Tab System + Product Cards
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Sort dropdown ─────────────────────────────────────────── */
+.pcat-sort {
+  padding: 9px 16px;
+  border: 1.5px solid var(--ch-border);
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
+  background: var(--ch-white);
+  color: var(--ch-slate);
+  transition: border-color 0.18s;
+}
+
+.pcat-sort:focus { border-color: var(--ch-gold); }
+
+/* ── Tab bar ───────────────────────────────────────────────── */
+.pcat-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 24px 0 28px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--ch-border-soft);
+}
+
+.pcat-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: 2px solid var(--ch-border);
+  border-radius: 30px;
+  background: var(--ch-white);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ch-slate);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  white-space: nowrap;
+  position: relative;
+}
+
+.pcat-tab:hover {
+  border-color: var(--ch-charcoal);
+  color: var(--ch-charcoal);
+  background: var(--ch-offwhite);
+}
+
+/* Active tab — charcoal fill */
+.pcat-tab--active {
+  background: var(--ch-charcoal);
+  border-color: var(--ch-charcoal);
+  color: var(--ch-white);
+  box-shadow: 0 4px 12px rgba(26,26,26,0.2);
+}
+
+/* Count badge inside tab */
+.pcat-tab__count {
+  background: rgba(0,0,0,0.12);
+  color: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.pcat-tab--active .pcat-tab__count {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ── Product grid — 2 col mobile, 4 col desktop ─────────────── */
+.pcat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);    /* mobile: 2 columns */
+  gap: 20px;
+  margin-top: 4px;
+}
+
+@media (min-width: 640px)  { .pcat-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+@media (min-width: 900px)  { .pcat-grid { grid-template-columns: repeat(3, 1fr); gap: 22px; } }
+@media (min-width: 1200px) { .pcat-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
+
+/* ── Product Card ──────────────────────────────────────────── */
+.pcat-card {
+  background: var(--ch-white);
+  border-radius: 16px;
+  border: 1px solid var(--ch-border-soft);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.pcat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.11);
+}
+
+/* Image */
+.pcat-card__img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--ch-offwhite);
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pcat-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  transition: transform 0.4s var(--ease);
+  display: block;
+}
+
+.pcat-card:hover .pcat-card__img { transform: scale(1.06); }
+
+.pcat-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  background: linear-gradient(145deg, #F0F8F3, #E8F5EE);
+}
+
+/* Category badge on image */
+.pcat-card__cat-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--ch-gold);
+  color: var(--ch-white);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(201,151,43,0.4);
+}
+
+/* Card body */
+.pcat-card__body {
+  padding: 14px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.pcat-card__name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ch-charcoal);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pcat-card__weight {
+  font-size: 12px;
+  color: var(--ch-muted);
+  font-weight: 500;
+}
+
+.pcat-card__price {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ch-charcoal);
+  letter-spacing: -0.3px;
+  margin-top: 4px;
+}
+
+/* Add to cart footer */
+.pcat-card__footer {
+  padding: 10px 16px 16px;
+  flex-shrink: 0;
+}
+
+.pcat-card__btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 16px;
+  background: var(--ch-charcoal);
+  color: var(--ch-white);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s var(--ease), transform 0.15s var(--ease);
+  letter-spacing: 0.1px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.pcat-card__btn:hover:not(:disabled) {
+  background: var(--ch-gold);
+  transform: translateY(-1px);
+}
+
+.pcat-card__btn:disabled {
+  background: #E5E5E5;
+  color: var(--ch-muted);
+  cursor: not-allowed;
+}
+
+.pcat-card__btn--added {
+  background: var(--ch-success) !important;
+}
+
+/* Result count row */
+.pcat-result-count {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ch-muted);
+  font-weight: 500;
+}
+
+/* ── Mobile tab scroll ──────────────────────────────────────── */
+@media (max-width: 540px) {
+  .pcat-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .pcat-tabs::-webkit-scrollbar { display: none; }
+  .pcat-tab { flex-shrink: 0; }
+  .pcat-card__name { font-size: 13px; }
+  .pcat-card__price { font-size: 17px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ABOUT US SECTION — Premium Glassmorphism
+   bg-green-950 equivalent: #052e16
+   ══════════════════════════════════════════════════════════ */
+
+.about-section {
+  background: linear-gradient(135deg, #052e16 0%, #0a3d20 40%, #0d4a28 100%);
+  padding: 80px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle background texture */
+.about-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 70% 30%, rgba(201,151,43,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(255,255,255,0.02) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.about-section__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── LEFT: Text content ────────────────────────────────── */
+.about-section__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.about-section__eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #F0CA6D;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+}
+
+.about-section__heading {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+}
+
+.about-section__body {
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.85;
+  margin-bottom: 36px;
+}
+
+/* ── 2×2 Glassmorphism stat cards ──────────────────────── */
+.about-section__stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.about-glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: default;
+  /* hover:-translate-y-2 transition-all duration-300 equivalent */
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.about-glass-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.about-glass-card__icon {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.about-glass-card__title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.3;
+}
+
+.about-glass-card__desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+/* ── RIGHT: Image column ───────────────────────────────── */
+.about-section__img-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-section__img-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* shadow-2xl + rounded-3xl equivalent */
+.about-section__img {
+  width: 100%;
+  height: 480px;
+  object-fit: cover;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.3);
+  display: block;
+}
+
+/* Floating "Farm to Door" badge */
+.about-section__badge {
+  position: absolute;
+  bottom: -16px;
+  left: -16px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.about-section__badge-icon { font-size: 30px; flex-shrink: 0; }
+
+.about-section__badge-title {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.2;
+}
+
+.about-section__badge-sub {
+  display: block;
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Responsive: Tablet ────────────────────────────────── */
+@media (max-width: 1024px) {
+  .about-section__inner {
+    gap: 40px;
+    padding: 0 32px;
+  }
+  .about-section__heading { font-size: 32px; }
+  .about-section__img { height: 380px; }
+}
+
+/* ── Responsive: Mobile — stack vertically ─────────────── */
+@media (max-width: 768px) {
+  .about-section { padding: 56px 0; }
+
+  .about-section__inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 0 20px;
+  }
+
+  .about-section__heading { font-size: 28px; }
+  .about-section__body { font-size: 14px; margin-bottom: 28px; }
+
+  /* Image moves below text on mobile */
+  .about-section__img-col { order: 2; }
+  .about-section__content  { order: 1; }
+
+  .about-section__img {
+    height: 280px;
+    border-radius: 18px;
+  }
+
+  .about-section__badge {
+    bottom: -12px;
+    left: 12px;
+    padding: 10px 14px;
+  }
+
+  .about-section__stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .about-glass-card { padding: 16px 14px; }
+  .about-glass-card__title { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  .about-section__img { height: 220px; }
+  .about-section__stats-grid { grid-template-columns: 1fr 1fr; }
 }

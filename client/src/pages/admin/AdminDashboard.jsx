@@ -40,12 +40,13 @@ function SkeletonRows({ cols = 8, rows = 5 }) {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats]             = useState({});
+  const [stats, setStats]               = useState({});
   const [recentOrders, setRecentOrders] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [notification, setNotification] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);   // full order with items
+  const [detailLoading, setDetailLoading] = useState(false);  // loading state for modal
 
   useEffect(() => {
     // Fetch dashboard stats
@@ -84,6 +85,24 @@ export default function AdminDashboard() {
   const statusBadge = (status) => {
     const s = STATUS_MAP[status] || { cls: 'gray', label: status };
     return <span className={`erp-badge erp-badge--${s.cls}`}>{s.label}</span>;
+  };
+
+  // ── Fetch full order detail (with items array) on eye-icon click ─
+  // Same pattern as Orders.jsx — hits GET /api/orders/:id which
+  // JOINs order_items + products so product_name and unit_price are never undefined.
+  const openOrderDetail = async (orderId) => {
+    setDetailLoading(true);
+    setSelectedOrder(null);
+    try {
+      const res = await api.get(`/api/orders/${orderId}`);
+      setSelectedOrder(res.data.data);   // { id, customer_name, total_amount, status, items: [...] }
+    } catch {
+      // Fallback: use the partial row data from the list
+      const fallback = recentOrders.find(o => o.id === orderId) || null;
+      setSelectedOrder(fallback);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   return (
@@ -196,15 +215,22 @@ export default function AdminDashboard() {
                     <td>{o.customer_name || `Customer #${o.customer_id}`}</td>
                     <td
                       style={{
-                        maxWidth: 150,
+                        maxWidth: 200,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
+                        fontSize: 12,
+                        color: '#374151',
                       }}
+                      title={o.product_names || 'No items'}
                     >
-                      {o.product_name || `Product #${o.product_id}`}
+                      {/* product_names from GROUP_CONCAT — never undefined */}
+                      {o.product_names || 'No items'}
                     </td>
-                    <td style={{ fontWeight: 600 }}>{o.quantity}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      {/* total_qty from SUM(oi.quantity) — never empty */}
+                      {o.total_qty ?? '—'}
+                    </td>
                     <td style={{ fontWeight: 700, color: '#1a3c2e' }}>
                       ₹{Number(o.total_amount).toFixed(2)}
                     </td>
@@ -218,7 +244,7 @@ export default function AdminDashboard() {
                       <button
                         className="erp-btn-icon"
                         title="View Order Details"
-                        onClick={() => setSelectedOrder(o)}
+                        onClick={() => openOrderDetail(o.id)}
                       >
                         👁
                       </button>
@@ -232,19 +258,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Order Detail Modal ────────────────────────────────────── */}
-      {selectedOrder && (
+      {(selectedOrder || detailLoading) && (
         <div
           className="erp-modal-overlay"
-          onClick={() => setSelectedOrder(null)}
+          onClick={() => { setSelectedOrder(null); }}
         >
           <div
             className="erp-modal"
-            style={{ maxWidth: 480 }}
+            style={{ maxWidth: 580 }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="erp-modal__header">
               <h3 className="erp-modal__title">
-                Order #{selectedOrder.id} Details
+                Order #{selectedOrder?.id || '…'} Details
               </h3>
               <button
                 className="erp-modal__close"
@@ -254,32 +281,129 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <div className="erp-detail-grid">
-              {[
-                ['Customer',  selectedOrder.customer_name || `#${selectedOrder.customer_id}`],
-                ['Product',   selectedOrder.product_name  || `#${selectedOrder.product_id}`],
-                ['Quantity',  selectedOrder.quantity],
-                ['Unit Price', `₹${Number(selectedOrder.unit_price || 0).toFixed(2)}`],
-                ['Total',     `₹${Number(selectedOrder.total_amount).toFixed(2)}`],
-                ['Status',    statusBadge(selectedOrder.status)],
-                ['Notes',     selectedOrder.notes || '—'],
-                ['Ordered On', new Date(selectedOrder.created_at).toLocaleString('en-IN')],
-              ].map(([k, v]) => (
-                <>
-                  <div key={`k-${k}`} className="erp-detail-grid__key">{k}</div>
-                  <div key={`v-${k}`} className="erp-detail-grid__val">{v}</div>
-                </>
-              ))}
-            </div>
+            {/* Loading state */}
+            {detailLoading ? (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
+                <div style={{
+                  width: 32, height: 32, border: '3px solid #e5e7eb',
+                  borderTopColor: '#2d6a4f', borderRadius: '50%',
+                  animation: 'erp-spin 0.7s linear infinite',
+                  margin: '0 auto 12px',
+                }} />
+                Loading order details…
+              </div>
+            ) : selectedOrder && (
+              <>
+                {/* ── Order summary row ─────────────────────── */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  gap: 12, padding: '14px 16px',
+                  background: '#f9fafb', borderRadius: 10, marginBottom: 20,
+                }}>
+                  {[
+                    ['Customer',   selectedOrder.customer_name || `#${selectedOrder.customer_id}`],
+                    ['Status',     statusBadge(selectedOrder.status)],
+                    ['Order Date', new Date(selectedOrder.created_at).toLocaleDateString('en-IN', {
+                                    day: '2-digit', month: 'short', year: 'numeric' })],
+                    ['Total',      `₹${Number(selectedOrder.total_amount).toFixed(2)}`],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af',
+                        textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+                        {label}
+                      </p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <button
-                className="erp-btn erp-btn--secondary"
-                onClick={() => setSelectedOrder(null)}
-              >
-                Close
-              </button>
-            </div>
+                {/* ── Items list — .map() over items array ──── */}
+                <div style={{ marginBottom: 20 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+                    Order Items ({selectedOrder.items?.length || 0})
+                  </p>
+
+                  {/* Column headers */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 60px 90px 90px',
+                    padding: '7px 12px',
+                    background: '#f3f4f6', borderRadius: 7,
+                    fontSize: 10, fontWeight: 700, color: '#9ca3af',
+                    textTransform: 'uppercase', letterSpacing: 0.5,
+                    marginBottom: 6,
+                  }}>
+                    <span>Product</span>
+                    <span style={{ textAlign: 'center' }}>Qty</span>
+                    <span style={{ textAlign: 'right' }}>Unit Price</span>
+                    <span style={{ textAlign: 'right' }}>Line Total</span>
+                  </div>
+
+                  {/* Items — rendered with .map() */}
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item, idx) => (
+                      <div
+                        key={item.product_id || idx}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 60px 90px 90px',
+                          padding: '10px 12px',
+                          background: idx % 2 === 0 ? '#fff' : '#fafafa',
+                          border: '1px solid #f0f0f0',
+                          borderRadius: 7,
+                          marginBottom: 4,
+                          fontSize: 13,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: '#1a1a1a' }}>
+                          {/* product_name from JOIN — never undefined */}
+                          {item.product_name || `Product #${item.product_id}`}
+                        </span>
+                        <span style={{ textAlign: 'center', color: '#6b7280' }}>
+                          {item.quantity}
+                        </span>
+                        <span style={{ textAlign: 'right', color: '#374151' }}>
+                          {/* unit_price aliased in SQL — never 0.00 */}
+                          ₹{Number(item.unit_price).toFixed(2)}
+                        </span>
+                        <span style={{ textAlign: 'right', fontWeight: 700, color: '#1a3c2e' }}>
+                          ₹{Number(item.line_total || item.unit_price * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '16px', color: '#9ca3af', fontSize: 13 }}>
+                      No item details available.
+                    </div>
+                  )}
+
+                  {/* Grand total row */}
+                  {selectedOrder.items?.length > 0 && (
+                    <div style={{
+                      display: 'flex', justifyContent: 'flex-end',
+                      padding: '10px 12px',
+                      borderTop: '2px solid #e5e7eb', marginTop: 6,
+                    }}>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: '#1a3c2e' }}>
+                        Grand Total: ₹{Number(selectedOrder.total_amount).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Close button */}
+                <div style={{ textAlign: 'right' }}>
+                  <button
+                    className="erp-btn erp-btn--secondary"
+                    onClick={() => setSelectedOrder(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
