@@ -1,0 +1,11 @@
+{
+  "name": "cashewhub-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend":  "cd Cashew_backend && npm run dev",
+    "dev:customer": "cd client-customer && npm run dev",
+    "dev:admin":    "cd client-admin && npm run dev",
+    "dev:legacy":   "cd client && npm run dev"
+  }
+}

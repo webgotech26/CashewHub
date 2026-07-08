@@ -36,13 +36,28 @@ const server = http.createServer(app);
 // Initialize Socket.io with the HTTP server
 const io = socket.init(server);
 
-// ─── MIDDLEWARE ──────────────────────────────────────────────────────────────
+// ─── CORS ────────────────────────────────────────────────────────────────────
+// Production: only allow your two known origins.
+// Add CORS_CUSTOMER_ORIGIN and CORS_ADMIN_ORIGIN to .env
+
+const ALLOWED_ORIGINS = [
+  process.env.CORS_CUSTOMER_ORIGIN || 'http://localhost:3000',  // storefront
+  process.env.CORS_ADMIN_ORIGIN    || 'http://localhost:3001',  // admin ERP
+].filter(Boolean);
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  origin: (origin, callback) => {
+    // Allow server-to-server calls (no Origin header) and same-origin
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,         // allow cookies/auth headers cross-origin
 }));
+
+// ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

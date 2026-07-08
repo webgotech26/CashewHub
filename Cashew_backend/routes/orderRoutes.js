@@ -6,6 +6,13 @@ const { createOrder, getOrders, getOrderById, updateOrderStatus } = require('../
 // All order routes require authentication
 router.use(verifyToken);
 
+// Disable caching on all order routes — ensures fresh data every request
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  next();
+});
+
 // POST   /api/orders        → Place a new order (customer or admin)
 router.post('/', createOrder);
 

@@ -1,0 +1,42 @@
+.home-container {
+  min-height: 100vh;
+  background-color: #f8fafb;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.home-title {
+  font-size: 22px;
+  color: #2d6a4f;
+}
+
+.home-logout-btn {
+  padding: 8px 16px;
+  background-color: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.home-logout-btn:hover {
+  opacity: 0.85;
+}
+
+.home-main {
+  padding: 40px;
+}
+
+.home-text {
+  font-size: 16px;
+  color: #555;
+}
