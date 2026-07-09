@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════
    CASHEW HUB — Premium White Minimalist Design System
    Brand: white base, warm gold accents, Playfair serif
    ═══════════════════════════════════════════════════ */
@@ -39,6 +39,8 @@
   background: var(--ch-offwhite);
   font-family: var(--font-sans);
   color: var(--ch-charcoal);
+  /* Push all content below the fixed 72px header */
+  padding-top: 72px;
 }
 
 /* ── Navbar ───────────────────────────────────── */
@@ -856,23 +858,33 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PREMIUM HEADER — CashewHub
+   PREMIUM HEADER — H2B3
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Header shell ──────────────────────────────────────────── */
 .ch-header {
-  position: sticky;
+  position: fixed;           /* guaranteed top-of-screen on all browsers */
   top: 0;
-  z-index: 200;
+  left: 0;
+  width: 100%;               /* span full viewport width */
+  z-index: 1000;             /* above all page content, modals, drawers */
   background: #FFFFFF;
   border-bottom: 1px solid #F0F0F0;
-  box-shadow: 0 1px 16px rgba(0,0,0,0.07);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.08),
+    0 1px 3px  rgba(0, 0, 0, 0.05);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 32px;
   padding: 0 48px;
   height: 72px;
+  /* GPU-composited layer — no flicker during scroll */
+  will-change: transform;
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* ── LEFT: Brand ───────────────────────────────────────────── */
@@ -1026,7 +1038,12 @@
   padding: 7px 12px 7px 10px;
   cursor: pointer;
   color: #4A4A4A;
-  transition: all 0.18s ease;
+  /* Smooth colour + scale micro-interaction */
+  transition:
+    border-color 0.2s ease,
+    background   0.2s ease,
+    color        0.2s ease,
+    transform    0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .ch-icon-btn:hover,
@@ -1034,6 +1051,7 @@
   border-color: #C9972B;
   background: #FDF4E1;
   color: #C9972B;
+  transform: scale(1.05);
 }
 
 .ch-icon-btn__chevron {
@@ -1047,115 +1065,343 @@
   transform: rotate(180deg);
 }
 
-/* Profile dropdown */
+/* Profile dropdown — shown on hover via JS state */
 .ch-profile-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 8px);
   right: 0;
   background: #FFFFFF;
   border: 1px solid #EBEBEB;
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-  min-width: 220px;
+  border-radius: 16px;                        /* rounded-xl equivalent */
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.03);           /* shadow-xl floating card */
+  min-width: 256px;
   z-index: 300;
   overflow: hidden;
-  animation: dropdown-in 0.18s ease;
+  transform-origin: top right;
+  animation: dropdown-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes dropdown-in {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-.ch-profile-dropdown__header {
+/* ── Welcome header ── */
+.ch-pd-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-  background: #FAFAFA;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-.ch-profile-dropdown__avatar {
-  width: 38px;
-  height: 38px;
+/* Subtle gold glow behind avatar */
+.ch-pd-header::before {
+  content: '';
+  position: absolute;
+  top: -24px;
+  left: -24px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: #C9972B;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  background: radial-gradient(circle, rgba(201,151,43,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ch-pd-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9972B, #F5C842);
+  border: 2px solid rgba(201, 151, 43, 0.45);
+  box-shadow: 0 0 0 3px rgba(201, 151, 43, 0.12);
+  color: #1a0a00;
+  font-size: 17px;
+  font-weight: 800;
+  font-family: 'Playfair Display', Georgia, serif;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-family: 'Playfair Display', serif;
+  position: relative;
+  z-index: 1;
 }
 
-.ch-profile-dropdown__name {
-  font-size: 14px;
+.ch-pd-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.ch-pd-greeting {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.ch-pd-name {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14.5px;
   font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.1px;
+}
+
+.ch-pd-email {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* ── Nav item body ── */
+.ch-pd-body {
+  padding: 8px 8px 6px;
+}
+
+.ch-pd-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background  0.15s ease,
+    transform   0.12s ease;
+}
+
+.ch-pd-item:hover {
+  background: #FDF8F0;             /* warm gold-50 tint */
+  transform: translateX(3px);
+}
+
+.ch-pd-item__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #4A4A4A;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ch-pd-item:hover .ch-pd-item__icon {
+  background: rgba(201, 151, 43, 0.12);
+  color: #C9972B;
+}
+
+.ch-pd-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-pd-item__label {
+  font-size: 13.5px;
+  font-weight: 600;
   color: #1A1A1A;
   line-height: 1.2;
 }
 
-.ch-profile-dropdown__email {
-  font-size: 11.5px;
+.ch-pd-item__sub {
+  font-size: 11px;
   color: #9CA3AF;
-  margin-top: 2px;
+  line-height: 1.2;
 }
 
-.ch-profile-dropdown__divider {
+.ch-pd-item__arrow {
+  font-size: 18px;
+  color: #D1D5DB;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ch-pd-item:hover .ch-pd-item__arrow {
+  color: #C9972B;
+  transform: translateX(2px);
+}
+
+/* ── Divider ── */
+.ch-pd-divider {
   height: 1px;
   background: #F0F0F0;
-  margin: 4px 0;
+  margin: 2px 16px 2px;
 }
 
-.ch-profile-dropdown__item {
+/* ── Footer / Logout ── */
+.ch-pd-footer {
+  padding: 6px 8px 10px;
+}
+
+.ch-pd-logout {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 11px 18px;
+  padding: 10px 12px;
   background: none;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  border-radius: 10px;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 13.5px;
-  font-weight: 500;
-  color: #4A4A4A;
+  font-weight: 600;
+  color: #DC2626;                   /* red — signals destructive action */
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition:
+    background  0.15s ease,
+    color       0.15s ease,
+    transform   0.12s ease;
 }
 
-.ch-profile-dropdown__item:hover {
-  background: #FAFAFA;
-  color: #1A1A1A;
+.ch-pd-logout:hover {
+  background: #FEF2F2;
+  color: #B91C1C;
+  transform: translateX(3px);
 }
 
-.ch-profile-dropdown__item--danger { color: #C0392B; }
-.ch-profile-dropdown__item--danger:hover { background: #FEF2F2; color: #C0392B; }
+.ch-pd-logout svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
 
-/* Cart button */
-.ch-cart-btn {
+/* ── Wishlist button — header heart icon ──────────────────── */
+.ch-wishlist-btn {
   position: relative;
-  background: #1A1A1A;
-  color: #FFFFFF;
+  background: #F3F4F6;
   border: none;
-  border-radius: 30px;
+  border-radius: 50%;
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  color: #4A4A4A;
   flex-shrink: 0;
+  transition:
+    background 0.2s ease,
+    color      0.2s ease,
+    transform  0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ch-wishlist-btn:hover {
+  background: #1A1A1A;
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+
+.ch-wishlist-btn:active {
+  transform: scale(0.92);
+}
+
+/* Numeric badge — shown when wishlist has items */
+.ch-wishlist-btn__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: #E74C3C;
+  color: #fff;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  line-height: 1;
+  animation: wl-badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes wl-badge-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Cart button — clean circular icon with dot badge */
+.ch-cart-btn {
+  position: relative;
+  background: #F3F4F6;
+  color: #4A4A4A;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.2s ease,
+    color      0.2s ease,
+    transform  0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .ch-cart-btn:hover {
-  background: #C9972B;
-  transform: translateY(-1px);
+  background: #1A1A1A;
+  color: #FFFFFF;
+  transform: scale(1.1);
 }
 
+.ch-cart-btn:active {
+  transform: scale(0.95);
+}
+
+/* Red dot — replaces the number badge for a cleaner look */
+.ch-cart-btn__dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  background: #EF4444;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  /* Subtle pulse so the user notices new items */
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);  }
+}
+
+/* Keep the old __badge class in case anything else references it */
 .ch-cart-btn__badge {
   position: absolute;
   top: -4px;
@@ -1177,13 +1423,15 @@
 /* ── Mobile header collapse ────────────────────────────────── */
 @media (max-width: 900px) {
   .ch-header {
+    /* position: fixed and width: 100% are inherited — don't reset them */
     grid-template-columns: auto 1fr;
     padding: 0 20px;
     gap: 16px;
-    height: auto;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    flex-wrap: wrap;
+    height: 60px;   /* explicit px so .shop-layout padding-top can match */
+  }
+  /* Reduce body offset to match the smaller mobile header height */
+  .shop-layout {
+    padding-top: 60px;
   }
   .ch-nav { display: none; }
   .ch-header__actions { grid-column: 1 / -1; justify-content: flex-end; gap: 8px; }

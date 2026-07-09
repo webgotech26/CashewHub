@@ -1,218 +1,232 @@
+/**
+ * MyOrders.jsx  — v3 Premium Spacious
+ * Order History page — horizontal top-nav, no sidebar.
+ *
+ * Layout:  account-no-sidebar.css  (max-width 1000px, 32px cards)
+ * Cards:   <OrderCard>             ← components/orders/OrderCard.jsx
+ */
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import OrderCard from '../../components/orders/OrderCard';
+import { GOLD, DARK, MUTED, FONT } from '../../components/orders/tokens';
+import '../../styles/pages/account-layout.css';
+import '../../styles/pages/account-no-sidebar.css';
 
-const STATUS_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+/* ── Horizontal tab-nav (mirrors ProfilePage) ──────────────────── */
+function AccountNav({ active, navigate }) {
+  const tabs = [
+    {
+      key: 'orders', label: 'My Orders', path: '/home/orders',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      ),
+    },
+    {
+      key: 'profile', label: 'My Profile', path: '/home/profile',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      ),
+    },
+    {
+      key: 'shop', label: 'Shop', path: '/home/shop',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+      ),
+    },
+  ];
 
-const STATUS_COLORS = {
-  pending:    { bg: '#FEF9C3', color: '#A16207', label: 'Pending'    },
-  confirmed:  { bg: '#DBEAFE', color: '#1D4ED8', label: 'Confirmed'  },
-  processing: { bg: '#EDE9FE', color: '#6D28D9', label: 'Processing' },
-  shipped:    { bg: '#E0F2FE', color: '#0369A1', label: 'Shipped'    },
-  delivered:  { bg: '#DCFCE7', color: '#15803D', label: 'Delivered'  },
-  cancelled:  { bg: '#FEE2E2', color: '#B91C1C', label: 'Cancelled'  },
-};
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
-const STEP_ICONS = { pending:'🕐', confirmed:'✅', processing:'📦', shipped:'🚚', delivered:'🎉' };
+  
+}
 
-function StatusBadge({ status }) {
-  const style = STATUS_COLORS[status] || { bg: '#F3F4F6', color: '#6B7280', label: status };
+/* ── Skeleton loading card ─────────────────────────────────────── */
+function SkeletonCard() {
   return (
-    <span style={{
-      background: style.bg, color: style.color,
-      padding: '4px 12px', borderRadius: 20,
-      fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
-    }}>
-      {style.label}
-    </span>
+    <div aria-busy="true" aria-label="Loading order…" className="acct-ns-card">
+      {[['38%', 18], ['24%', 12], ['100%', 76], ['60%', 12]].map(([w, h], i) => (
+        <div key={i} className="skeleton"
+          style={{ height: h, width: w, marginBottom: 16 }} />
+      ))}
+    </div>
   );
 }
 
-function OrderTracker({ status }) {
-  if (status === 'cancelled') return (
-    <div style={{ padding:'10px 0', display:'flex', alignItems:'center', gap:8 }}>
-      <span style={{ fontSize:16 }}>❌</span>
-      <span style={{ fontSize:13, color:'#B91C1C', fontWeight:600 }}>Order Cancelled</span>
-    </div>
-  );
-
-  const currentIdx = STATUS_STEPS.indexOf(status);
+/* ── Empty state ───────────────────────────────────────────────── */
+function EmptyState({ onShop }) {
   return (
-    <div style={{ padding:'12px 0 4px' }}>
-      <div style={{ display:'flex', alignItems:'center' }}>
-        {STATUS_STEPS.map((step, i) => (
-          <div key={step} style={{ display:'flex', alignItems:'center', flex: i < STATUS_STEPS.length - 1 ? 1 : 'none' }}>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: i <= currentIdx ? 'linear-gradient(135deg,#C9972B,#F5C842)' : '#F0F0F0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14, border: i === currentIdx ? '3px solid #C9972B' : '3px solid transparent',
-                boxShadow: i === currentIdx ? '0 0 0 3px rgba(201,151,43,0.2)' : 'none',
-                transition: 'all 0.3s',
-              }}>
-                {i <= currentIdx ? STEP_ICONS[step] : <span style={{ fontSize:10, color:'#9CA3AF', fontWeight:700 }}>{i+1}</span>}
-              </div>
-              <span style={{ fontSize:9, fontWeight:600, color: i <= currentIdx ? '#C9972B' : '#9CA3AF',
-                textTransform:'uppercase', letterSpacing:0.5, whiteSpace:'nowrap' }}>
-                {STATUS_COLORS[step]?.label}
-              </span>
-            </div>
-            {i < STATUS_STEPS.length - 1 && (
-              <div style={{ flex:1, height:3, borderRadius:2, marginBottom:18,
-                background: i < currentIdx ? 'linear-gradient(90deg,#C9972B,#F5C842)' : '#F0F0F0',
-                transition: 'background 0.3s',
-              }} />
-            )}
-          </div>
+    <div className="acct-ns-card"
+      style={{ textAlign: 'center', padding: '72px 40px' }}>
+      <div style={{ position: 'relative', width: 96, height: 96, margin: '0 auto 28px' }}>
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: `linear-gradient(135deg, ${GOLD}18, ${GOLD}30)`,
+          boxShadow: `0 8px 32px ${GOLD}22`,
+        }} />
+        <div style={{
+          position: 'absolute', inset: 12, borderRadius: '50%',
+          background: `linear-gradient(135deg, ${GOLD}25, ${GOLD}45)`,
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 38,
+        }}>📦</div>
+      </div>
+
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: DARK,
+        marginBottom: 10, fontFamily: FONT }}>
+        No orders yet
+      </h2>
+      <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7,
+        maxWidth: 320, margin: '0 auto 32px', fontFamily: FONT }}>
+        Browse our premium cashew collection and place your first order.
+      </p>
+
+      <div style={{ display: 'flex', justifyContent: 'center',
+        gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
+        {['🚚 Free delivery above ₹499', '🌿 No preservatives', '📦 Fresh packed'].map(f => (
+          <span key={f} style={{
+            fontFamily: FONT, fontSize: 12, fontWeight: 600, color: '#4A4A4A',
+            background: '#F5F5F5', border: '1px solid #EBEBEB',
+            padding: '5px 12px', borderRadius: 20,
+          }}>{f}</span>
         ))}
       </div>
+
+      <button onClick={onShop} style={{
+        fontFamily: FONT,
+        background: `linear-gradient(135deg, ${GOLD}, #F5C842)`,
+        color: '#1a0a00', border: 'none', borderRadius: 30,
+        padding: '13px 36px', fontSize: 14, fontWeight: 700,
+        cursor: 'pointer', boxShadow: `0 6px 20px ${GOLD}40`,
+        letterSpacing: 0.3,
+      }}>
+        Shop Premium Cashews →
+      </button>
     </div>
   );
 }
 
+/* ── MyOrders page ─────────────────────────────────────────────── */
 export default function MyOrders() {
-  const navigate = useNavigate();
-  const [orders, setOrders]   = useState([]);
+  const navigate  = useNavigate();
+  const user      = JSON.parse(localStorage.getItem('user') || '{}');
+  const avatarUrl = localStorage.getItem('avatar_url') || '';
+  const initials  = (user.name || user.email || 'C').charAt(0).toUpperCase();
+
+  const [orders,  setOrders]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [error,   setError]   = useState(null);
 
   const fetchOrders = useCallback(() => {
     setLoading(true);
     setError(null);
     api.get('/api/orders?limit=50')
-      .then(r => setOrders(r.data.data || []))
+      .then(r   => setOrders(r.data.data || []))
       .catch(err => setError(err.response?.data?.message || 'Failed to load orders.'))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  if (loading) {
-    return (
-      <div className="shop-content">
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
-          Loading your orders…
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="shop-content">
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#1A1A1A' }}>
-          My Orders
-        </h1>
-        <button
-          onClick={() => navigate('/home')}
-          style={{
-            background: '#1A1A1A', color: '#fff', border: 'none',
-            borderRadius: 8, padding: '10px 20px', fontSize: 14,
-            fontWeight: 600, cursor: 'pointer',
-          }}
-        >
-          ← Continue Shopping
-        </button>
-      </div>
+    <div className="acct-ns-page">
 
-      {error && (
-        <div style={{
-          background: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA',
-          borderRadius: 10, padding: '14px 18px', marginBottom: 24, fontSize: 14,
-        }}>
-          ❌ {error}
-        </div>
-      )}
+     
 
-      {orders.length === 0 && !error ? (
-        <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>📦</div>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#4A4A4A', marginBottom: 8 }}>
-            No orders yet
-          </h2>
-          <p style={{ color: '#9ca3af', marginBottom: 24 }}>
-            Place your first order to see it here.
-          </p>
-          <button
-            onClick={() => navigate('/home')}
-            style={{
-              background: '#C9972B', color: '#fff', border: 'none',
-              borderRadius: 30, padding: '12px 28px',
-              fontSize: 15, fontWeight: 700, cursor: 'pointer',
-            }}
-          >
-            Shop Now →
-          </button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {orders.map(order => (
-            <div key={order.id} style={{
-              background: '#fff', border: '1px solid #EBEBEB',
-              borderRadius: 14, padding: '20px 24px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      {/* ── Horizontal nav ── */}
+      <AccountNav active="orders" navigate={navigate} />
+
+      {/* ── Content ── */}
+      <div className="acct-ns-wrap">
+        <div className="acct-ns-content">
+
+          {/* Section header */}
+          <div className="acct-ns-section-head">
+            <h2 className="acct-ns-section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Order History
+            </h2>
+            {!loading && orders.length > 0 && (
+              <span className="acct-ns-section-count">
+                {orders.length} order{orders.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
+          {/* Error banner */}
+          {error && (
+            <div role="alert" style={{
+              background: '#FEF2F2', color: '#B91C1C',
+              border: '1px solid #FECACA', borderRadius: 12,
+              padding: '14px 20px', fontSize: 13, fontFamily: FONT,
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: 12,
+              flexWrap: 'wrap', marginBottom: 20,
             }}>
-              {/* Order header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: 15, color: '#1A1A1A' }}>
-                    Order #{order.id}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 3 }}>
-                    {new Date(order.created_at).toLocaleDateString('en-IN', {
-                      day: '2-digit', month: 'long', year: 'numeric'
-                    })}
-                  </p>
-                </div>
-                <StatusBadge status={order.status} />
-              </div>
-
-              {/* Divider */}
-              <div style={{ borderTop: '1px solid #F0F0F0', margin: '14px 0' }} />
-
-              {/* Product info */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 60, height: 60, borderRadius: 8,
-                  background: '#FAFAFA', border: '1px solid #EBEBEB',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden', flexShrink: 0,
-                }}>
-                  {order.image_url
-                    ? <img src={order.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} />
-                    : <span style={{ fontSize: 28 }}>🌰</span>}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, fontSize: 14, color: '#1A1A1A' }}>
-                    {order.product_names || `Order #${order.id}`}
-                  </p>
-                  <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>
-                    Qty: {order.total_qty || '—'}
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontWeight: 800, fontSize: 16, color: '#1A1A1A' }}>
-                    ₹{Number(order.total_amount).toFixed(2)}
-                  </p>
-                  <p style={{ fontSize: 11, color: '#9ca3af' }}>Total</p>
-                </div>
-              </div>
-
-              {/* Notes */}
-              {order.notes && (
-                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 10, fontStyle: 'italic' }}>
-                  {order.notes}
-                </p>
-              )}
-
-              {/* Order tracker */}
-              <OrderTracker status={order.status} />
+              <span>❌ {error}</span>
+              <button onClick={fetchOrders} style={{
+                background: '#B91C1C', color: '#fff', border: 'none',
+                borderRadius: 6, padding: '6px 14px', cursor: 'pointer',
+                fontSize: 12, fontWeight: 700, fontFamily: FONT,
+              }}>Retry</button>
             </div>
-          ))}
+          )}
+
+          {/* Skeletons */}
+          {loading && (
+            <div className="acct-ns-order-list">
+              {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && orders.length === 0 && (
+            <EmptyState onShop={() => navigate('/home/shop')} />
+          )}
+
+          {/* Order cards — full width */}
+          {!loading && orders.length > 0 && (
+            <div className="acct-ns-order-list">
+              {orders.map(order => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onView={id  => navigate(`/home/orders/${id}`)}
+                  onTrack={id => navigate(`/home/orders/${id}`)}
+                />
+              ))}
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
     </div>
   );
 }

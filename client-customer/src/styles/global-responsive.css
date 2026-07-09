@@ -1,0 +1,416 @@
+/* ================================================================
+   global-responsive.css  —  H²B³ Cashew  |  Mobile-First Master
+   Imported once in main.jsx after index.css.
+   Covers every requirement without touching individual page files.
+   ================================================================
+
+   TABLE OF CONTENTS
+   1.  Viewport & baseline
+   2.  Global container  (.g-container)
+   3.  CSS Grid system  (.g-grid, .g-col-*)
+   4.  Touch targets  (44px minimum)
+   5.  No-overflow guards
+   6.  Header responsive patches
+   7.  Footer grid collapse
+   8.  Account pages  (Orders / Profile)
+   9.  Checkout page
+   10. Form fields
+   11. Utility classes
+   ================================================================ */
+
+/* ── 1. Viewport & baseline ─────────────────────────────────────
+   Ensures consistent rendering on all devices.               */
+html {
+  /* Prevents iOS Safari from bumping font size on rotation */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Force all media to stay within their container */
+img, video, canvas, svg, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent long words / URLs from causing horizontal overflow */
+p, h1, h2, h3, h4, h5, h6, li, span, a, label {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── 2. Global container ─────────────────────────────────────────
+   Use .g-container on any page-level wrapper.
+   Desktop: centred, max 1200px.
+   Mobile:  fluid 5% padding.                                 */
+.g-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;               /* logical shorthand for margin: 0 auto */
+  padding-inline: clamp(16px, 5%, 48px);
+  box-sizing: border-box;
+}
+
+/* Narrower variant for account/content pages */
+.g-container--md {
+  max-width: 1000px;
+}
+
+/* Wide variant for shop/hero sections */
+.g-container--xl {
+  max-width: 1400px;
+}
+
+/* ── 3. CSS Grid system ──────────────────────────────────────────
+   Mobile-first: all grids start as 1-column.
+   Upgrade to 2-column at ≥ 640px, more at ≥ 1024px.         */
+
+/* Base: single column on all screens */
+.g-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--g-gap, 20px);
+}
+
+/* 2-column from tablet up */
+@media (min-width: 640px) {
+  .g-grid--2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 3-column from small desktop up */
+@media (min-width: 1024px) {
+  .g-grid--3 { grid-template-columns: repeat(3, 1fr); }
+  .g-grid--4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Sidebar layout: fixed 260px sidebar + fluid content
+   Collapses to 1 column below 900px (covered by account CSS)  */
+@media (min-width: 900px) {
+  .g-grid--sidebar {
+    grid-template-columns: 260px 1fr;
+    gap: 28px;
+  }
+}
+
+/* Full-width span helper */
+.g-col-full { grid-column: 1 / -1; }
+
+/* ── 4. Touch targets ────────────────────────────────────────────
+   All interactive elements get min 44×44px for mobile tapping.
+   This follows Apple HIG and WCAG 2.5.5.                     */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+a.btn,
+.btn,
+.g-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  /* Remove 300ms tap delay on mobile */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Inputs and selects — comfortable on mobile */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  min-height: 44px;
+  padding-block: 10px;
+  touch-action: manipulation;
+}
+
+/* Checkbox and radio — bigger hit area without changing appearance */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Existing cart and action buttons already meet 44px;
+   this catches any small icon buttons missed elsewhere */
+.ch-cart-btn,
+.ch-icon-btn,
+.shop-btn-cart,
+.shop-btn-wishlist,
+.acct-ns-hero__cta {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+/* Nav tabs — ensure enough height for comfortable tapping */
+.acct-ns-tab {
+  min-height: 44px;
+}
+
+/* ── 5. No-overflow guards ───────────────────────────────────────
+   Prevents horizontal scroll on any page.                    */
+
+/* The html/body must never overflow horizontally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* All direct children of body and .shop-layout */
+body > *,
+.shop-layout > * {
+  max-width: 100%;
+}
+
+/* Tables — scroll horizontally inside their container */
+table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Pre / code blocks */
+pre, code {
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+}
+
+/* Cards must never bleed edges */
+.acct-ns-card,
+.acct-card,
+.shop-product-card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ── 6. Header responsive patches ───────────────────────────────
+   Fills gaps not covered by customer.css.                    */
+
+/* On very small phones (< 360px) shrink the brand name further */
+@media (max-width: 359px) {
+  .ch-header__brand-name { font-size: 14px !important; }
+  .ch-header__logo       { width: 30px !important; height: 30px !important; }
+}
+
+/* Ensure hamburger button meets 44px touch target */
+.ch-hamburger {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  touch-action: manipulation;
+}
+
+/* Profile dropdown — stays within viewport on mobile */
+@media (max-width: 480px) {
+  .ch-profile-dropdown {
+    right: -8px;
+    min-width: 200px;
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* ── 7. Footer grid collapse ─────────────────────────────────────
+   The footer uses an inline grid (2fr 1fr 1fr 1fr) that breaks
+   on mobile. Patch it to stack gracefully.                   */
+.footer-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr !important;
+  gap: 40px !important;
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 28px !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}
+
+/* ── 8. Account pages (Orders / Profile) ────────────────────────
+   Patches for .acct-ns-* and .acct-* classes.               */
+
+/* Page shell — already has #F4F5F7 bg; ensure no horizontal bleed */
+.acct-ns-page,
+.acct-page {
+  overflow-x: hidden;
+}
+
+/* Hero identity row — wrap on very small screens */
+@media (max-width: 400px) {
+  .acct-ns-hero__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .acct-ns-hero__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Section head — stack title + count vertically on phones */
+@media (max-width: 400px) {
+  .acct-ns-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Order cards — full-width, no side overflow on phones */
+.acct-ns-order-list > * {
+  max-width: 100%;
+}
+
+/* OrderCard internal product strip — prevent overflow on small screens */
+@media (max-width: 480px) {
+  /* Stack price below name instead of side-by-side */
+  .order-product-strip {
+    flex-wrap: wrap;
+  }
+}
+
+/* Timeline stepper — compress step labels on very small screens */
+@media (max-width: 380px) {
+  /* Hide step labels, keep circles only */
+  .timeline-step-label {
+    display: none;
+  }
+}
+
+/* Two-column forms (Settings + Password) — already collapses at 720px
+   via .acct-ns-two-col. This catches the edge case below 480px.  */
+@media (max-width: 480px) {
+  .acct-ns-two-col {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* ── 9. Checkout page ────────────────────────────────────────────
+   Checkout currently uses inline styles. These classes provide
+   opt-in responsive structure.                               */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .checkout-grid {
+    grid-template-columns: 1fr 380px;  /* form | order summary */
+    align-items: start;
+    gap: 32px;
+  }
+}
+
+/* Checkout section card */
+.checkout-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  padding: clamp(20px, 3vw, 32px);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Order summary — sticky on desktop, normal flow on mobile */
+@media (min-width: 768px) {
+  .checkout-summary {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+/* ── 10. Form fields ─────────────────────────────────────────────
+   Global form field polish — consistent with all pages.      */
+
+/* Full-width inputs by default */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Remove iOS Safari inner shadow on inputs */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Prevent zoom on focus in iOS (font-size must be ≥ 16px) */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── 11. Utility classes ─────────────────────────────────────────
+   Lightweight helpers available globally.                    */
+
+/* Visually hidden (accessible, not display:none) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Hide on mobile, show on desktop */
+.hide-mobile  { display: none; }
+@media (min-width: 640px) {
+  .hide-mobile  { display: revert; }
+  .hide-desktop { display: none !important; }
+}
+
+/* Flex row — wraps on mobile */
+.flex-wrap-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Full-width on mobile only */
+.full-mobile {
+  width: 100%;
+}
+@media (min-width: 640px) {
+  .full-mobile { width: auto; }
+}
+
+/* Spacer */
+.spacer-sm { height: 16px; }
+.spacer-md { height: 32px; }
+.spacer-lg { height: 64px; }
+
+/* Text alignment helpers */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+@media (max-width: 640px) {
+  .text-center-mobile { text-align: center; }
+}
+
+/* Overflow-safe image container */
+.img-safe {
+  overflow: hidden;
+  max-width: 100%;
+}
+.img-safe img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

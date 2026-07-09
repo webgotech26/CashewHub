@@ -171,12 +171,21 @@ function InventoryCard({ product, onStockSaved }) {
             alt={product.name}
             className="inv-card__img"
             loading="lazy"
+            onError={e => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
           />
-        ) : (
-          <div className="inv-card__placeholder" role="img" aria-label="No image available">
-            <CashewIcon size={64} />
-          </div>
-        )}
+        ) : null}
+        {/* Fallback placeholder — shown if image_url missing or broken */}
+        <div
+          className="inv-card__placeholder"
+          role="img"
+          aria-label="No image available"
+          style={{ display: product.image_url ? 'none' : 'flex' }}
+        >
+          <CashewIcon size={64} />
+        </div>
 
         {/* Discount badge removed — offer_price column dropped from DB */}
 

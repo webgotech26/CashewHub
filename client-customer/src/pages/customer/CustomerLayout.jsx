@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { CartProvider, useCart } from '../../context/CartContext';
-import CartDrawer from '../../components/CartDrawer';
-import WhatsAppButton from '../../components/WhatsAppButton';
+import { ToastProvider } from '../../context/ToastContext';
+import CartDrawer from '../../Components/CartDrawer';
+import WhatsAppButton from '../../Components/WhatsAppButton';
+import BackToTop from '../../Components/BackToTop';
+import { getWishlist } from '../customer/WishlistPage';
 import '../../styles/pages/customer.css';
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
@@ -22,10 +25,21 @@ const IconUser = () => (
 );
 
 const IconCart = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 0 1-8 0"/>
+  </svg>
+);
+
+/* Outline heart (default) and filled red heart (wishlisted) */
+const IconHeart = ({ filled = false }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24"
+    fill={filled ? '#E74C3C' : 'none'}
+    stroke={filled ? '#E74C3C' : 'currentColor'}
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
   </svg>
 );
 
@@ -70,33 +84,70 @@ const NAV_LINKS = [
 
 /* ── Profile Dropdown ────────────────────────────────────────── */
 function ProfileDropdown({ user, onLogout, onNavigate }) {
+  const initials    = (user.name || user.email || 'C').charAt(0).toUpperCase();
+  const displayName = user.name  || 'Customer';
+  const email       = user.email || '';
+
+  const hour     = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  const menuItems = [
+    {
+      icon: <IconOrder />,
+      label: 'My Orders',
+      sub: 'Track & manage orders',
+      path: '/home/orders',
+    },
+    {
+      icon: <IconProfile />,
+      label: 'My Profile',
+      sub: 'Account settings',
+      path: '/home/profile',
+    },
+  ];
+
   return (
     <div className="ch-profile-dropdown">
-      {/* User info header */}
-      <div className="ch-profile-dropdown__header">
-        <div className="ch-profile-dropdown__avatar">
-          {(user.name || 'C').charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="ch-profile-dropdown__name">{user.name || 'Customer'}</p>
-          <p className="ch-profile-dropdown__email">{user.email || 'Welcome back'}</p>
+
+      {/* ── Welcome header ── */}
+      <div className="ch-pd-header">
+        <div className="ch-pd-avatar">{initials}</div>
+        <div className="ch-pd-identity">
+          <span className="ch-pd-greeting">{greeting} 👋</span>
+          <p className="ch-pd-name">{displayName}</p>
+          {email && <p className="ch-pd-email">{email}</p>}
         </div>
       </div>
 
-      <div className="ch-profile-dropdown__divider" />
+      {/* ── Nav items ── */}
+      <div className="ch-pd-body">
+        {menuItems.map(item => (
+          <button
+            key={item.label}
+            className="ch-pd-item"
+            onClick={() => onNavigate(item.path)}
+          >
+            <span className="ch-pd-item__icon">{item.icon}</span>
+            <span className="ch-pd-item__text">
+              <span className="ch-pd-item__label">{item.label}</span>
+              <span className="ch-pd-item__sub">{item.sub}</span>
+            </span>
+            <span className="ch-pd-item__arrow">›</span>
+          </button>
+        ))}
+      </div>
 
-      <button className="ch-profile-dropdown__item" onClick={() => onNavigate('/home/orders')}>
-        <IconOrder /> My Orders
-      </button>
-      <button className="ch-profile-dropdown__item" onClick={() => onNavigate('/home/orders')}>
-        <IconProfile /> My Profile
-      </button>
+      {/* ── Divider ── */}
+      <div className="ch-pd-divider" />
 
-      <div className="ch-profile-dropdown__divider" />
+      {/* ── Logout ── */}
+      <div className="ch-pd-footer">
+        <button className="ch-pd-logout" onClick={onLogout}>
+          <IconLogout />
+          Sign out
+        </button>
+      </div>
 
-      <button className="ch-profile-dropdown__item ch-profile-dropdown__item--danger" onClick={onLogout}>
-        <IconLogout /> Logout
-      </button>
     </div>
   );
 }
@@ -104,15 +155,48 @@ function ProfileDropdown({ user, onLogout, onNavigate }) {
 /* ── Main Layout ─────────────────────────────────────────────── */
 function Layout() {
   const navigate = useNavigate();
-  const [cartOpen, setCartOpen]         = useState(false);
-  const [search, setSearch]             = useState('');
-  const [profileOpen, setProfileOpen]   = useState(false);
+  const [cartOpen, setCartOpen]             = useState(false);
+  const [search, setSearch]                 = useState('');
+  const [profileOpen, setProfileOpen]       = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const profileRef                      = useRef(null);
-  const { cartCount }                   = useCart();
+  const profileRef                          = useRef(null);
+  const hoverTimerRef                       = useRef(null);
+  const { cartCount }                       = useCart();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Close profile dropdown on outside click
+  /* Wishlist count — stays in sync across all tabs via storage event */
+  const [wishlistCount, setWishlistCount] = useState(() => getWishlist().length);
+  useEffect(() => {
+    const sync = () => setWishlistCount(getWishlist().length);
+    window.addEventListener('wishlist-change', sync);
+    return () => window.removeEventListener('wishlist-change', sync);
+  }, []);
+
+  /* Detect touch devices — hover becomes click on touch screens */
+  const isTouchDevice = () =>
+    typeof window !== 'undefined' &&
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+  /* ── Hover handlers (desktop only) ── */
+  const handleProfileMouseEnter = () => {
+    if (isTouchDevice()) return;
+    clearTimeout(hoverTimerRef.current);
+    setProfileOpen(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    if (isTouchDevice()) return;
+    /* Small delay so the user can move the cursor into the dropdown */
+    hoverTimerRef.current = setTimeout(() => setProfileOpen(false), 150);
+  };
+
+  /* ── Click handler (touch / mobile fallback) ── */
+  const handleProfileClick = () => {
+    if (!isTouchDevice()) return;
+    setProfileOpen(v => !v);
+  };
+
+  /* Close on outside click (touch devices) */
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -120,7 +204,10 @@ function Layout() {
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      clearTimeout(hoverTimerRef.current);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -146,13 +233,13 @@ function Layout() {
         <div className="ch-header__brand" onClick={() => navigate('/home')}>
           <img
             src="/assets/cashewlogo.png"
-            alt="CashewHub logo"
+            alt="H2B3 logo"
             className="ch-header__logo"
             style={{ mixBlendMode: 'multiply' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
           <div className="ch-header__brand-text">
-            <span className="ch-header__brand-name">CashewHub</span>
+            <span className="ch-header__brand-name">H²B³ Cashew</span>
             <span className="ch-header__brand-tag">Premium Quality Nuts</span>
           </div>
         </div>
@@ -170,10 +257,10 @@ function Layout() {
           ))}
         </nav>
 
-        {/* ── RIGHT: Actions ────────────────────────────── */}
+        {/* ── RIGHT: Actions  (order: Search → Wishlist → Cart → Profile → Hamburger) ── */}
         <div className="ch-header__actions">
 
-          {/* Search pill */}
+          {/* 1. Search pill */}
           <div className="ch-search">
             <span className="ch-search__icon"><IconSearch /></span>
             <input
@@ -186,13 +273,45 @@ function Layout() {
             />
           </div>
 
-          {/* Profile button + dropdown */}
-          <div className="ch-profile-wrap" ref={profileRef}>
+          {/* 2. Wishlist button — navigates to /home/wishlist */}
+          <button
+            className="ch-wishlist-btn"
+            onClick={() => navigate('/home/wishlist')}
+            aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount !== 1 ? 's' : ''}` : ''}`}
+          >
+            <IconHeart filled={wishlistCount > 0} />
+            {wishlistCount > 0 && (
+              <span className="ch-wishlist-btn__badge" aria-hidden="true">
+                {wishlistCount > 99 ? '99+' : wishlistCount}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Cart button */}
+          <button
+            className="ch-cart-btn"
+            onClick={() => setCartOpen(true)}
+            aria-label={`Shopping cart, ${cartCount} item${cartCount !== 1 ? 's' : ''}`}
+          >
+            <IconCart />
+            {cartCount > 0 && (
+              <span className="ch-cart-btn__dot" aria-hidden="true" />
+            )}
+          </button>
+
+          {/* 4. Profile button + dropdown */}
+          <div
+            className="ch-profile-wrap"
+            ref={profileRef}
+            onMouseEnter={handleProfileMouseEnter}
+            onMouseLeave={handleProfileMouseLeave}
+          >
             <button
               className={`ch-icon-btn ${profileOpen ? 'ch-icon-btn--active' : ''}`}
-              onClick={() => setProfileOpen(v => !v)}
+              onClick={handleProfileClick}
               aria-label="Account menu"
               aria-expanded={profileOpen}
+              aria-haspopup="true"
             >
               <IconUser />
               <span className="ch-icon-btn__chevron"><IconChevron /></span>
@@ -207,19 +326,7 @@ function Layout() {
             )}
           </div>
 
-          {/* Cart button */}
-          <button
-            className="ch-cart-btn"
-            onClick={() => setCartOpen(true)}
-            aria-label={`Shopping cart, ${cartCount} items`}
-          >
-            <IconCart />
-            {cartCount > 0 && (
-              <span className="ch-cart-btn__badge" aria-hidden="true">{cartCount}</span>
-            )}
-          </button>
-
-          {/* Hamburger — mobile only */}
+          {/* 5. Hamburger — mobile only */}
           <button
             onClick={() => setMobileMenuOpen(v => !v)}
             style={{
@@ -256,7 +363,7 @@ function Layout() {
               <img src="/assets/cashewlogo.png" alt="" style={{ width:40, height:40, borderRadius:'50%', objectFit:'cover' }}
                 onError={e => e.target.style.display='none'} />
               <div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:700, color:'#1A1A1A' }}>CashewHub</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:700, color:'#1A1A1A' }}>H²B³ Cashew</div>
                 <div style={{ fontSize:10, color:'#C9972B', fontWeight:600, textTransform:'uppercase', letterSpacing:1 }}>Premium Quality Nuts</div>
               </div>
               <button onClick={() => setMobileMenuOpen(false)} style={{
@@ -359,7 +466,7 @@ function Layout() {
                 <img src="/assets/cashewlogo.png" alt="" style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover' }}
                   onError={e => e.target.style.display='none'} />
                 <div>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#fff' }}>CashewHub</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#fff' }}>H²B³ Cashew</div>
                   <div style={{ fontSize:10, color:'#F5C842', fontWeight:600, textTransform:'uppercase', letterSpacing:1.5 }}>Premium Quality Nuts</div>
                 </div>
               </div>
@@ -374,7 +481,7 @@ function Layout() {
                   onMouseEnter={e => e.currentTarget.style.background='rgba(37,211,102,0.3)'}
                   onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'}
                 >💬</a>
-                <a href="mailto:cashewhub@gmail.com"
+                <a href="mailto:h2b3@gmail.com"
                   style={{ width:36, height:36, borderRadius:10, background:'rgba(255,255,255,0.08)',
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:16, textDecoration:'none', transition:'background 0.2s' }}
@@ -438,11 +545,11 @@ function Layout() {
                   onMouseEnter={e => e.target.style.color='#F5C842'}
                   onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.55)'}
                 >📞 +91 63825 35757</a>
-                <a href="mailto:cashewhub@gmail.com" style={{ fontSize:13, color:'rgba(255,255,255,0.55)',
+                <a href="mailto:h2b3@gmail.com" style={{ fontSize:13, color:'rgba(255,255,255,0.55)',
                   textDecoration:'none', transition:'color 0.2s' }}
                   onMouseEnter={e => e.target.style.color='#F5C842'}
                   onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.55)'}
-                >📧 cashewhub@gmail.com</a>
+                >📧 h2b3@gmail.com</a>
                 <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)' }}>🕐 9AM – 10PM Daily</div>
               </div>
             </div>
@@ -451,7 +558,7 @@ function Layout() {
           <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:24,
             display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
             <p style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>
-              © {new Date().getFullYear()} CashewHub. All rights reserved.
+              © {new Date().getFullYear()} H²B³ Cashew. All rights reserved.
             </p>
             <p style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>
               Made with ❤️ in Panruti, Tamil Nadu
@@ -462,14 +569,19 @@ function Layout() {
 
       {/* WhatsApp Floating Button */}
       <WhatsAppButton />
+
+      {/* Back to top */}
+      <BackToTop />
     </div>
   );
 }
 
 export default function CustomerLayout() {
   return (
-    <CartProvider>
-      <Layout />
-    </CartProvider>
+    <ToastProvider>
+      <CartProvider>
+        <Layout />
+      </CartProvider>
+    </ToastProvider>
   );
 }

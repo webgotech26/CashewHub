@@ -1,0 +1,259 @@
+/* ============================================================
+   account-no-sidebar.css  —  v3 Premium Spacious
+   Full-width, sidebar-free layout for Orders & Profile pages.
+   Supplements account-layout.css (status pills, CSS vars, etc.)
+   ============================================================ */
+
+/* ── 1. Page shell ───────────────────────────────────────────── */
+.acct-ns-page {
+  min-height: 100vh;
+  background-color: #F4F5F7;
+  font-family: var(--font);
+  color: var(--body);
+}
+
+/* Centred content wrapper — max-width 1000px */
+.acct-ns-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px) 80px;
+  box-sizing: border-box;
+}
+
+/* ── 2. Page hero banner ─────────────────────────────────────── */
+.acct-ns-hero {
+  background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 55%, #5c2a00 100%);
+  padding: clamp(28px, 4vw, 48px) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.acct-ns-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,151,43,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.acct-ns-hero__inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.acct-ns-hero__identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.acct-ns-hero__avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border: 3px solid rgba(201,151,43,0.45);
+  box-shadow: 0 4px 20px rgba(201,151,43,0.30), 0 0 0 5px rgba(201,151,43,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: #1a0a00; overflow: hidden; flex-shrink: 0;
+  transition: transform var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out);
+}
+.acct-ns-hero__avatar:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-gold), 0 0 0 6px rgba(201,151,43,0.12);
+}
+.acct-ns-hero__avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.acct-ns-hero__greeting {
+  font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase; letter-spacing: 1.8px; margin: 0 0 4px;
+}
+.acct-ns-hero__name {
+  font-size: clamp(18px, 2.5vw, 24px); font-weight: 800;
+  color: #fff; letter-spacing: -0.4px; line-height: 1.15; margin: 0 0 6px;
+}
+.acct-ns-hero__badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; color: var(--gold);
+  background: rgba(201,151,43,0.15); border: 1px solid rgba(201,151,43,0.35);
+  padding: 3px 10px; border-radius: var(--radius-full);
+  letter-spacing: 0.6px; text-transform: uppercase;
+}
+
+.acct-ns-hero__cta {
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  color: #1a0a00;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border: none; border-radius: var(--radius-md);
+  padding: 11px 22px; cursor: pointer;
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(201,151,43,0.40);
+  transition: box-shadow var(--duration-fast) var(--ease-out),
+              transform  var(--duration-fast) var(--ease-out);
+}
+.acct-ns-hero__cta:hover  { box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+.acct-ns-hero__cta:active { transform: translateY(0); }
+
+/* ── 3. Horizontal tab-nav ───────────────────────────────────── */
+.acct-ns-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: var(--header-h, 72px);
+  z-index: 100;
+}
+
+.acct-ns-nav__inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.acct-ns-nav__inner::-webkit-scrollbar { display: none; }
+
+/* Individual tab button */
+.acct-ns-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 14px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.acct-ns-tab svg { flex-shrink: 0; transition: transform var(--duration-fast) var(--ease-out); }
+.acct-ns-tab:hover { color: var(--dark); }
+.acct-ns-tab:hover svg { transform: translateY(-1px); }
+.acct-ns-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; border-radius: 4px 4px 0 0; }
+
+/* Active state — gold underline */
+.acct-ns-tab--active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 700; }
+.acct-ns-tab--active svg { color: var(--gold); }
+
+/* Sign out — pushed to far right */
+.acct-ns-tab--danger { color: #9CA3AF; margin-left: auto; }
+.acct-ns-tab--danger:hover { color: #DC2626; }
+
+/* ── 4. Content area ─────────────────────────────────────────── */
+.acct-ns-content { padding-top: 36px; }
+
+.acct-ns-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Section header row */
+.acct-ns-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.acct-ns-section-title {
+  font-family: var(--font);
+  font-size: 18px; font-weight: 700;
+  color: var(--dark); letter-spacing: -0.3px; margin: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.acct-ns-section-count {
+  font-family: var(--font);
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  background: #F3F4F6; padding: 3px 10px; border-radius: var(--radius-full);
+}
+
+/* ── 5. Card shell — white on gray, 32px padding ─────────────── */
+.acct-ns-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);        /* 16px */
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  padding: 32px;                          /* spec: 32px */
+  width: 100%;
+  box-sizing: border-box;
+  transition: box-shadow   var(--duration-base) var(--ease-out),
+              transform    var(--duration-base) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out);
+}
+.acct-ns-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+  border-color: rgba(201,151,43,0.22);
+}
+
+.acct-ns-card__header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+}
+.acct-ns-card__title {
+  font-family: var(--font);
+  font-size: 15px; font-weight: 700; color: var(--dark); margin: 0;
+  display: flex; align-items: center; gap: 9px; letter-spacing: -0.1px;
+}
+.acct-ns-card__divider {
+  height: 1px; background: #F0F0F0; margin: 24px -32px;
+}
+
+/* ── 6. Full-width order list ────────────────────────────────── */
+.acct-ns-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── 7. Two-column sub-grid (settings + password) ────────────── */
+.acct-ns-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 720px) {
+  .acct-ns-two-col { grid-template-columns: 1fr; }
+}
+
+/* ── 8. Mobile nav (≤ 600px) — icons only ───────────────────── */
+@media (max-width: 600px) {
+  .acct-ns-nav__inner { gap: 0; padding: 0 12px; }
+  .acct-ns-tab { font-size: 12.5px; padding: 14px 13px 12px; gap: 6px; }
+  .acct-ns-tab__label { display: none; }
+  .acct-ns-tab--danger { margin-left: 0; }
+}
+
+/* ── 9. Mobile card (≤ 480px) ───────────────────────────────── */
+@media (max-width: 480px) {
+  .acct-ns-card { padding: 20px 18px; border-radius: var(--radius-md); }
+  .acct-ns-card:hover { transform: none; }
+  .acct-ns-card__divider { margin: 20px -18px; }
+  .acct-ns-content { padding-top: 24px; }
+  .acct-ns-stack { gap: 20px; }
+  .acct-ns-hero__identity { gap: 14px; }
+  .acct-ns-hero__avatar { width: 52px; height: 52px; font-size: 20px; }
+}

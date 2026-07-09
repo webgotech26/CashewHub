@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 
@@ -49,7 +49,7 @@ export default function Register() {
           <img src="/assets/cashewlogo.png" alt="" style={{ width:50, height:50, borderRadius:'50%', objectFit:'cover' }}
             onError={e => e.target.style.display='none'} />
           <div>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:'#fff' }}>CashewHub</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:'#fff' }}>H²B³ Cashew</div>
             <div style={{ fontSize:10, color:'#F5C842', fontWeight:600, textTransform:'uppercase', letterSpacing:1.5 }}>Premium Quality Nuts</div>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function Register() {
         <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:36, fontWeight:800,
           color:'#fff', lineHeight:1.2, marginBottom:14 }}>
           Join the<br />
-          <span style={{ color:'#F5C842', fontStyle:'italic' }}>CashewHub</span><br />
+          <span style={{ color:'#F5C842', fontStyle:'italic' }}>H²B³ Cashew</span><br />
           Family Today
         </h1>
         <p style={{ fontSize:14, color:'rgba(255,255,255,0.65)', lineHeight:1.85, marginBottom:40 }}>

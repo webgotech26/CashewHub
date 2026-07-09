@@ -1,0 +1,451 @@
+/* ═══════════════════════════════════════════════════════════════
+   WishlistPage — Premium Design System
+   Palette: white cards · charcoal type · gold accents
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ──────────────────────────────────────────────── */
+.wl-page {
+  min-height: 100vh;
+  background: #F8F8F9;
+  font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+}
+
+.wl-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 48px) 100px;
+  box-sizing: border-box;
+}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.wl-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.wl-header__eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  color: #C9972B;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  margin: 0 0 6px;
+}
+
+.wl-header__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.wl-header__count {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin: 6px 0 0;
+}
+
+.wl-header__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Header action buttons */
+.wl-btn-clear {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #FECACA;
+  background: transparent;
+  color: #DC2626;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.wl-btn-clear:hover {
+  background: #FEF2F2;
+  transform: translateY(-1px);
+}
+
+.wl-btn-browse {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #1A1A1A;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.wl-btn-browse:hover {
+  background: #333333;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive grid ─────────────────────────────────────────── */
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1200px) { .wl-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 860px)  { .wl-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+@media (max-width: 480px)  { .wl-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+@media (max-width: 360px)  { .wl-grid { grid-template-columns: 1fr; } }
+
+/* ── Wishlist Card ───────────────────────────────────────────── */
+.wl-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #F0F0F0;                         /* glass-like border */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform    0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow   0.26s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.26s ease;
+}
+
+.wl-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.10),
+    0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: rgba(201, 151, 43, 0.28);            /* gold tint on hover */
+}
+
+/* ── Image area ─────────────────────────────────────────────── */
+.wl-card__img-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #F7F4EF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wl-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 14px;
+  box-sizing: border-box;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.wl-card:hover .wl-card__img {
+  transform: scale(1.07);
+}
+
+/* Emoji fallback inside image area */
+.wl-card__img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.wl-card__img-fallback span:first-child {
+  font-size: 52px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.22));
+  line-height: 1;
+}
+
+.wl-card__img-fallback span:last-child {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* Remove (heart) button — top-right of image */
+.wl-card__remove-img-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.wl-card__remove-img-btn:hover {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  transform: scale(1.1);
+}
+
+/* In-cart badge — top-left of image */
+.wl-card__cart-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #15803D;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  padding: 3px 8px;
+  border-radius: 20px;
+  z-index: 2;
+}
+
+/* ── Card body ───────────────────────────────────────────────── */
+.wl-card__body {
+  padding: 16px 18px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wl-card__category {
+  font-size: 10px;
+  font-weight: 700;
+  color: #C9972B;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin: 0;
+}
+
+.wl-card__name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;                                    /* dark for premium feel */
+  margin: 4px 0;
+  line-height: 1.35;
+  letter-spacing: -0.1px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wl-card__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid #F5F5F5;
+}
+
+.wl-card__price {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: -0.5px;
+}
+
+.wl-card__unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9CA3AF;
+}
+
+/* ── Card footer ─────────────────────────────────────────────── */
+.wl-card__footer {
+  padding: 12px 18px 18px;
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Add to Cart — solid dark, premium */
+.wl-btn-cart {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px 0;
+  border-radius: 10px;
+  border: none;
+  background: #1A1A1A;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.2px;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.wl-btn-cart:hover {
+  background: #333333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.wl-btn-cart:active {
+  transform: translateY(0);
+}
+
+/* Added state — green flash */
+.wl-btn-cart--added {
+  background: #16A34A !important;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3) !important;
+  transform: none !important;
+  cursor: default;
+}
+
+/* Delete button — minimal outlined square */
+.wl-btn-delete {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 10px;
+  border: 1.5px solid #E5E7EB;
+  background: #FAFAFA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9CA3AF;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, transform 0.15s ease;
+}
+
+.wl-btn-delete:hover {
+  border-color: #FECACA;
+  color: #DC2626;
+  background: #FEF2F2;
+  transform: scale(1.08);
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.wl-empty {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #F0F0F0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  padding: 80px 32px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.wl-empty__icon-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 28px;
+}
+
+.wl-empty__icon-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(254,226,226,0.4), rgba(254,226,226,0.7));
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.1);
+}
+
+.wl-empty__icon-inner {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(254,226,226,0.5), rgba(254,226,226,0.9));
+}
+
+.wl-empty__icon-heart {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wl-empty__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 10px;
+  letter-spacing: -0.3px;
+}
+
+.wl-empty__desc {
+  font-size: 14px;
+  color: #9CA3AF;
+  line-height: 1.7;
+  margin: 0 0 28px;
+}
+
+.wl-empty__pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.wl-empty__pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A4A4A;
+  background: #F5F5F5;
+  border: 1px solid #EBEBEB;
+  padding: 5px 14px;
+  border-radius: 20px;
+}
+
+.wl-empty__cta {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 36px;
+  border-radius: 30px;
+  border: none;
+  background: #1A1A1A;
+  color: #ffffff;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.wl-empty__cta:hover {
+  background: #333333;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}

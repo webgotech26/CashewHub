@@ -1,128 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../services/api';
 import { useCart } from '../../context/CartContext';
-
-/* ── Product visual helper ──────────────────────────────────── */
-function getVisual(name = '') {
-  const n = name.toLowerCase();
-  if (n.includes('w180')) return { bg:'linear-gradient(135deg,#7B3F00,#C68642)', emoji:'🥇', tag:'Premium' };
-  if (n.includes('w210')) return { bg:'linear-gradient(135deg,#8B4513,#D2691E)', emoji:'⭐', tag:'Large' };
-  if (n.includes('w240')) return { bg:'linear-gradient(135deg,#A0522D,#DEB887)', emoji:'✨', tag:'Medium-Large' };
-  if (n.includes('w320')) return { bg:'linear-gradient(135deg,#C9972B,#F5C842)', emoji:'🏆', tag:'Best Seller' };
-  if (n.includes('w450')) return { bg:'linear-gradient(135deg,#B8860B,#DAA520)', emoji:'💛', tag:'Value' };
-  if (n.includes('roasted') && n.includes('salt')) return { bg:'linear-gradient(135deg,#8B0000,#CD5C5C)', emoji:'🔥', tag:'Salted' };
-  if (n.includes('roasted')) return { bg:'linear-gradient(135deg,#5C3317,#A0522D)', emoji:'🍂', tag:'Roasted' };
-  if (n.includes('masala')) return { bg:'linear-gradient(135deg,#8B2500,#E25822)', emoji:'🌶️', tag:'Spicy' };
-  if (n.includes('pepper')) return { bg:'linear-gradient(135deg,#2C2C2C,#696969)', emoji:'🖤', tag:'Pepper' };
-  if (n.includes('broken')) return { bg:'linear-gradient(135deg,#6B6B3A,#B8B860)', emoji:'💎', tag:'Broken' };
-  return { bg:'linear-gradient(135deg,#C9972B,#F5C842)', emoji:'🥜', tag:'Cashew' };
-}
-
-/* ── Product Card ────────────────────────────────────────────── */
-function ProductCard({ product, onView }) {
-  const { addToCart, cartItems } = useCart();
-  const [added, setAdded] = useState(false);
-  const visual = getVisual(product.name);
-  const inCart = cartItems.find(i => i.id === product.id);
-  const outOfStock = Number(product.stock_quantity) <= 0;
-
-  const handleAdd = () => {
-    if (outOfStock) return;
-    addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
-  };
-
-  return (
-    <div style={{
-      background:'#fff', borderRadius:20, overflow:'hidden',
-      border:'1px solid #F0F0F0', boxShadow:'0 2px 12px rgba(0,0,0,0.05)',
-      display:'flex', flexDirection:'column', transition:'all 0.25s',
-    }}
-      onMouseEnter={e => { e.currentTarget.style.transform='translateY(-6px)'; e.currentTarget.style.boxShadow='0 16px 40px rgba(0,0,0,0.12)'; }}
-      onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 2px 12px rgba(0,0,0,0.05)'; }}
-    >
-      {/* Image */}
-      <div style={{ position:'relative', cursor:'pointer' }} onClick={() => onView(product)}>
-        <div style={{ background: product.image_url ? '#FAFAFA' : visual.bg,
-          height:200, display:'flex', flexDirection:'column',
-          alignItems:'center', justifyContent:'center' }}>
-          {product.image_url
-            ? <img src={product.image_url} alt={product.name} style={{ height:'100%', width:'100%', objectFit:'contain', padding:16 }} />
-            : <>
-                <span style={{ fontSize:60, filter:'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }}>{visual.emoji}</span>
-                <span style={{ marginTop:8, fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.8)',
-                  textTransform:'uppercase', letterSpacing:1.5, background:'rgba(0,0,0,0.2)',
-                  padding:'2px 10px', borderRadius:20 }}>{visual.tag}</span>
-              </>
-          }
-        </div>
-        {outOfStock && (
-          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.55)',
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <span style={{ background:'rgba(0,0,0,0.7)', color:'#fff', fontSize:12,
-              fontWeight:700, padding:'6px 16px', borderRadius:20 }}>Out of Stock</span>
-          </div>
-        )}
-        {inCart && !outOfStock && (
-          <div style={{ position:'absolute', top:10, right:10, background:'#16a34a',
-            color:'#fff', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20 }}>
-            ✓ In Cart ({inCart.qty})
-          </div>
-        )}
-      </div>
-
-      {/* Body */}
-      <div style={{ padding:'16px 18px', flex:1, display:'flex', flexDirection:'column', gap:4 }}>
-        {product.category_name && (
-          <span style={{ fontSize:10, fontWeight:700, color:'#C9972B',
-            textTransform:'uppercase', letterSpacing:1.2 }}>{product.category_name}</span>
-        )}
-        <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:700,
-          color:'#1A1A1A', lineHeight:1.35, margin:'2px 0 4px',
-          display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
-          {product.name}
-        </h3>
-        {product.description && (
-          <p style={{ fontSize:12, color:'#9CA3AF', lineHeight:1.6,
-            display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
-            {product.description}
-          </p>
-        )}
-        <div style={{ display:'flex', alignItems:'baseline', gap:4, marginTop:'auto', paddingTop:10,
-          borderTop:'1px solid #F5F5F5' }}>
-          <span style={{ fontFamily:"'Playfair Display',serif", fontSize:22,
-            fontWeight:700, color:'#1A1A1A' }}>₹{Number(product.price).toFixed(0)}</span>
-          <span style={{ fontSize:11, color:'#9CA3AF' }}>/ {product.unit || 'kg'}</span>
-          {Number(product.stock_quantity) > 0 && Number(product.stock_quantity) <= 10 && (
-            <span style={{ marginLeft:'auto', fontSize:10, color:'#F59E0B', fontWeight:700 }}>
-              Only {product.stock_quantity} left!
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div style={{ padding:'0 18px 18px', display:'flex', gap:10 }}>
-        <button onClick={handleAdd} disabled={outOfStock} style={{
-          flex:1, padding:'11px', borderRadius:10, border:'none',
-          background: added ? '#16a34a' : outOfStock ? '#E5E5E5' : '#1A1A1A',
-          color: outOfStock ? '#9CA3AF' : '#fff',
-          fontSize:13, fontWeight:700, cursor: outOfStock ? 'not-allowed' : 'pointer',
-          transition:'all 0.2s',
-        }}>
-          {outOfStock ? '✗ Out of Stock' : added ? '✓ Added!' : inCart ? '🛒 Add More' : '🛒 Add to Cart'}
-        </button>
-        
-      </div>
-    </div>
-  );
-}
+import { getProductVisual } from '../../utils/productVisual';
+import ProductCard from '../../Components/ProductCard';
 
 /* ── Quick View Modal ─────────────────────────────────────────── */
 function QuickView({ product, onClose }) {
   const { addToCart } = useCart();
-  const visual = getVisual(product.name);
+  const visual = getProductVisual(product.name);
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {

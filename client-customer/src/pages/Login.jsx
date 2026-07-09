@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/pages/login.css';
@@ -55,7 +55,7 @@ export default function Login() {
           <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:52 }}>
             <img
               src="/assets/cashewlogo.png"
-              alt="CashewHub"
+              alt="H²B³ Cashew"
               style={{
                 width:54, height:54, borderRadius:'50%', objectFit:'cover',
                 boxShadow:'0 4px 16px rgba(0,0,0,0.4), 0 0 0 3px rgba(201,151,43,0.4)',
@@ -68,7 +68,7 @@ export default function Login() {
                 fontSize:20, fontWeight:800, color:'#fff',
                 textShadow:'0 1px 8px rgba(0,0,0,0.3)',
               }}>
-                CashewHub
+                H²B³ Cashew
               </div>
               <div style={{
                 fontSize:10, fontWeight:700, color:'rgba(245,200,66,0.9)',
@@ -115,7 +115,7 @@ export default function Login() {
 
           {/* Heading */}
           <h2 className="login-title">Welcome Back</h2>
-          <p className="login-subtitle">Sign in to your CashewHub account</p>
+          <p className="login-subtitle">Sign in to your H²B³ Cashew account</p>
 
           {/* Error */}
           {error && (

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 
 const VALUES = [
   { icon: '🌿', title: 'No Chemicals',      desc: 'No preservatives, no artificial colour. Just cashews — nothing extra added.' },
@@ -30,7 +30,7 @@ export default function AboutPage() {
           </div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:46, fontWeight:800,
             color:'#fff', lineHeight:1.15, marginBottom:18 }}>
-            We Are CashewHub —<br />
+            We Are H²B³ Cashew —<br />
             <span style={{ color:'#F5C842', fontStyle:'italic' }}>Premium Cashews</span>
           </h1>
           <p style={{ fontSize:16, color:'rgba(255,255,255,0.68)', lineHeight:1.8 }}>

@@ -2,8 +2,9 @@ import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import SplashScreen from './components/SplashScreen';
+import SplashScreen from './Components/SplashScreen';
 import './index.css';
+import './styles/global-responsive.css';
 
 function Root() {
   const [splashDone, setSplashDone] = useState(false);

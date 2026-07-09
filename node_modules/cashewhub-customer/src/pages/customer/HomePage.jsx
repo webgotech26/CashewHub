@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useCart } from '../../context/CartContext';
@@ -399,7 +399,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#C9972B',
-              textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Why CashewHub</div>
+              textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Why H²B³ Cashew</div>
             <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 38,
               fontWeight: 800, color: '#1A1A1A' }}>
               What Makes Us Different

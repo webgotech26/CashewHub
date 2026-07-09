@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 export default function SplashScreen({ onDone }) {
   const [phase, setPhase] = useState('show'); // show → fadeout → done
@@ -28,7 +28,7 @@ export default function SplashScreen({ onDone }) {
       }}>
         <img
           src="/assets/cashewlogo.png"
-          alt="CashewHub"
+          alt="H²B³ Cashew"
           style={{
             width: 160, height: 160,
             borderRadius: '50%',
@@ -51,7 +51,7 @@ export default function SplashScreen({ onDone }) {
           fontSize: 32, fontWeight: 800, color: '#fff',
           letterSpacing: '-0.5px',
         }}>
-          CashewHub
+          H²B³ Cashew
         </div>
         <div style={{
           fontSize: 12, fontWeight: 600, color: '#C9972B',
