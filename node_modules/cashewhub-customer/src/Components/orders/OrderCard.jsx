@@ -9,10 +9,22 @@
  *   onTrack {(id) => void}
  */
 import { useState } from 'react';
+import { getProductVisual } from '../../utils/productVisual';
 import { GOLD, GOLD_L, DARK, MUTED, FONT } from './tokens';
 import StatusBadge   from './StatusBadge';
 import Timeline      from './Timeline';
 import ActionButtons from './ActionButtons';
+
+/* ── Helper: parse image_url (may be JSON string) ───────────────── */
+function parseImageUrl(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+  } catch {
+    return raw.startsWith('http') || raw.startsWith('/') ? raw : null;
+  }
+}
 
 /* ── CalendarIcon — tiny inline SVG ──────────────────────────── */
 function CalendarIcon() {
@@ -49,6 +61,10 @@ export default function OrderCard({ order, onView, onTrack }) {
   const formattedAmount = Number(order.total_amount).toLocaleString('en-IN', {
     minimumFractionDigits: 0,
   });
+
+  /* Resolve image — parse JSON array string if needed */
+  const visual   = getProductVisual(order.product_names ?? '');
+  const imgSrc   = parseImageUrl(order.image_url) || visual.localImage || null;
 
   /* Accent bar colour mirrors status */
   const accentColor = isCancelled
@@ -149,7 +165,7 @@ export default function OrderCard({ order, onView, onTrack }) {
               height:       60,
               borderRadius: 10,
               flexShrink:   0,
-              background:   '#F5F0E8',
+              background:   imgSrc ? '#F7F4EF' : visual.bg,
               border:       '1px solid #EDE8DE',
               display:      'flex',
               alignItems:   'center',
@@ -158,16 +174,23 @@ export default function OrderCard({ order, onView, onTrack }) {
               fontSize:     24,
             }}
           >
-            {order.image_url
-              ? (
-                <img
-                  src={order.image_url}
-                  alt={order.product_names || `Order #${order.id}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 5 }}
-                />
-              )
-              : <span aria-hidden="true">🌰</span>
-            }
+            {imgSrc ? (
+              <img
+                src={imgSrc}
+                alt={order.product_names || `Order #${order.id}`}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 5 }}
+                onError={e => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <span
+              aria-hidden="true"
+              style={{ display: imgSrc ? 'none' : 'flex', fontSize: 28, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+            >
+              {visual.emoji || '🌰'}
+            </span>
           </div>
 
           {/* Product name + quantity */}

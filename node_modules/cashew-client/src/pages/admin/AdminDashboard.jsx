@@ -23,8 +23,8 @@ const STATUS_MAP = {
 };
 
 // ── Skeleton row component ───────────────────────────────────────────
-function SkeletonRows({ cols = 8, rows = 5 }) {
-  const widths = [30, 100, 120, 40, 70, 70, 80, 50];
+function SkeletonRows({ cols = 10, rows = 5 }) {
+  const widths = [30, 100, 120, 40, 70, 150, 90, 70, 80, 50];
   return Array.from({ length: rows }).map((_, i) => (
     <tr key={i} className="erp-skeleton--row">
       {Array.from({ length: cols }).map((_, j) => (
@@ -224,11 +224,9 @@ export default function AdminDashboard() {
                       }}
                       title={o.product_names || 'No items'}
                     >
-                      {/* product_names from GROUP_CONCAT — never undefined */}
                       {o.product_names || 'No items'}
                     </td>
                     <td style={{ fontWeight: 600 }}>
-                      {/* total_qty from SUM(oi.quantity) — never empty */}
                       {o.total_qty ?? '—'}
                     </td>
                     <td style={{ fontWeight: 700, color: '#1a3c2e' }}>
@@ -306,13 +304,18 @@ export default function AdminDashboard() {
                     ['Order Date', new Date(selectedOrder.created_at).toLocaleDateString('en-IN', {
                                     day: '2-digit', month: 'short', year: 'numeric' })],
                     ['Total',      `₹${Number(selectedOrder.total_amount).toFixed(2)}`],
+                    ['Address',    selectedOrder.address || '—'],
+                    ['Payment',    selectedOrder.notes   || '—'],
                   ].map(([label, value]) => (
-                    <div key={label}>
+                    <div key={label} style={label === 'Address' ? { gridColumn: '1 / -1' } : {}}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af',
                         textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
                         {label}
                       </p>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{value}</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a',
+                        wordBreak: label === 'Address' ? 'break-word' : 'normal' }}>
+                        {value}
+                      </p>
                     </div>
                   ))}
                 </div>

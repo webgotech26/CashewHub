@@ -94,7 +94,7 @@ const getProductById = async (req, res) => {
          p.price,
          p.stock_quantity,
          p.is_active,
-         p.image_url,
+         image_url,
          c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id

@@ -1,56 +1,57 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { useCart } from '../../context/CartContext';
-
-/* ── Same visual helper as ShopPage ────────────────────────── */
-function getVisual(name = '') {
-  const n = name.toLowerCase();
-  if (n.includes('w180')) return { bg:'linear-gradient(135deg,#7B3F00,#C68642)', emoji:'🥇', tag:'Premium' };
-  if (n.includes('w210')) return { bg:'linear-gradient(135deg,#8B4513,#D2691E)', emoji:'⭐', tag:'Large' };
-  if (n.includes('w240')) return { bg:'linear-gradient(135deg,#A0522D,#DEB887)', emoji:'✨', tag:'Medium-Large' };
-  if (n.includes('w320')) return { bg:'linear-gradient(135deg,#C9972B,#F5C842)', emoji:'🏆', tag:'Best Seller' };
-  if (n.includes('w450')) return { bg:'linear-gradient(135deg,#B8860B,#DAA520)', emoji:'💛', tag:'Value' };
-  if (n.includes('roasted') && n.includes('salt')) return { bg:'linear-gradient(135deg,#8B0000,#CD5C5C)', emoji:'🔥', tag:'Salted' };
-  if (n.includes('roasted')) return { bg:'linear-gradient(135deg,#5C3317,#A0522D)', emoji:'🍂', tag:'Roasted' };
-  if (n.includes('masala')) return { bg:'linear-gradient(135deg,#8B2500,#E25822)', emoji:'🌶️', tag:'Spicy' };
-  if (n.includes('pepper')) return { bg:'linear-gradient(135deg,#2C2C2C,#696969)', emoji:'🖤', tag:'Pepper' };
-  if (n.includes('broken')) return { bg:'linear-gradient(135deg,#6B6B3A,#B8B860)', emoji:'💎', tag:'Broken' };
-  return { bg:'linear-gradient(135deg,#C9972B,#F5C842)', emoji:'🥜', tag:'Cashew' };
-}
+import ProductCard from '../../Components/ProductCard';
+import BannerSlider from '../../Components/BannerSlider';
 
 const SLIDES = [
   {
-    image: '/assets/pexels-hatdieubaokhanh-com-2155729267-34449058.jpg',
-    tag: 'Fresh from Panruti',
-    title: 'Good Quality',
-    titleHighlight: 'Cashews',
-    titleEnd: 'Direct to You',
-    subtitle: "We grow and process cashews in Panruti. W180 to W450 grades, roasted and flavoured — all available.",
+    image: '/assets/slide1.png',
+    tag: 'PREMIUM QUALITY CASHEWS',
+    title: 'Every Cashew,',
+    titleHighlight: 'A Taste of Excellence',
+    titleEnd: '',
+    subtitle: 'Discover premium-quality cashews that are carefully selected, naturally delicious, and packed to preserve freshness and crunch in every bite.',
+    btn1Text: 'Shop Now →',
+    btn1Path: '/home/shop',
+    btn2Text: 'Explore Collection',
+    btn2Path: '/home/shop',
   },
   {
-    image: '/assets/pexels-nandamends-30878379.jpg',
-    tag: 'No Preservatives',
-    title: 'Clean &',
-    titleHighlight: 'Natural',
-    titleEnd: 'Cashews',
-    subtitle: 'No chemicals, no artificial colour. Just cashews — cleaned, graded and packed fresh.',
-  },
-  {
-    image: '/assets/pexels-cottonbro-9811624.jpg',
-    tag: 'Airtight Packed',
-    title: 'Stays Fresh',
-    titleHighlight: 'Longer',
-    titleEnd: 'Every Time',
-    subtitle: 'We pack tightly to keep cashews fresh. Orders above ₹499 get free delivery.',
-  },
-  {
-    image: '/assets/pexels-shuvalova-natalia-415991090-18876240.jpg',
-    tag: 'Roasted & Flavoured',
+    image: '/assets/slide2.png',
+    tag: 'ROASTED & FLAVOURED',
     title: 'Masala, Pepper',
-    titleHighlight: '& More',
-    titleEnd: 'Varieties',
-    subtitle: 'Salted, masala, pepper cashews — made with simple spices, no artificial taste.',
+    titleHighlight: '& More Varieties',
+    titleEnd: '',
+    subtitle: 'From classic salted to spicy masala and bold pepper, enjoy a range of irresistible flavours crafted for every taste.',
+    btn1Text: 'Shop Now →',
+    btn1Path: '/home/shop',
+    btn2Text: 'View Flavours',
+    btn2Path: '/home/shop',
+  },
+  {
+    image: '/assets/slide3.png',
+    tag: 'QUALITY YOU CAN TRUST',
+    title: 'Quality in Every',
+    titleHighlight: 'Handpicked Batch',
+    titleEnd: '',
+    subtitle: 'We carefully select every batch, maintain high hygiene standards, and pack every order with care so you receive the finest cashews every time.',
+    btn1Text: 'Our Process',
+    btn1Path: '/home/processing',
+    btn2Text: 'Learn More',
+    btn2Path: '/home/processing',
+  },
+  {
+    image: '/assets/slide4.png',
+    tag: 'HEALTHY SNACKING',
+    title: 'Healthy Bites,',
+    titleHighlight: 'Happy Moments',
+    titleEnd: '',
+    subtitle: 'Rich in protein, healthy fats, vitamins, and minerals, our premium cashews are the perfect snack for work, travel, fitness, and family time.',
+    btn1Text: 'Shop Now →',
+    btn1Path: '/home/shop',
+    btn2Text: 'Know Benefits',
+    btn2Path: '/home/shop',
   },
 ];
 
@@ -86,10 +87,22 @@ const WHY_US = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [products, setProducts] = useState([]);
+
+  // Debug: log slide images on mount
+  useEffect(() => {
+    console.log('[HomePage] SLIDES images:', SLIDES.map(s => s.image));
+    
+    // Preload slide images and log errors
+    SLIDES.forEach((slide, idx) => {
+      const img = new Image();
+      img.onload = () => console.log(`[HomePage] ✓ Slide ${idx + 1} loaded:`, slide.image);
+      img.onerror = () => console.error(`[HomePage] ✗ Slide ${idx + 1} FAILED:`, slide.image);
+      img.src = slide.image;
+    });
+  }, []);
 
   useEffect(() => {
     api.get('/api/products', { params: { limit: 8 } })
@@ -128,7 +141,9 @@ export default function HomePage() {
             backgroundSize: 'cover', backgroundPosition: 'center',
             opacity: i === current ? (animating ? 0 : 1) : 0,
             transition: 'opacity 0.65s ease', zIndex: 0,
-          }} />
+          }} 
+          onError={(e) => console.error('[HomePage] Background image error for slide', i, s.image)}
+          />
         ))}
 
         {/* Dark overlay */}
@@ -184,43 +199,29 @@ export default function HomePage() {
 
             {/* Buttons */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={() => navigate('/home/shop')} style={{
+              <button onClick={() => navigate(slide.btn1Path)} style={{
                 background: 'linear-gradient(135deg,#C9972B,#F5C842)',
                 color: '#1a0a00', border: 'none', borderRadius: 30,
                 padding: '14px 28px', fontSize: 14, fontWeight: 800,
                 cursor: 'pointer', boxShadow: '0 8px 24px rgba(201,151,43,0.4)',
                 whiteSpace: 'nowrap',
               }}>
-                Shop Now →
+                {slide.btn1Text}
               </button>
-              <button onClick={() => navigate('/home/processing')} style={{
+              <button onClick={() => navigate(slide.btn2Path)} style={{
                 background: 'rgba(255,255,255,0.1)', color: '#fff',
                 border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 30,
                 padding: '13px 24px', fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', backdropFilter: 'blur(4px)',
                 whiteSpace: 'nowrap',
               }}>
-                Our Process
+                {slide.btn2Text}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Dots */}
-        <div style={{
-          position: 'absolute', bottom: 32, left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex', gap: 10, zIndex: 3,
-        }}>
-          {SLIDES.map((_, i) => (
-            <button key={i} onClick={() => goTo(i)} style={{
-              width: i === current ? 28 : 10, height: 10,
-              borderRadius: 5, border: 'none', padding: 0, cursor: 'pointer',
-              background: i === current ? '#F5C842' : 'rgba(255,255,255,0.35)',
-              transition: 'all 0.3s ease',
-            }} />
-          ))}
-        </div>
+       
 
         {/* Arrows */}
         {[
@@ -241,12 +242,7 @@ export default function HomePage() {
         ))}
 
         {/* Counter */}
-        <div style={{
-          position: 'absolute', bottom: 36, right: 48, zIndex: 3,
-          color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 700, letterSpacing: 1,
-        }}>
-          {String(current + 1).padStart(2, '0')} / {String(SLIDES.length).padStart(2, '0')}
-        </div>
+        
       </section>
 
       {/* ══════════════════════════════════════
@@ -284,6 +280,11 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════
+          PROMOTIONAL BANNERS — from DB (active only)
+         ══════════════════════════════════════ */}
+      <BannerSlider />
+
+      {/* ══════════════════════════════════════
           PRODUCTS PREVIEW — from DB
          ══════════════════════════════════════ */}
       <section style={{ padding: '80px 0', background: '#fff' }}>
@@ -300,85 +301,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Products from DB — same visual as ShopPage */}
+          {/* Products from DB — shared ProductCard component (same as ShopPage) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20, marginBottom: 40 }}>
-            {products.slice(0, 8).map(product => {
-              const visual = getVisual(product.name);
-              const outOfStock = Number(product.stock_quantity) <= 0;
-              return (
-                <div key={product.id}
-                  style={{
-                    borderRadius: 20, overflow: 'hidden', cursor: 'pointer',
-                    border: '1px solid #F0F0F0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-                    transition: 'all 0.25s', background: '#fff',
-                    display: 'flex', flexDirection: 'column',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 16px 36px rgba(0,0,0,0.12)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.05)'; }}
-                >
-                  {/* Same visual as ShopPage */}
-                  <div style={{ position: 'relative', height: 180 }}>
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{
-                        width: '100%', height: '100%', background: visual.bg,
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', gap: 6,
-                      }}>
-                        <span style={{ fontSize: 52, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }}>{visual.emoji}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
-                          textTransform: 'uppercase', letterSpacing: 1.5,
-                          background: 'rgba(0,0,0,0.2)', padding: '2px 10px', borderRadius: 20 }}>
-                          {visual.tag}
-                        </span>
-                      </div>
-                    )}
-                    {outOfStock && (
-                      <div style={{ position: 'absolute', top: 10, right: 10,
-                        background: 'rgba(0,0,0,0.55)', color: '#fff',
-                        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>
-                        Out of Stock
-                      </div>
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div style={{ padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {product.category_name && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#C9972B',
-                        textTransform: 'uppercase', letterSpacing: 1.2 }}>{product.category_name}</span>
-                    )}
-                    <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 14,
-                      fontWeight: 700, color: '#1A1A1A', lineHeight: 1.35, margin: '2px 0 0',
-                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {product.name}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4,
-                      marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #F5F5F5' }}>
-                      <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 18,
-                        fontWeight: 700, color: '#1A1A1A' }}>₹{Number(product.price).toFixed(0)}</span>
-                      <span style={{ fontSize: 11, color: '#9CA3AF' }}>/ {product.unit || 'kg'}</span>
-                    </div>
-                  </div>
-                  {/* Add to cart */}
-                  <div style={{ padding: '0 16px 16px' }}>
-                    <button
-                      onClick={e => { e.stopPropagation(); if (!outOfStock) { addToCart(product); navigate('/home/shop'); } }}
-                      disabled={outOfStock}
-                      style={{
-                        width: '100%', padding: '10px', borderRadius: 10, border: 'none',
-                        background: outOfStock ? '#E5E5E5' : '#1A1A1A',
-                        color: outOfStock ? '#9CA3AF' : '#fff',
-                        fontSize: 13, fontWeight: 700,
-                        cursor: outOfStock ? 'not-allowed' : 'pointer',
-                      }}>
-                      {outOfStock ? '✗ Out of Stock' : '🛒 Add to Cart'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {products.slice(0, 8).map(product => (
+              <ProductCard key={product.id} product={product} onView={null} />
+            ))}
           </div>
 
           <div style={{ textAlign: 'center' }}>

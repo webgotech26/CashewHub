@@ -118,22 +118,27 @@
 /* Product image */
 .inv-card__img-wrap {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  background: #F3F4F6;       /* light grey per brief */
+  height: 200px;
+  background: #f8f8f8;
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .inv-card__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: transform 0.35s ease;
 }
 
-.inv-card:hover .inv-card__img { transform: scale(1.05); }
+.inv-card:hover .inv-card__img { transform: scale(1.03); }
 
 /* SVG cashew icon placeholder */
 .inv-card__placeholder {

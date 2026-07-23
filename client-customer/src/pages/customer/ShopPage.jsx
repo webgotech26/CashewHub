@@ -7,8 +7,14 @@ import ProductCard from '../../Components/ProductCard';
 /* ── Quick View Modal ─────────────────────────────────────────── */
 function QuickView({ product, onClose }) {
   const { addToCart } = useCart();
-  const visual = getProductVisual(product.name);
+  const visual = getProductVisual(product?.name ?? '', product?.category_name ?? '');
   const [added, setAdded] = useState(false);
+
+  if (!product) return null;
+
+  const imgSrc = product.image_url || visual.localImage || null;
+  const price  = Number(product.price ?? 0);
+  const stock  = Number(product.stock_quantity ?? 0);
 
   const handleAdd = () => {
     addToCart(product);
@@ -28,11 +34,11 @@ function QuickView({ product, onClose }) {
         maxHeight:'88vh', display:'flex', flexDirection:'column',
       }}>
         {/* Image */}
-        <div style={{ height:260, background: product.image_url ? '#FAFAFA' : visual.bg,
+        <div style={{ height:260, background: imgSrc ? '#FAFAFA' : visual.bg,
           display:'flex', alignItems:'center', justifyContent:'center',
           position:'relative', flexShrink:0 }}>
-          {product.image_url
-            ? <img src={product.image_url} alt={product.name} style={{ height:'100%', width:'100%', objectFit:'contain', padding:20 }} />
+          {imgSrc
+            ? <img src={imgSrc} alt={product.name ?? 'Product'} style={{ height:'100%', width:'100%', objectFit:'contain', padding:20 }} />
             : <span style={{ fontSize:90, filter:'drop-shadow(0 8px 20px rgba(0,0,0,0.3))' }}>{visual.emoji}</span>
           }
           <button onClick={onClose} style={{
@@ -49,7 +55,7 @@ function QuickView({ product, onClose }) {
               textTransform:'uppercase', letterSpacing:1.5 }}>{product.category_name}</span>
           )}
           <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:24,
-            fontWeight:800, color:'#1A1A1A', margin:'8px 0 12px' }}>{product.name}</h2>
+            fontWeight:800, color:'#1A1A1A', margin:'8px 0 12px' }}>{product.name ?? 'Product'}</h2>
           {product.description && (
             <p style={{ fontSize:14, color:'#6B6B6B', lineHeight:1.8, marginBottom:18 }}>{product.description}</p>
           )}
@@ -58,27 +64,27 @@ function QuickView({ product, onClose }) {
             background:'#FAFAFA', borderRadius:12, padding:'14px 18px', marginBottom:20 }}>
             <div>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:28,
-                fontWeight:800, color:'#1A1A1A' }}>₹{Number(product.price).toFixed(0)}</div>
+                fontWeight:800, color:'#1A1A1A' }}>₹{price.toFixed(0)}</div>
               <div style={{ fontSize:11, color:'#9CA3AF' }}>per {product.unit || 'kg'}</div>
             </div>
             <div style={{ textAlign:'right' }}>
               <div style={{ fontSize:13, fontWeight:700,
-                color: Number(product.stock_quantity) > 0 ? '#16a34a' : '#DC2626' }}>
-                {Number(product.stock_quantity) > 0 ? '✓ In Stock' : '✗ Out of Stock'}
+                color: stock > 0 ? '#16a34a' : '#DC2626' }}>
+                {stock > 0 ? '✓ In Stock' : '✗ Out of Stock'}
               </div>
-              {Number(product.stock_quantity) > 0 && (
+              {stock > 0 && (
                 <div style={{ fontSize:11, color:'#9CA3AF' }}>{product.stock_quantity} {product.unit || 'kg'} available</div>
               )}
             </div>
           </div>
 
-          <button onClick={handleAdd} disabled={Number(product.stock_quantity) <= 0} style={{
+          <button onClick={handleAdd} disabled={stock <= 0} style={{
             width:'100%', padding:15, background: added ? '#16a34a' : '#1A1A1A',
             color:'#fff', border:'none', borderRadius:12, fontSize:15,
-            fontWeight:700, cursor: Number(product.stock_quantity) <= 0 ? 'not-allowed' : 'pointer',
+            fontWeight:700, cursor: stock <= 0 ? 'not-allowed' : 'pointer',
             transition:'background 0.2s',
           }}>
-            {Number(product.stock_quantity) <= 0 ? 'Out of Stock' : added ? '✓ Added to Cart!' : '🛒 Add to Cart'}
+            {stock <= 0 ? 'Out of Stock' : added ? '✓ Added to Cart!' : '🛒 Add to Cart'}
           </button>
         </div>
       </div>
@@ -116,17 +122,18 @@ export default function ShopPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const filtered = products
+  const filtered = (Array.isArray(products) ? products : [])
     .filter(p => {
-      const ms = p.name.toLowerCase().includes(search.toLowerCase());
+      if (!p) return false;
+      const ms = (p.name ?? '').toLowerCase().includes(search.toLowerCase());
       const mc = activeCategory === 'all' || String(p.category_id) === String(activeCategory);
       return ms && mc;
     })
     .sort((a, b) => {
-      if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
-      if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
-      if (sortBy === 'name-asc')   return a.name.localeCompare(b.name);
-      if (sortBy === 'stock')      return Number(b.stock_quantity) - Number(a.stock_quantity);
+      if (sortBy === 'price-asc')  return Number(a.price ?? 0) - Number(b.price ?? 0);
+      if (sortBy === 'price-desc') return Number(b.price ?? 0) - Number(a.price ?? 0);
+      if (sortBy === 'name-asc')   return (a.name ?? '').localeCompare(b.name ?? '');
+      if (sortBy === 'stock')      return Number(b.stock_quantity ?? 0) - Number(a.stock_quantity ?? 0);
       return 0;
     });
 

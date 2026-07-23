@@ -1,0 +1,63 @@
+/* ============================================================
+   BannerSlider.css — supplements Swiper's built-in CSS
+   ============================================================ */
+
+/* ── Outer wrapper ───────────────────────────────────────────── */
+.banner-slider {
+  width: 100%;
+  overflow: hidden;
+  background: #1a0a00;
+}
+
+/* ── Text placeholder when no image ─────────────────────────── */
+.banner-slide__placeholder {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a0a00, #3d1a00);
+  color: #F5C842;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(18px, 4vw, 36px);
+  font-weight: 800;
+  text-align: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* ── Caption overlay (title over image) ─────────────────────── */
+.banner-slide__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: clamp(12px, 2vw, 20px) clamp(16px, 4vw, 40px);
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
+  color: #ffffff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: clamp(13px, 2vw, 17px);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+}
+
+/* ── Swiper pagination dots — brand colours ─────────────────── */
+.banner-slider .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.4);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.banner-slider .swiper-pagination-bullet-active {
+  width: 28px;
+  border-radius: 5px;
+  background: #F5C842;
+}
+
+/* ── Mobile: keep height sensible ───────────────────────────── */
+@media (max-width: 480px) {
+  .banner-slide__placeholder { height: 220px; }
+}

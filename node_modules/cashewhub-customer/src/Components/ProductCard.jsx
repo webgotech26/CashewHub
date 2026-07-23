@@ -25,19 +25,24 @@ export default function ProductCard({ product, onView }) {
   const { showToast }            = useToast();
   const [added, setAdded]        = useState(false);
 
-  /* Wishlist — initialised from localStorage, toggled locally */
-  const [wishlisted, setWishlisted] = useState(() => isWishlisted(product.id));
+  /* Wishlist — guard against undefined product.id */
+  const [wishlisted, setWishlisted] = useState(
+    () => product?.id != null ? isWishlisted(product.id) : false
+  );
 
-  const visual     = getProductVisual(product.name);
+  /* Guard — don't render if product data is missing */
+  if (!product) return null;
+
+  const visual     = getProductVisual(product?.name ?? '', product?.category_name ?? '');
   const inCart     = cartItems.find(i => i.id === product.id);
-  const outOfStock = Number(product.stock_quantity) <= 0;
-  const lowStock   = !outOfStock && Number(product.stock_quantity) <= 10;
+  const outOfStock = Number(product?.stock_quantity ?? 0) <= 0;
+  const lowStock   = !outOfStock && Number(product?.stock_quantity ?? 0) <= 10;
 
   const handleAdd = (e) => {
     e.stopPropagation();
     if (outOfStock) return;
     addToCart(product);
-    showToast(`"${product.name}" added to cart 🛒`, 'success');
+    showToast(`"${product?.name ?? 'Item'}" added to cart 🛒`, 'success');
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -89,8 +94,31 @@ export default function ProductCard({ product, onView }) {
           style={{ cursor: 'pointer' }}
         >
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="pc-img" />
+            /* ── DB image — highest priority ── */
+            <img
+              src={product.image_url}
+              alt={product.name ?? 'Product'}
+              className="pc-img"
+              onError={e => {
+                // If DB URL is broken, fall back to local asset
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = visual.localImage;
+              }}
+            />
+          ) : visual.localImage ? (
+            /* ── Local /public/assets/ image — second priority ── */
+            <img
+              src={visual.localImage}
+              alt={product.name ?? 'Product'}
+              className="pc-img"
+              onError={e => {
+                // If local asset is also missing, show gradient tile
+                e.currentTarget.onerror = null;
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           ) : (
+            /* ── Gradient tile fallback — last resort ── */
             <div className="pc-img-fallback" style={{ background: visual.bg }}>
               <span className="pc-img-fallback__emoji">{visual.emoji}</span>
               <span className="pc-img-fallback__tag">{visual.tag}</span>

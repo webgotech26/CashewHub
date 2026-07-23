@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../../services/api';
+import { getProductVisual } from '../../utils/productVisual';
 import '../../styles/pages/inventory.css';
 
 /* ════════════════════════════════════════════════════════════════
@@ -151,6 +152,10 @@ function StockControl({ productId, initialQty, onSaved }) {
 function InventoryCard({ product, onStockSaved }) {
   const displayPrice = Number(product.price);
   const stock        = Number(product.stock_quantity);
+  const visual       = getProductVisual(product.name ?? '', product.category_name ?? '');
+
+  /* Priority: local asset (name-based) → DB image_url → gradient placeholder */
+  const imgSrc = visual.localImage || product.image_url || null;
 
   const stockBadge = () => {
     if (stock <= 0)  return { cls: 'inv-card__stock-badge--out',  label: 'Out of Stock' };
@@ -165,29 +170,32 @@ function InventoryCard({ product, onStockSaved }) {
     <article className="inv-card" aria-label={`Product: ${product.name}`}>
       {/* Image */}
       <div className="inv-card__img-wrap">
-        {product.image_url ? (
+        {imgSrc ? (
           <img
-            src={product.image_url}
-            alt={product.name}
+            src={imgSrc}
+            alt={product.name ?? 'Product'}
             className="inv-card__img"
             loading="lazy"
             onError={e => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
+              console.warn('[InventoryCard] Image failed to load:', e.currentTarget.src);
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling.style.display = 'flex';
             }}
           />
         ) : null}
-        {/* Fallback placeholder — shown if image_url missing or broken */}
+
+        {/* Gradient + emoji placeholder — visible when no image loads */}
         <div
           className="inv-card__placeholder"
           role="img"
-          aria-label="No image available"
-          style={{ display: product.image_url ? 'none' : 'flex' }}
+          aria-label={visual.tag}
+          style={{
+            display: imgSrc ? 'none' : 'flex',
+            background: visual.bg,
+          }}
         >
-          <CashewIcon size={64} />
+          <span style={{ fontSize: 40 }}>{visual.emoji}</span>
         </div>
-
-        {/* Discount badge removed — offer_price column dropped from DB */}
 
         {/* Stock badge */}
         <span className={`inv-card__stock-badge ${cls}`}>{label}</span>

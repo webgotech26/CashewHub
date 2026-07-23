@@ -19,31 +19,98 @@ const getPurchases = async (req, res) => {
 const createPurchase = async (req, res) => {
   const connection = await pool.getConnection();
   try {
-    const { supplier_id, product_id, quantity, unit_cost, batch_number, expiry_date, notes } = req.body;
-    if (!product_id || !quantity || !unit_cost)
-      return res.status(400).json({ success: false, message: 'product_id, quantity, and unit_cost are required.' });
+    /*
+     * Accept both 'qty' and 'quantity' from the request body so the
+     * frontend can send either field name without breaking validation.
+     * Schema column: purchases.quantity  (DECIMAL 10,2)
+     */
+    const {
+      supplier_id,
+      product_id,
+      qty,
+      quantity,
+      unit_cost,
+      batch_number,
+      expiry_date,
+      notes,
+      status,
+    } = req.body;
 
-    const total_cost = parseFloat(quantity) * parseFloat(unit_cost);
+    const purchaseQty = qty || quantity;  // accept either field name
 
+    /* ── Validation ───────────────────────────────────────────── */
+    if (!product_id || !purchaseQty || !unit_cost) {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: 'product_id, qty (or quantity), and unit_cost are required.',
+      });
+    }
+
+    const qtyNum      = parseFloat(purchaseQty);
+    const unitCostNum = parseFloat(unit_cost);
+
+    if (isNaN(qtyNum) || qtyNum <= 0) {
+      connection.release();
+      return res.status(400).json({ success: false, message: 'qty must be a positive number.' });
+    }
+    if (isNaN(unitCostNum) || unitCostNum <= 0) {
+      connection.release();
+      return res.status(400).json({ success: false, message: 'unit_cost must be a positive number.' });
+    }
+
+    const validStatuses = ['ordered', 'received', 'partial', 'returned'];
+    const purchaseStatus = validStatuses.includes(status) ? status : 'received';
+    const total_cost = parseFloat((qtyNum * unitCostNum).toFixed(2));
+
+    /* ── BEGIN TRANSACTION ────────────────────────────────────── */
     await connection.beginTransaction();
 
+    /* Step 1: Insert into purchases */
     const [result] = await connection.query(
-      `INSERT INTO purchases (supplier_id, product_id, quantity, unit_cost, total_cost, batch_number, expiry_date, notes, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'received')`,
-      [supplier_id || null, product_id, quantity, unit_cost, total_cost,
-       batch_number || null, expiry_date || null, notes || null]
+      `INSERT INTO purchases
+         (supplier_id, product_id, quantity, unit_cost, total_cost, batch_number, expiry_date, notes, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        supplier_id   || null,
+        product_id,
+        qtyNum,
+        unitCostNum,
+        total_cost,
+        batch_number  || null,
+        expiry_date   || null,
+        notes         || null,
+        purchaseStatus,
+      ]
     );
 
-    // Auto-increase stock on purchase
-    await connection.query(
-      'UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?',
-      [quantity, product_id]
-    );
+    /* Step 2: Auto-increment product stock when status is 'received' */
+    if (purchaseStatus === 'received') {
+      await connection.query(
+        'UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?',
+        [qtyNum, product_id]
+      );
+    }
 
+    /* ── COMMIT ───────────────────────────────────────────────── */
     await connection.commit();
     connection.release();
 
-    return res.status(201).json({ success: true, message: 'Purchase recorded. Stock updated.', data: { id: result.insertId } });
+    return res.status(201).json({
+      success: true,
+      message: purchaseStatus === 'received'
+        ? 'Purchase recorded successfully. Stock updated.'
+        : 'Purchase recorded successfully.',
+      data: {
+        id:           result.insertId,
+        product_id,
+        quantity:     qtyNum,
+        unit_cost:    unitCostNum,
+        total_cost,
+        status:       purchaseStatus,
+      },
+    });
+
   } catch (err) {
     await connection.rollback();
     connection.release();

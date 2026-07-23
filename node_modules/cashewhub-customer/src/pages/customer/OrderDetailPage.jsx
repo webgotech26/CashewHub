@@ -186,7 +186,15 @@ export default function OrderDetailPage() {
                       display:'flex', alignItems:'center', justifyContent:'center',
                       fontSize:28, cursor:'pointer', overflow:'hidden' }}
                       onClick={() => navigate(`/home/product/${item.product_id}`)}>
-                      🌰
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.product_name}
+                          style={{ width:'100%', height:'100%', objectFit:'contain', padding:8 }}
+                        />
+                      ) : (
+                        <span aria-hidden="true">🌰</span>
+                      )}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <p style={{ fontWeight:700, fontSize:14, color:'#1A1A1A', cursor:'pointer',

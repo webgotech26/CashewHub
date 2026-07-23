@@ -312,6 +312,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* ── Reviews section ──────────────────────────────── */}
+        <ReviewSection productId={product.id} />
+
         {/* Related products */}
         {related.length > 0 && (
           <div style={{ marginTop:64 }}>
