@@ -4,11 +4,6 @@ const pool = require('../config/db');
  * GET /api/products
  * Public — returns paginated product list with optional search filter.
  * Joins categories table so category_name is included in each row.
- *
- * Query params:
- *   search  (string)  — partial match on product name
- *   page    (number)  — default 1
- *   limit   (number)  — default 20
  */
 const getProducts = async (req, res) => {
   try {
@@ -94,7 +89,7 @@ const getProductById = async (req, res) => {
          p.price,
          p.stock_quantity,
          p.is_active,
-         image_url,
+         p.image_url,
          c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
@@ -115,11 +110,11 @@ const getProductById = async (req, res) => {
 
 /**
  * POST /api/products/add  (also accepts POST /api/products)
- * Creates a new product. Admin-only in production (protect middleware applied in router).
+ * Creates a new product. Admin-only in production.
  */
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, stock_quantity, category_id } = req.body;
+    const { name, description, price, stock_quantity, category_id, image_url } = req.body;
 
     if (!name || price === undefined || stock_quantity === undefined) {
       return res.status(400).json({
@@ -129,21 +124,22 @@ const createProduct = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO products (category_id, name, description, price, stock_quantity)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         category_id   || null,
         name,
         description   || null,
         price,
         stock_quantity,
+        image_url     || null,
       ]
     );
 
     return res.status(201).json({
       success: true,
       message: 'Product created successfully.',
-      data: { id: result.insertId, name, price, stock_quantity },
+      data: { id: result.insertId, name, price, stock_quantity, image_url },
     });
   } catch (error) {
     console.error('createProduct error:', error.message);
@@ -158,12 +154,12 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock_quantity, category_id } = req.body;
+    const { name, description, price, stock_quantity, category_id, image_url } = req.body;
 
     const [result] = await pool.query(
       `UPDATE products
        SET category_id = ?, name = ?, description = ?,
-           price = ?, stock_quantity = ?
+           price = ?, stock_quantity = ?, image_url = ?
        WHERE id = ?`,
       [
         category_id   || null,
@@ -171,6 +167,7 @@ const updateProduct = async (req, res) => {
         description   || null,
         price,
         stock_quantity,
+        image_url     || null,
         id,
       ]
     );
