@@ -150,18 +150,35 @@ const createOrder = async (req, res) => {
     );
 
     // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-    // Actual columns: order_id | product_id | quantity | price
-    const orderItemRows = validatedItems.map(item => [
-      orderId,
-      item.product_id,
-      item.quantity,
-      item.unit_price,   // → price column
-    ]);
-
-    await connection.query(
-      'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
-      [orderItemRows]
+    // Detect actual schema: Railway has (unit_price, line_total),
+    // local cashew_system has just (price).  Check once and adapt.
+   // ── STEP 4: Bulk INSERT into order_items ───────────────────────
+    const [oiCols] = await connection.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME   = 'order_items'
+         AND COLUMN_NAME  IN ('price', 'unit_price', 'line_total')`
     );
+    const oiColSet    = new Set(oiCols.map(r => r.COLUMN_NAME));
+    const hasUnitPrice = oiColSet.has('unit_price');
+    const hasLineTotal = oiColSet.has('line_total');
+
+    if (hasUnitPrice && hasLineTotal) {
+      for (const item of validatedItems) {
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
+        );
+      }
+    } else {
+      for (const item of validatedItems) {
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price]
+        );
+      }
+    }
 
     // ── STEP 5: Deduct stock ───────────────────────────────────────
     for (const item of validatedItems) {
@@ -261,21 +278,24 @@ const getOrders = async (req, res) => {
     const offset = (page - 1) * limit;
 
     /*
-     * Check which optional columns exist in the orders table.
-     * 'address' and 'notes' were added in a later migration — older
-     * databases may not have them yet.  We select them only when present
-     * so the query never throws "Unknown column" errors.
+     * Check which optional columns exist.
+     * 'address' / 'notes' on orders, 'image_url' on products —
+     * all may be absent on older DB schemas.
      */
     const [colRows] = await pool.query(
-      `SELECT COLUMN_NAME
+      `SELECT TABLE_NAME, COLUMN_NAME
        FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME   = 'orders'
-         AND COLUMN_NAME  IN ('address', 'notes')`
+         AND (
+               (TABLE_NAME = 'orders'   AND COLUMN_NAME IN ('address', 'notes'))
+            OR (TABLE_NAME = 'products' AND COLUMN_NAME = 'image_url')
+         )`
     );
-    const existingCols = new Set(colRows.map(r => r.COLUMN_NAME));
-    const hasAddress   = existingCols.has('address');
-    const hasNotes     = existingCols.has('notes');
+
+    const existingCols  = new Set(colRows.map(r => `${r.TABLE_NAME}.${r.COLUMN_NAME}`));
+    const hasAddress    = existingCols.has('orders.address');
+    const hasNotes      = existingCols.has('orders.notes');
+    const hasImageUrl   = existingCols.has('products.image_url');
 
     // Build optional SELECT fragments
     const addressSelect = hasAddress ? ',\n        o.address' : '';
@@ -284,6 +304,21 @@ const getOrders = async (req, res) => {
     // GROUP BY must list every non-aggregated SELECT column
     const addressGroup  = hasAddress ? ', o.address' : '';
     const notesGroup    = hasNotes   ? ', o.notes'   : '';
+
+    // Only include the image_url subquery if the column actually exists
+    const imageSelect = hasImageUrl
+      ? `,
+        (
+          SELECT p2.image_url
+          FROM order_items oi2
+          JOIN products p2 ON p2.id = oi2.product_id
+          WHERE oi2.order_id = o.id
+            AND p2.image_url IS NOT NULL
+            AND p2.image_url != ''
+          ORDER BY oi2.id ASC
+          LIMIT 1
+        ) AS image_url`
+      : `, NULL AS image_url`;
 
     let query = `
       SELECT
@@ -297,18 +332,7 @@ const getOrders = async (req, res) => {
         COALESCE(
           NULLIF(GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR ', '), ''),
           'No items'
-        ) AS product_names,
-
-        (
-          SELECT p2.image_url
-          FROM order_items oi2
-          JOIN products p2 ON p2.id = oi2.product_id
-          WHERE oi2.order_id = o.id
-            AND p2.image_url IS NOT NULL
-            AND p2.image_url != ''
-          ORDER BY oi2.id ASC
-          LIMIT 1
-        ) AS image_url,
+        ) AS product_names${imageSelect},
 
         COALESCE(NULLIF(SUM(oi.quantity), 0), 0) AS total_qty
 
@@ -406,16 +430,36 @@ const getOrderById = async (req, res) => {
     const order = orderRows[0];
 
     // ── Fetch order items ────────────────────────────────────────
-    // Real order_items columns: id, order_id, product_id, quantity, price
-    // Alias oi.price → unit_price; calculate line_total inline.
+    // Detect schema: Railway uses unit_price + line_total; local uses price.
+    const [itmCols] = await pool.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME   = 'order_items'
+         AND COLUMN_NAME  IN ('price', 'unit_price', 'line_total')`
+    );
+    const itmColSet = new Set(itmCols.map(r => r.COLUMN_NAME));
+
+    const priceExpr    = itmColSet.has('unit_price') ? 'oi.unit_price' : 'oi.price';
+    const totalExpr    = itmColSet.has('line_total')
+      ? 'oi.line_total'
+      : `(oi.quantity * ${priceExpr})`;
+
+    // image_url may not exist on Railway products table
+    const [imgCols] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'image_url'`
+    );
+    const imgExpr = imgCols.length > 0 ? 'p.image_url AS image_url' : 'NULL AS image_url';
+
     const [itemRows] = await pool.query(
       `SELECT
          oi.product_id,
-         p.name                   AS product_name,
-         p.image_url              AS image_url,
+         p.name              AS product_name,
+         ${imgExpr},
          oi.quantity,
-         oi.price                 AS unit_price,
-         (oi.quantity * oi.price) AS line_total
+         ${priceExpr}        AS unit_price,
+         ${totalExpr}        AS line_total
        FROM order_items oi
        JOIN products p ON p.id = oi.product_id
        WHERE oi.order_id = ?
