@@ -8,8 +8,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import OrderCard from '../../components/orders/OrderCard';
-import { GOLD, DARK, MUTED, FONT } from '../../components/orders/tokens';
+import OrderCard from '../../Components/orders/OrderCard';
+import { GOLD, DARK, MUTED, FONT } from '../../Components/orders/tokens';
 import '../../styles/pages/account-layout.css';
 import '../../styles/pages/account-no-sidebar.css';
 
