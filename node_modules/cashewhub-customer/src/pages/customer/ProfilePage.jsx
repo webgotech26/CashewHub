@@ -13,7 +13,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import StatusBadge from '../../components/orders/StatusBadge';
+import StatusBadge from '../../Components/orders/StatusBadge';
 import '../../styles/pages/account-layout.css';
 import '../../styles/pages/account-no-sidebar.css';
 
