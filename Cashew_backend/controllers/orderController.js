@@ -150,34 +150,35 @@ const createOrder = async (req, res) => {
     );
 
     // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-    // Detect actual schema: Railway has (unit_price, line_total),
-    // local cashew_system has just (price).  Check once and adapt.
-   // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-    const [oiCols] = await connection.query(
-      `SELECT COLUMN_NAME
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME   = 'order_items'
-         AND COLUMN_NAME  IN ('price', 'unit_price', 'line_total')`
-    );
-    const oiColSet    = new Set(oiCols.map(r => r.COLUMN_NAME));
-    const hasUnitPrice = oiColSet.has('unit_price');
-    const hasLineTotal = oiColSet.has('line_total');
-
-    if (hasUnitPrice && hasLineTotal) {
-      for (const item of validatedItems) {
-        await connection.query(
-          'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
-          [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
-        );
-      }
-    } else {
-      for (const item of validatedItems) {
-        await connection.query(
-          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-          [orderId, item.product_id, item.quantity, item.unit_price]
-        );
-      }
+    // Try the modern schema first (unit_price + line_total).
+    // If the DB still uses the old schema (price only), fall back automatically.
+    try {
+      const orderItemRows = validatedItems.map(item => [
+        orderId,
+        item.product_id,
+        item.quantity,
+        item.unit_price,
+        item.line_total,
+      ]);
+      await connection.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES ?',
+        [orderItemRows]
+      );
+      console.log(`[Order] Inserted ${validatedItems.length} item(s) using unit_price/line_total schema.`);
+    } catch (schemaErr) {
+      // Older schema only has a single "price" column — fall back gracefully
+      console.warn('[Order] unit_price/line_total insert failed, falling back to price schema:', schemaErr.message);
+      const orderItemRows = validatedItems.map(item => [
+        orderId,
+        item.product_id,
+        item.quantity,
+        item.unit_price,  // → stored in the "price" column
+      ]);
+      await connection.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
+        [orderItemRows]
+      );
+      console.log(`[Order] Inserted ${validatedItems.length} item(s) using legacy price schema.`);
     }
 
     // ── STEP 5: Deduct stock ───────────────────────────────────────
