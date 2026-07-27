@@ -101,10 +101,54 @@ const createOrder = async (req, res) => {
     }
 
     // ── STEP 2: INSERT main order ─────────────────────────────────
-   const [orderResult] = await connection.query(
-  'INSERT INTO orders (customer_id, total_amount, status, address, payment_method) VALUES (?, ?, ?, ?, ?)',
-  [customer_id, total_amount, 'pending', address, payment_method]
-);
+    // Detect which optional columns exist on the orders table so we
+    // never reference a column that isn't there (Railway vs local may differ).
+    const [ordColRows] = await connection.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME   = 'orders'
+         AND COLUMN_NAME  IN ('address','notes','payment_method','product_id','unit_price','quantity')`
+    );
+    const ordCols = new Set(ordColRows.map(r => r.COLUMN_NAME));
+
+    // Always-present columns
+    let ordFields = ['customer_id', 'total_amount', 'status'];
+    let ordValues = [customer_id, orderTotal, 'pending'];
+
+    // Optional modern columns
+    if (ordCols.has('address')) {
+      ordFields.push('address');
+      ordValues.push(address.trim());
+    }
+    if (ordCols.has('payment_method')) {
+      ordFields.push('payment_method');
+      ordValues.push(payment_method);
+    }
+    if (ordCols.has('notes')) {
+      ordFields.push('notes');
+      ordValues.push(`Payment: ${payment_method.toUpperCase()}`);
+    }
+    // Legacy schema: orders had product_id/quantity/unit_price directly on the row
+    // Populate with the first item so the NOT NULL constraint is satisfied
+    if (ordCols.has('product_id')) {
+      ordFields.push('product_id');
+      ordValues.push(validatedItems[0].product_id);
+    }
+    if (ordCols.has('quantity')) {
+      ordFields.push('quantity');
+      ordValues.push(validatedItems[0].quantity);
+    }
+    if (ordCols.has('unit_price')) {
+      ordFields.push('unit_price');
+      ordValues.push(validatedItems[0].unit_price);
+    }
+
+    const placeholders = ordFields.map(() => '?').join(', ');
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (${ordFields.join(', ')}) VALUES (${placeholders})`,
+      ordValues
+    );
 
     const orderId = orderResult.insertId;
 
