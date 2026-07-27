@@ -375,7 +375,7 @@ export default function Checkout() {
       setError('Please fill in all required address fields.');
       return;
     }
-
+console.log("Cart Items checking:", cartItems);
     setLoading(true);
 
     /* Simulate brief payment processing */
