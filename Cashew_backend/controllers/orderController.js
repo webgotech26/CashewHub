@@ -147,38 +147,22 @@ const createOrder = async (req, res) => {
       [orderId, 'pending']
     );
 
-    // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-    try {
-      const orderItemRows = validatedItems.map(item => [
-        orderId,
-        item.product_id,
-        item.quantity,
-        item.unit_price,
-        item.line_total,
-      ]);
-
-      await connection.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES ?',
-        [orderItemRows]
-      );
-
-      console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into order_items (modern schema).`);
-    } catch (schemaErr) {
-      console.warn('[Order] unit_price/line_total insert failed, falling back to price schema:', schemaErr.message);
-      
-      const orderItemRows = validatedItems.map(item => [
-        orderId,
-        item.product_id,
-        item.quantity,
-        item.unit_price,
-      ]);
-
-      await connection.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
-        [orderItemRows]
-      );
-      
-      console.log(`[Order] Inserted ${validatedItems.length} item(s) using legacy price schema.`);
+    // ── STEP 4: Insert order_items one by one (safe per-row fallback) ──
+    // Tries modern schema (unit_price + line_total) per item.
+    // Falls back to legacy (price) if the column doesn't exist.
+    for (const item of validatedItems) {
+      try {
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
+        );
+      } catch (innerErr) {
+        console.warn('[Order] unit_price insert failed, falling back to legacy price column:', innerErr.message);
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price]
+        );
+      }
     }
 
     // ── STEP 5: Deduct stock ───────────────────────────────────────
