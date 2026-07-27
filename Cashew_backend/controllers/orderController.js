@@ -101,7 +101,7 @@ const createOrder = async (req, res) => {
     }
 
     const [orderResult] = await connection.query(
-      'INSERT INTO orders (customer_id, total_amount, status, address, notes) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO orders (customer_id, total_amount, status, address, ) VALUES (?, ?, ?, ?, ?)',
       [customer_id, orderTotal, 'pending', address.trim(), `Payment: ${payment_method.toUpperCase()}`]
     );
 
