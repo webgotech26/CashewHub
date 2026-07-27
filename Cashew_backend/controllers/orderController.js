@@ -153,18 +153,20 @@ const createOrder = async (req, res) => {
     // Try the modern schema first (unit_price + line_total).
     // If the DB still uses the old schema (price only), fall back automatically.
     try {
-      const orderItemRows = validatedItems.map(item => [
-        orderId,
-        item.product_id,
-        item.quantity,
-        item.unit_price,
-        item.line_total,
-      ]);
-      await connection.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES ?',
-        [orderItemRows]
-      );
-      console.log(`[Order] Inserted ${validatedItems.length} item(s) using unit_price/line_total schema.`);
+     // ── STEP 4: Bulk INSERT into order_items ───────────────────────
+const orderItemRows = validatedItems.map(item => [
+  orderId,
+  item.product_id,
+  item.quantity,
+  item.price || item.unit_price, // price-ai mattum safe-ah edukka
+]);
+
+await connection.query(
+  'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
+  [orderItemRows]
+);
+
+console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into order_items.`);
     } catch (schemaErr) {
       // Older schema only has a single "price" column — fall back gracefully
       console.warn('[Order] unit_price/line_total insert failed, falling back to price schema:', schemaErr.message);
