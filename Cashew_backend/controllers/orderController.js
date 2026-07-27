@@ -100,25 +100,39 @@ const createOrder = async (req, res) => {
       });
     }
 
+    // ── STEP 2: INSERT main order ─────────────────────────────────
     const [orderResult] = await connection.query(
-  'INSERT INTO orders (customer_id, total_amount, status, address, payment_method) VALUES (?, ?, ?, ?, ?)',
-  [customer_id, orderTotal, 'pending', address.trim(), payment_method]
-);
+      'INSERT INTO orders (customer_id, total_amount, status, address, payment_method) VALUES (?, ?, ?, ?, ?)',
+      [customer_id, orderTotal, 'pending', address.trim(), payment_method]
+    );
 
     const orderId = orderResult.insertId;
 
+    // ── STEP 3: INSERT delivery record ────────────────────────────
     await connection.query(
       'INSERT INTO deliveries (order_id, status) VALUES (?, ?)',
       [orderId, 'pending']
     );
 
+    // ── STEP 4: INSERT order_items one by one ─────────────────────
+    // Tries modern schema (unit_price + line_total) per item first.
+    // Falls back to legacy (price) column if that fails.
     for (const item of validatedItems) {
-      await connection.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
-        [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
-      );
+      try {
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
+        );
+      } catch (innerErr) {
+        console.warn('[Order] unit_price insert failed, falling back to legacy price column:', innerErr.message);
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderId, item.product_id, item.quantity, item.unit_price]
+        );
+      }
     }
 
+    // ── STEP 5: Deduct stock ───────────────────────────────────────
     for (const item of validatedItems) {
       await connection.query(
         'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
