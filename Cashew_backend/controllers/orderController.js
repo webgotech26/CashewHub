@@ -118,7 +118,6 @@ const createOrder = async (req, res) => {
     }
 
     // ── STEP 2: INSERT into orders ─────────────────────────────────
-    // Check which optional columns exist before inserting into them.
     const [colCheck] = await connection.query(
       `SELECT COLUMN_NAME
        FROM INFORMATION_SCHEMA.COLUMNS
@@ -130,7 +129,7 @@ const createOrder = async (req, res) => {
     const hasAddress   = cols.has('address');
     const hasNotes     = cols.has('notes');
 
-    let insertSQL    = 'INSERT INTO orders (customer_id, total_amount, status';
+    let insertSQL      = 'INSERT INTO orders (customer_id, total_amount, status';
     let insertValues = [customer_id, orderTotal, 'pending'];
 
     if (hasAddress) { insertSQL += ', address'; insertValues.push(address.trim()); }
@@ -142,44 +141,43 @@ const createOrder = async (req, res) => {
 
     const orderId = orderResult.insertId;
 
-    // ── STEP 3: INSERT into deliveries (NO address column) ─────────
-    // deliveries table only tracks order_id + delivery status
+    // ── STEP 3: INSERT into deliveries ─────────────────────────────
     await connection.query(
       'INSERT INTO deliveries (order_id, status) VALUES (?, ?)',
       [orderId, 'pending']
     );
 
     // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-    // Try the modern schema first (unit_price + line_total).
-    // If the DB still uses the old schema (price only), fall back automatically.
     try {
-     // ── STEP 4: Bulk INSERT into order_items ───────────────────────
-const orderItemRows = validatedItems.map(item => [
-  orderId,
-  item.product_id,
-  item.quantity,
-  item.price || item.unit_price, // price-ai mattum safe-ah edukka
-]);
-
-await connection.query(
-  'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
-  [orderItemRows]
-);
-
-console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into order_items.`);
-    } catch (schemaErr) {
-      // Older schema only has a single "price" column — fall back gracefully
-      console.warn('[Order] unit_price/line_total insert failed, falling back to price schema:', schemaErr.message);
       const orderItemRows = validatedItems.map(item => [
         orderId,
         item.product_id,
         item.quantity,
-        item.unit_price,  // → stored in the "price" column
+        item.unit_price,
+        item.line_total,
       ]);
+
+      await connection.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES ?',
+        [orderItemRows]
+      );
+
+      console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into order_items (modern schema).`);
+    } catch (schemaErr) {
+      console.warn('[Order] unit_price/line_total insert failed, falling back to price schema:', schemaErr.message);
+      
+      const orderItemRows = validatedItems.map(item => [
+        orderId,
+        item.product_id,
+        item.quantity,
+        item.unit_price,
+      ]);
+
       await connection.query(
         'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
         [orderItemRows]
       );
+      
       console.log(`[Order] Inserted ${validatedItems.length} item(s) using legacy price schema.`);
     }
 
@@ -197,7 +195,7 @@ console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into
 
     // ── STEP 6: Emit real-time Socket.io event ─────────────────────
     const orderData = {
-      id:            orderId,
+      id:             orderId,
       customer_id,
       customer_name: customerName,
       items:         validatedItems,
@@ -210,16 +208,11 @@ console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into
 
     getIO().emit('new-order', orderData);
 
-    // ── STEP 7: Send notifications (fire-and-forget, non-blocking) ─
-    // These must NEVER block the order response. Use .catch() to log
-    // errors without crashing the request handler.
-
-    // ★ Admin WhatsApp alert
+    // ── STEP 7: Send notifications ─────────────────────────────────
     sendWhatsAppAlert(orderData).catch(err =>
       console.error(`[WhatsApp] Admin alert failed for Order #${orderId}:`, err.message)
     );
 
-    // ★ Customer WhatsApp notification
     if (customerPhone) {
       sendCustomerWhatsApp({
         to: customerPhone,
@@ -228,11 +221,8 @@ console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into
       }).catch(err =>
         console.error(`[WhatsApp] Customer notification failed for Order #${orderId}:`, err.message)
       );
-    } else {
-      console.warn(`[WhatsApp] Customer notification skipped for Order #${orderId} — no phone number.`);
     }
 
-    // ★ Customer Email confirmation
     if (customerEmail) {
       sendOrderConfirmationEmail({
         customerEmail,
@@ -241,8 +231,6 @@ console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into
       }).catch(err =>
         console.error(`[Email] Confirmation failed for Order #${orderId}:`, err.message)
       );
-    } else {
-      console.warn(`[Email] Confirmation skipped for Order #${orderId} — no email address.`);
     }
 
     return res.status(201).json({
@@ -262,29 +250,12 @@ console.log(`[Order] Successfully inserted ${validatedItems.length} item(s) into
   }
 };
 
-/**
- * GET /api/orders
- * Retrieves order history with aggregated product names and quantities.
- *
- * Handles two data layouts:
- *   Modern  — items stored in order_items table (GROUP_CONCAT + SUM)
- *   Legacy  — product_id / quantity stored directly on orders row (fallback)
- *
- * Response per row includes:
- *   product_names — e.g. "Premium 210, Roasted Cashew" (or legacy product name)
- *   total_qty     — total quantity across all items
- */
 const getOrders = async (req, res) => {
   try {
     const page   = parseInt(req.query.page,  10) || 1;
     const limit  = parseInt(req.query.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
-    /*
-     * Check which optional columns exist.
-     * 'address' / 'notes' on orders, 'image_url' on products —
-     * all may be absent on older DB schemas.
-     */
     const [colRows] = await pool.query(
       `SELECT TABLE_NAME, COLUMN_NAME
        FROM INFORMATION_SCHEMA.COLUMNS
@@ -300,15 +271,11 @@ const getOrders = async (req, res) => {
     const hasNotes      = existingCols.has('orders.notes');
     const hasImageUrl   = existingCols.has('products.image_url');
 
-    // Build optional SELECT fragments
     const addressSelect = hasAddress ? ',\n        o.address' : '';
     const notesSelect   = hasNotes   ? ',\n        o.notes'   : '';
-
-    // GROUP BY must list every non-aggregated SELECT column
     const addressGroup  = hasAddress ? ', o.address' : '';
     const notesGroup    = hasNotes   ? ', o.notes'   : '';
 
-    // Only include the image_url subquery if the column actually exists
     const imageSelect = hasImageUrl
       ? `,
         (
@@ -374,23 +341,10 @@ const getOrders = async (req, res) => {
   }
 };
 
-/**
- * GET /api/orders/:id
- * Returns a single order with a clean `items` array.
- *
- * Response shape:
- * {
- *   id, customer_id, customer_name, total_amount, status, created_at,
- *   items: [
- *     { product_id, product_name, quantity, unit_price, line_total }
- *   ]
- * }
- */
 const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ── Check which optional columns exist ───────────────────────
     const [colRows] = await pool.query(
       `SELECT COLUMN_NAME
        FROM INFORMATION_SCHEMA.COLUMNS
@@ -402,7 +356,6 @@ const getOrderById = async (req, res) => {
     const addressSel   = existingCols.has('address') ? ',\n        o.address' : '';
     const notesSel     = existingCols.has('notes')   ? ',\n        o.notes'   : '';
 
-    // ── Fetch order header ───────────────────────────────────────
     let orderQuery = `
       SELECT
         o.id,
@@ -432,8 +385,6 @@ const getOrderById = async (req, res) => {
 
     const order = orderRows[0];
 
-    // ── Fetch order items ────────────────────────────────────────
-    // Detect schema: Railway uses unit_price + line_total; local uses price.
     const [itmCols] = await pool.query(
       `SELECT COLUMN_NAME
        FROM INFORMATION_SCHEMA.COLUMNS
@@ -448,7 +399,6 @@ const getOrderById = async (req, res) => {
       ? 'oi.line_total'
       : `(oi.quantity * ${priceExpr})`;
 
-    // image_url may not exist on Railway products table
     const [imgCols] = await pool.query(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'image_url'`
@@ -457,16 +407,16 @@ const getOrderById = async (req, res) => {
 
     const [itemRows] = await pool.query(
       `SELECT
-         oi.product_id,
-         p.name              AS product_name,
-         ${imgExpr},
-         oi.quantity,
-         ${priceExpr}        AS unit_price,
-         ${totalExpr}        AS line_total
-       FROM order_items oi
-       JOIN products p ON p.id = oi.product_id
-       WHERE oi.order_id = ?
-       ORDER BY oi.id ASC`,
+          oi.product_id,
+          p.name               AS product_name,
+          ${imgExpr},
+          oi.quantity,
+          ${priceExpr}         AS unit_price,
+          ${totalExpr}         AS line_total
+        FROM order_items oi
+        JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id = ?
+        ORDER BY oi.id ASC`,
       [id]
     );
 
@@ -480,10 +430,6 @@ const getOrderById = async (req, res) => {
   }
 };
 
-/**
- * PATCH /api/orders/:id/status
- * Admin-only: Updates order status.
- */
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
