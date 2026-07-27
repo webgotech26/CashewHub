@@ -3,22 +3,6 @@ const { getIO } = require('../utils/socket');
 const { sendWhatsAppAlert, sendCustomerWhatsApp } = require('../utils/whatsapp');
 const { sendOrderConfirmationEmail } = require('../utils/email');
 
-/**
- * POST /api/orders
- *
- * Actual database columns (corrected):
- *   orders      → customer_id, total_amount, status, notes, address
- *   deliveries  → order_id, status  (NO address column)
- *   order_items → order_id, product_id, quantity, unit_price, line_total
- *
- * req.body expected:
- *   items          — [{ product_id, quantity }]
- *   address        — full delivery address string (→ orders.address)
- *   payment_method — 'upi' | 'card' | 'netbanking'  (→ orders.notes)
- *
- * All SQL uses prepared statements (?) to prevent injection.
- * Full ACID transaction: beginTransaction → commit / rollback.
- */
 const createOrder = async (req, res) => {
   const connection = await pool.getConnection();
 
@@ -26,7 +10,6 @@ const createOrder = async (req, res) => {
     const { items, address, payment_method } = req.body;
     const customer_id = req.user.id;
 
-    // ── Input validation ───────────────────────────────────────────
     if (!items || !Array.isArray(items) || items.length === 0) {
       connection.release();
       return res.status(400).json({
@@ -51,10 +34,8 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // ── BEGIN TRANSACTION ──────────────────────────────────────────
     await connection.beginTransaction();
 
-    // ── Fetch customer details for notifications ───────────────────
     const [customerRows] = await connection.query(
       'SELECT name, email, mobile FROM customers WHERE id = ?',
       [customer_id]
@@ -65,12 +46,14 @@ const createOrder = async (req, res) => {
     const customerEmail = customer.email || null;
     const customerPhone = customer.mobile || null;
 
-    // ── STEP 1: Validate products & calculate total ────────────────
     let orderTotal = 0;
     const validatedItems = [];
 
     for (const item of items) {
-      if (!item.product_id || !item.quantity || item.quantity <= 0) {
+      const prodId = item.product_id || item.id;
+      const qty = parseFloat(item.quantity || item.qty);
+
+      if (!prodId || !qty || qty <= 0) {
         await connection.rollback();
         connection.release();
         return res.status(400).json({
@@ -81,7 +64,7 @@ const createOrder = async (req, res) => {
 
       const [rows] = await connection.query(
         'SELECT id, name, price, stock_quantity FROM products WHERE id = ? FOR UPDATE',
-        [item.product_id]
+        [prodId]
       );
 
       if (rows.length === 0) {
@@ -89,13 +72,13 @@ const createOrder = async (req, res) => {
         connection.release();
         return res.status(404).json({
           success: false,
-          message: `Product with id ${item.product_id} not found.`,
+          message: `Product with id ${prodId} not found.`,
         });
       }
 
       const product = rows[0];
 
-      if (parseFloat(product.stock_quantity) < parseFloat(item.quantity)) {
+      if (parseFloat(product.stock_quantity) < qty) {
         await connection.rollback();
         connection.release();
         return res.status(400).json({
@@ -105,67 +88,37 @@ const createOrder = async (req, res) => {
       }
 
       const unit_price = parseFloat(product.price);
-      const line_total = unit_price * parseFloat(item.quantity);
+      const line_total = unit_price * qty;
       orderTotal += line_total;
 
       validatedItems.push({
-        product_id:   item.product_id,
+        product_id:   prodId,
         product_name: product.name,
-        quantity:     parseFloat(item.quantity),
+        quantity:     qty,
         unit_price,
         line_total,
       });
     }
 
-    // ── STEP 2: INSERT into orders ─────────────────────────────────
-    const [colCheck] = await connection.query(
-      `SELECT COLUMN_NAME
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME   = 'orders'
-         AND COLUMN_NAME  IN ('address', 'notes')`
+    const [orderResult] = await connection.query(
+      'INSERT INTO orders (customer_id, total_amount, status, address, notes) VALUES (?, ?, ?, ?, ?)',
+      [customer_id, orderTotal, 'pending', address.trim(), `Payment: ${payment_method.toUpperCase()}`]
     );
-    const cols         = new Set(colCheck.map(r => r.COLUMN_NAME));
-    const hasAddress   = cols.has('address');
-    const hasNotes     = cols.has('notes');
-
-    let insertSQL      = 'INSERT INTO orders (customer_id, total_amount, status';
-    let insertValues = [customer_id, orderTotal, 'pending'];
-
-    if (hasAddress) { insertSQL += ', address'; insertValues.push(address.trim()); }
-    if (hasNotes)   { insertSQL += ', notes';   insertValues.push(`Payment: ${payment_method.toUpperCase()}`); }
-
-    insertSQL += ') VALUES (' + insertValues.map(() => '?').join(', ') + ')';
-
-    const [orderResult] = await connection.query(insertSQL, insertValues);
 
     const orderId = orderResult.insertId;
 
-    // ── STEP 3: INSERT into deliveries ─────────────────────────────
     await connection.query(
       'INSERT INTO deliveries (order_id, status) VALUES (?, ?)',
       [orderId, 'pending']
     );
 
-    // ── STEP 4: Insert order_items one by one (safe per-row fallback) ──
-    // Tries modern schema (unit_price + line_total) per item.
-    // Falls back to legacy (price) if the column doesn't exist.
     for (const item of validatedItems) {
-      try {
-        await connection.query(
-          'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
-          [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
-        );
-      } catch (innerErr) {
-        console.warn('[Order] unit_price insert failed, falling back to legacy price column:', innerErr.message);
-        await connection.query(
-          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-          [orderId, item.product_id, item.quantity, item.unit_price]
-        );
-      }
+      await connection.query(
+        'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
+        [orderId, item.product_id, item.quantity, item.unit_price, item.line_total]
+      );
     }
 
-    // ── STEP 5: Deduct stock ───────────────────────────────────────
     for (const item of validatedItems) {
       await connection.query(
         'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
@@ -173,13 +126,11 @@ const createOrder = async (req, res) => {
       );
     }
 
-    // ── COMMIT ─────────────────────────────────────────────────────
     await connection.commit();
     connection.release();
 
-    // ── STEP 6: Emit real-time Socket.io event ─────────────────────
     const orderData = {
-      id:             orderId,
+      id:            orderId,
       customer_id,
       customer_name: customerName,
       items:         validatedItems,
@@ -190,9 +141,12 @@ const createOrder = async (req, res) => {
       created_at:    new Date().toISOString(),
     };
 
-    getIO().emit('new-order', orderData);
+    try {
+      getIO().emit('new-order', orderData);
+    } catch (socketErr) {
+      console.error('Socket emit error:', socketErr.message);
+    }
 
-    // ── STEP 7: Send notifications ─────────────────────────────────
     sendWhatsAppAlert(orderData).catch(err =>
       console.error(`[WhatsApp] Admin alert failed for Order #${orderId}:`, err.message)
     );
@@ -224,12 +178,14 @@ const createOrder = async (req, res) => {
     });
 
   } catch (error) {
-    await connection.rollback();
-    connection.release();
-    console.error('createOrder error:', error.message);
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    console.error('createOrder error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error. Order was not placed.',
+      message: error.message || 'Internal server error. Order was not placed.',
     });
   }
 };
@@ -240,28 +196,17 @@ const getOrders = async (req, res) => {
     const limit  = parseInt(req.query.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
-    const [colRows] = await pool.query(
-      `SELECT TABLE_NAME, COLUMN_NAME
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND (
-               (TABLE_NAME = 'orders'   AND COLUMN_NAME IN ('address', 'notes'))
-            OR (TABLE_NAME = 'products' AND COLUMN_NAME = 'image_url')
-         )`
-    );
-
-    const existingCols  = new Set(colRows.map(r => `${r.TABLE_NAME}.${r.COLUMN_NAME}`));
-    const hasAddress    = existingCols.has('orders.address');
-    const hasNotes      = existingCols.has('orders.notes');
-    const hasImageUrl   = existingCols.has('products.image_url');
-
-    const addressSelect = hasAddress ? ',\n        o.address' : '';
-    const notesSelect   = hasNotes   ? ',\n        o.notes'   : '';
-    const addressGroup  = hasAddress ? ', o.address' : '';
-    const notesGroup    = hasNotes   ? ', o.notes'   : '';
-
-    const imageSelect = hasImageUrl
-      ? `,
+    let query = `
+      SELECT
+        o.id,
+        o.customer_id,
+        o.total_amount,
+        o.status,
+        o.created_at,
+        o.address,
+        o.notes,
+        c.name AS customer_name,
+        COALESCE(NULLIF(GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR ', '), ''), 'No items') AS product_names,
         (
           SELECT p2.image_url
           FROM order_items oi2
@@ -271,29 +216,12 @@ const getOrders = async (req, res) => {
             AND p2.image_url != ''
           ORDER BY oi2.id ASC
           LIMIT 1
-        ) AS image_url`
-      : `, NULL AS image_url`;
-
-    let query = `
-      SELECT
-        o.id,
-        o.customer_id,
-        o.total_amount,
-        o.status,
-        o.created_at${addressSelect}${notesSelect},
-        c.name AS customer_name,
-
-        COALESCE(
-          NULLIF(GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR ', '), ''),
-          'No items'
-        ) AS product_names${imageSelect},
-
+        ) AS image_url,
         COALESCE(NULLIF(SUM(oi.quantity), 0), 0) AS total_qty
-
       FROM orders o
-      LEFT JOIN customers   c  ON c.id          = o.customer_id
+      LEFT JOIN customers   c  ON c.id        = o.customer_id
       LEFT JOIN order_items oi ON oi.order_id   = o.id
-      LEFT JOIN products    p  ON p.id          = oi.product_id
+      LEFT JOIN products    p  ON p.id        = oi.product_id
     `;
 
     const params = [];
@@ -304,9 +232,7 @@ const getOrders = async (req, res) => {
     }
 
     query += `
-      GROUP BY
-        o.id, o.customer_id, o.total_amount, o.status,
-        o.created_at${addressGroup}${notesGroup}, c.name
+      GROUP BY o.id, o.customer_id, o.total_amount, o.status, o.created_at, o.address, o.notes, c.name
       ORDER BY o.created_at DESC
       LIMIT ? OFFSET ?
     `;
@@ -329,24 +255,15 @@ const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [colRows] = await pool.query(
-      `SELECT COLUMN_NAME
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME   = 'orders'
-         AND COLUMN_NAME  IN ('address', 'notes')`
-    );
-    const existingCols = new Set(colRows.map(r => r.COLUMN_NAME));
-    const addressSel   = existingCols.has('address') ? ',\n        o.address' : '';
-    const notesSel     = existingCols.has('notes')   ? ',\n        o.notes'   : '';
-
     let orderQuery = `
       SELECT
         o.id,
         o.customer_id,
         o.total_amount,
         o.status,
-        o.created_at${addressSel}${notesSel},
+        o.created_at,
+        o.address,
+        o.notes,
         c.name   AS customer_name,
         c.email  AS customer_email,
         c.mobile AS customer_mobile
@@ -369,34 +286,14 @@ const getOrderById = async (req, res) => {
 
     const order = orderRows[0];
 
-    const [itmCols] = await pool.query(
-      `SELECT COLUMN_NAME
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME   = 'order_items'
-         AND COLUMN_NAME  IN ('price', 'unit_price', 'line_total')`
-    );
-    const itmColSet = new Set(itmCols.map(r => r.COLUMN_NAME));
-
-    const priceExpr    = itmColSet.has('unit_price') ? 'oi.unit_price' : 'oi.price';
-    const totalExpr    = itmColSet.has('line_total')
-      ? 'oi.line_total'
-      : `(oi.quantity * ${priceExpr})`;
-
-    const [imgCols] = await pool.query(
-      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'image_url'`
-    );
-    const imgExpr = imgCols.length > 0 ? 'p.image_url AS image_url' : 'NULL AS image_url';
-
     const [itemRows] = await pool.query(
       `SELECT
           oi.product_id,
-          p.name               AS product_name,
-          ${imgExpr},
+          p.name AS product_name,
+          p.image_url AS image_url,
           oi.quantity,
-          ${priceExpr}         AS unit_price,
-          ${totalExpr}         AS line_total
+          oi.unit_price AS unit_price,
+          oi.line_total AS line_total
         FROM order_items oi
         JOIN products p ON p.id = oi.product_id
         WHERE oi.order_id = ?
