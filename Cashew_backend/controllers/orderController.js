@@ -101,10 +101,10 @@ const createOrder = async (req, res) => {
     }
 
     // ── STEP 2: INSERT main order ─────────────────────────────────
-    const [orderResult] = await connection.query(
-      'INSERT INTO orders (customer_id, total_amount, status, address, payment_method) VALUES (?, ?, ?, ?, ?)',
-      [customer_id, orderTotal, 'pending', address.trim(), payment_method]
-    );
+   const [orderResult] = await connection.query(
+  'INSERT INTO orders (customer_id, total_amount, status, address, payment_method) VALUES (?, ?, ?, ?, ?)',
+  [customer_id, total_amount, 'pending', address, payment_method]
+);
 
     const orderId = orderResult.insertId;
 
