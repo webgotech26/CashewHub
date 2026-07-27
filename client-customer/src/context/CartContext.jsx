@@ -2,11 +2,16 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 
 const CartContext = createContext(null);
 
-const STORAGE_KEY = 'cashew_cart';
+const STORAGE_KEY   = 'cashew_cart';
+const CART_VERSION  = 'v2';           // bump this whenever product IDs change in DB
+const VERSION_KEY   = 'cashew_cart_version';
 
 /**
  * CartProvider — wraps the customer layout.
  * Cart is persisted to localStorage so it survives page refreshes.
+ *
+ * Version guard: if the stored cart version doesn't match CART_VERSION,
+ * the cart is wiped so stale product IDs never cause "Product not found" errors.
  *
  * Exposes:
  *   cartItems      — array of { id, name, price, qty, ... }
@@ -19,8 +24,14 @@ const STORAGE_KEY = 'cashew_cart';
  */
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
-    // Rehydrate from localStorage on first render
     try {
+      // Wipe cart if version has changed (e.g. DB was reseeded with new IDs)
+      const storedVersion = localStorage.getItem(VERSION_KEY);
+      if (storedVersion !== CART_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(VERSION_KEY, CART_VERSION);
+        return [];
+      }
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
@@ -64,6 +75,7 @@ export function CartProvider({ children }) {
   const clearCart = useCallback(() => {
     setCartItems([]);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(VERSION_KEY, CART_VERSION);
   }, []);
 
   // Effective price = price (offer_price column removed from DB)
