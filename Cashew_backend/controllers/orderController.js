@@ -1,7 +1,6 @@
 const pool = require('../config/db');
 const { getIO } = require('../utils/socket');
 const { sendWhatsAppAlert, sendCustomerWhatsApp } = require('../utils/whatsapp');
-const { sendOrderConfirmationEmail } = require('../utils/email');
 
 const createOrder = async (req, res) => {
   const connection = await pool.getConnection();
@@ -216,16 +215,6 @@ const createOrder = async (req, res) => {
         orderData,
       }).catch(err =>
         console.error(`[WhatsApp] Customer notification failed for Order #${orderId}:`, err.message)
-      );
-    }
-
-    if (customerEmail) {
-      sendOrderConfirmationEmail({
-        customerEmail,
-        customerName,
-        orderData,
-      }).catch(err =>
-        console.error(`[Email] Confirmation failed for Order #${orderId}:`, err.message)
       );
     }
 

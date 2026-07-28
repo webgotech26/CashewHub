@@ -2,201 +2,189 @@
  * utils/whatsapp.js
  * Twilio WhatsApp notification utility for H²B³ Cashew.
  *
- * Reads credentials exclusively from environment variables — never
- * hard-codes credentials in source code.
- *
- * Exports:
- *   sendWhatsAppAlert(orderData)               — Notifies the ADMIN on new order
- *   sendCustomerWhatsApp({ to, orderData, customerName }) — Notifies the CUSTOMER
+ * Two separate flows:
+ *   sendWhatsAppAlert(orderData)                          → ADMIN order alert
+ *   sendCustomerWhatsApp({ to, customerName, orderData }) → CUSTOMER confirmation
  *
  * Required .env variables:
- *   TWILIO_ACCOUNT_SID   — e.g. ACxxxxxxxxxxxxxxxxx
- *   TWILIO_AUTH_TOKEN    — from Twilio dashboard
- *   TWILIO_WA_FROM       — whatsapp:+16506400496  (your Twilio sender number)
- *   TWILIO_WA_ADMIN_TO   — whatsapp:+91XXXXXXXXXX (admin's WhatsApp number)
+ *   TWILIO_ACCOUNT_SID  — ACxxxxxxxxxxxxxxxxx
+ *   TWILIO_AUTH_TOKEN   — from Twilio console
+ *   TWILIO_WA_FROM      — whatsapp:+14155238886  (sandbox / approved sender)
+ *   TWILIO_WA_TO        — whatsapp:+91XXXXXXXXXX (admin's WhatsApp)
  */
 
 'use strict';
 
-/**
- * Lazily initialise the Twilio client so the app can still boot even if
- * Twilio env vars are missing (useful in CI / test environments).
- */
+const SEP = '─────────────────────────';   // clean separator line
+
+/* ── Lazy Twilio client ──────────────────────────────────────────── */
 let _client = null;
 
 function getTwilioClient() {
   if (_client) return _client;
-
   const sid   = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
-
   if (!sid || !token) {
-    throw new Error(
-      'Twilio credentials not configured. ' +
-      'Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in your .env file.'
-    );
+    throw new Error('Twilio credentials missing. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env');
   }
-
   _client = require('twilio')(sid, token);
   return _client;
 }
 
-/**
- * Format a phone number to WhatsApp format.
- * Accepts: '+919876543210', '09876543210', '9876543210', '+91 98765 43210'
- * Returns: 'whatsapp:+91XXXXXXXXXX'
- */
-function formatWhatsAppNumber(phone) {
-  if (!phone) return null;
-
-  // Already formatted
-  if (phone.startsWith('whatsapp:')) return phone;
-
-  // Strip all non-digit chars except leading +
-  let digits = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
-
-  // Add country code +91 if it's a bare 10-digit Indian number
-  if (/^\d{10}$/.test(digits)) {
-    digits = '+91' + digits;
-  }
-
-  // Ensure there's a + prefix
-  if (!digits.startsWith('+')) {
-    digits = '+' + digits;
-  }
-
-  return `whatsapp:${digits}`;
+/* ── Shared sender number ────────────────────────────────────────── */
+function getSender() {
+  const raw = process.env.TWILIO_WA_FROM || '';
+  return raw.startsWith('whatsapp:') ? raw : `whatsapp:${raw}`;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   ADMIN alert — fires on every new order
-   ──────────────────────────────────────────────────────────────── */
-/**
- * sendWhatsAppAlert
- * Sends a WhatsApp notification to the ADMIN after a new order is placed.
- *
- * @param {object} orderData
- * @param {number|string} orderData.id
- * @param {number}        orderData.total_amount
- * @param {string}        orderData.address
- * @param {string}        orderData.payment_method
- * @param {Array}         orderData.items — [{ product_name, quantity }]
- * @param {string}        [orderData.customer_name]
- *
- * @returns {Promise<void>}
- */
+/* ── Format items list ───────────────────────────────────────────── */
+function formatItems(items) {
+  if (!items || items.length === 0) return '   (no items)';
+  return items
+    .map((item, idx) => {
+      const name  = item.product_name || 'Item';
+      const qty   = item.quantity  || 1;
+      const total = item.line_total
+        ? `₹${Number(item.line_total).toFixed(2)}`
+        : item.unit_price
+          ? `₹${(Number(item.unit_price) * Number(qty)).toFixed(2)}`
+          : '';
+      return `   ${idx + 1}. ${name}\n      Qty: ${qty}  |  Total: ${total}`;
+    })
+    .join('\n');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FLOW 1 — ADMIN ALERT
+   Sent to TWILIO_WA_TO on every new order.
+   ═══════════════════════════════════════════════════════════════════ */
 async function sendWhatsAppAlert(orderData) {
-  const from    = process.env.TWILIO_WA_FROM;
-  const adminTo = process.env.TWILIO_WA_ADMIN_TO || process.env.TWILIO_WA_TO;
+  const from    = getSender();
+  const adminTo = process.env.TWILIO_WA_TO;
 
   if (!from || !adminTo) {
-    console.warn('[WhatsApp] Admin alert skipped — TWILIO_WA_FROM or TWILIO_WA_ADMIN_TO not set.');
+    console.warn('[WhatsApp] Admin alert skipped — TWILIO_WA_FROM or TWILIO_WA_TO not set.');
     return;
   }
 
-  const itemLines = (orderData.items || [])
-    .map(i => `  • ${i.product_name || 'Item'} × ${i.quantity}`)
-    .join('\n');
+  const now = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
 
   const body = [
-    `🛒 *New Order — H²B³ Cashew*`,
+    `🔔 *NEW ORDER ALERT*`,
+    `🌰 *H²B³ Cashew — Admin Panel*`,
+    SEP,
     ``,
-    `📦 *Order ID:* #${orderData.id}`,
-    `👤 *Customer:* ${orderData.customer_name || `ID ${orderData.customer_id}`}`,
-    `💳 *Payment:* ${(orderData.payment_method || 'N/A').toUpperCase()}`,
-    `💰 *Total:* ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
+    `📋 *Order Details*`,
+    `   🆔 Order ID    : #${orderData.id}`,
+    `   📅 Date & Time : ${now} IST`,
+    `   💳 Payment     : ${(orderData.payment_method || 'N/A').toUpperCase()}`,
+    `   💰 Order Total : ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
     ``,
-    `*Items:*`,
-    itemLines || '  (no items)',
+    SEP,
     ``,
-    `📍 *Address:*`,
-    `  ${orderData.address || 'Not provided'}`,
+    `👤 *Customer Info*`,
+    `   Name : ${orderData.customer_name || `Customer #${orderData.customer_id}`}`,
     ``,
-    `⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`,
+    SEP,
+    ``,
+    `🛍️ *Items Ordered*`,
+    formatItems(orderData.items),
+    ``,
+    SEP,
+    ``,
+    `📍 *Delivery Address*`,
+    `   ${orderData.address || 'Not provided'}`,
+    ``,
+    SEP,
+    ``,
+    `✅ Please confirm & process this order promptly.`,
+    `📞 Support: +91 82209 60887`,
   ].join('\n');
 
-  const client  = getTwilioClient();
-  const message = await client.messages.create({ from, to: adminTo, body });
-
-  console.log(`[WhatsApp] Admin alert sent for Order #${orderData.id} — SID: ${message.sid}`);
+  const msg = await getTwilioClient().messages.create({ from, to: adminTo, body });
+  console.log(`[WhatsApp] ✓ Admin alert sent → Order #${orderData.id} | SID: ${msg.sid}`);
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   CUSTOMER notification — fires on every new order
-   ──────────────────────────────────────────────────────────────── */
-/**
- * sendCustomerWhatsApp
- * Sends an order confirmation WhatsApp message to the CUSTOMER.
- *
- * @param {object} params
- * @param {string} params.to           — Customer's 10-digit mobile number (from DB)
- * @param {string} params.customerName — Customer's name for personalised greeting
- * @param {object} params.orderData
- * @param {number|string} params.orderData.id
- * @param {number}        params.orderData.total_amount
- * @param {string}        params.orderData.address
- * @param {string}        params.orderData.payment_method
- * @param {Array}         params.orderData.items — [{ product_name, quantity, line_total }]
- *
- * @returns {Promise<void>}
- */
+/* ═══════════════════════════════════════════════════════════════════
+   FLOW 2 — CUSTOMER CONFIRMATION
+   Sent dynamically to the customer's own phone number.
+   ═══════════════════════════════════════════════════════════════════ */
 async function sendCustomerWhatsApp({ to, customerName, orderData }) {
-  // Sandbox sender — fixed to Twilio WhatsApp sandbox number
-  const from = 'whatsapp:+14155238886';
+  const from = getSender();
 
-  // Guard — phone number must be present
+  if (!from) {
+    console.warn('[WhatsApp] Customer notification skipped — TWILIO_WA_FROM not set.');
+    return;
+  }
   if (!to) {
-    console.warn('[WhatsApp] Customer notification skipped — no phone number provided.');
+    console.warn(`[WhatsApp] Customer notification skipped for Order #${orderData.id} — no phone.`);
     return;
   }
 
-  // Strip spaces/dashes, then compose the recipient in whatsapp:+91XXXXXXXXXX format.
-  // Handles both bare 10-digit ("9876543210") and already-prefixed ("+919876543210") inputs.
-  const digits = String(to).replace(/[\s\-]/g, '').replace(/^\+91/, '');
-  const customerTo = `whatsapp:+91${digits}`;
+  // Normalise to whatsapp:+91XXXXXXXXXX
+  const digits = String(to).replace(/[\s\-]/g, '').replace(/^\+?91/, '');
+  const custTo = `whatsapp:+91${digits}`;
 
-  // Build a neat items list
-  const itemLines = (orderData.items || [])
-    .map(
-      (i, idx) =>
-        `  ${idx + 1}. ${i.product_name || 'Item'} × ${i.quantity}` +
-        (i.line_total ? ` — ₹${Number(i.line_total).toFixed(2)}` : '')
-    )
-    .join('\n');
+  const now = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
 
-  // Compose the message body
   const body = [
-    `✅ *Order Confirmed! — H²B³ Cashew*`,
+    `✅ *ORDER CONFIRMED!*`,
+    `🌰 *H²B³ Cashew*`,
+    SEP,
     ``,
-    `Hi ${customerName || 'there'}! 🌰 Your order has been placed successfully.`,
+    `Hi *${customerName || 'there'}!* 👋`,
+    `Your order has been placed successfully.`,
+    `We'll pack & dispatch it soon! 🚀`,
     ``,
-    `━━━━━━━━━━━━━━━━━━━━━━`,
-    `📦 *Order ID:*    #${orderData.id}`,
-    `💰 *Total Paid:*  ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
-    `💳 *Payment:*     ${(orderData.payment_method || 'N/A').toUpperCase()}`,
-    `━━━━━━━━━━━━━━━━━━━━━━`,
+    SEP,
     ``,
-    `🛒 *Items Ordered:*`,
-    itemLines || '  (no items)',
+    `📋 *Order Summary*`,
+    `   🆔 Order ID    : #${orderData.id}`,
+    `   📅 Date & Time : ${now} IST`,
+    `   💳 Payment     : ${(orderData.payment_method || 'N/A').toUpperCase()}`,
+    `   💰 Amount Paid : ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
     ``,
-    `📍 *Delivery Address:*`,
-    `  ${orderData.address || 'Not provided'}`,
+    SEP,
     ``,
-    `━━━━━━━━━━━━━━━━━━━━━━`,
-    `We'll notify you once your order is shipped! 🚚`,
+    `🛒 *Items in Your Order*`,
+    formatItems(orderData.items),
     ``,
-    `Need help? Call or WhatsApp us:`,
-    `📞 *+91 82209 60887*`,
+    SEP,
     ``,
-    `Thank you for shopping with H²B³ Cashew! 🌰`,
+    `📍 *Delivery Address*`,
+    `   ${orderData.address || 'Not provided'}`,
+    ``,
+    SEP,
+    ``,
+    `📦 You'll receive a shipping update once dispatched.`,
+    ``,
+    `💬 *Need Help?*`,
+    `   📞 Call / WhatsApp: *+91 82209 60887*`,
+    `   🕘 Hours: 9 AM – 10 PM (Mon – Sat)`,
+    ``,
+    `Thank you for choosing H²B³ Cashew! 🌰❤️`,
   ].join('\n');
 
-  const client  = getTwilioClient();
-  const message = await client.messages.create({ from, to: customerTo, body });
+  const msg = await getTwilioClient().messages.create({ from, to: custTo, body });
+  console.log(`[WhatsApp] ✓ Customer msg sent → ${custTo} | Order #${orderData.id} | SID: ${msg.sid}`);
+}
 
-  console.log(
-    `[WhatsApp] Customer confirmation sent to ${customerTo} for Order #${orderData.id} — SID: ${message.sid}`
-  );
+/* ── Backward-compat helper (used in test-whatsapp.js) ──────────── */
+function formatWhatsAppNumber(phone) {
+  if (!phone) return null;
+  if (phone.startsWith('whatsapp:')) return phone;
+  let digits = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+  if (/^\d{10}$/.test(digits)) digits = '+91' + digits;
+  if (!digits.startsWith('+')) digits = '+' + digits;
+  return `whatsapp:${digits}`;
 }
 
 module.exports = { sendWhatsAppAlert, sendCustomerWhatsApp, formatWhatsAppNumber };
