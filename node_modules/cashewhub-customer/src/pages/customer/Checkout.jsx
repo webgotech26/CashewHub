@@ -531,7 +531,7 @@ export default function Checkout() {
           Order Confirmed!
         </h2>
         <p style={{ fontSize: 15, color: '#4B5563', marginBottom: 6 }}>
-          Order <strong style={{ color: '#1A1A1A' }}>#{success.orderId}</strong> has been placed successfully.
+          Order has been placed successfully.
         </p>
         <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>
           Payment ID: <code style={{ background: '#F3F4F6', padding: '2px 6px', borderRadius: 4 }}>
