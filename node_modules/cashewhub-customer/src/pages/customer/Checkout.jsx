@@ -366,6 +366,17 @@ export default function Checkout() {
     return `${name}, ${phone} | ${house}, ${area}, ${city} - ${pincode}, ${state}`;
   };
 
+  /* ── Load Razorpay checkout script once ─────────────────── */
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) { resolve(true); return; }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload  = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   /* ── Place order ─────────────────────────────────────────── */
   const handlePay = async () => {
     setError(null);
@@ -375,32 +386,105 @@ export default function Checkout() {
       setError('Please fill in all required address fields.');
       return;
     }
-console.log("Cart Items checking:", cartItems);
+
     setLoading(true);
 
-    /* Simulate brief payment processing */
-    await new Promise(r => setTimeout(r, 900));
-
     try {
-      const items = cartItems.map(item => ({
-        product_id: item.id,
-        quantity:   item.qty,
-      }));
+      // 1. Load Razorpay SDK
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        setError('Failed to load Razorpay. Check your internet connection.');
+        setLoading(false);
+        return;
+      }
 
-      const res = await api.post('/api/orders', {
-        customer_id:    user.id,
-        items,
-        address:        addressStr,
-        payment_method: payMethod,
-        total_amount:   parseFloat(grandTotal.toFixed(2)),
+      // 2. Create Razorpay order on backend
+      const amountPaise = Math.round(grandTotal * 100); // ₹ → paise
+      const rzpOrderRes = await api.post('/api/payment/create-order', {
+        amount:   amountPaise,
+        currency: 'INR',
+        receipt:  `rcpt_${Date.now()}`,
       });
 
-      const orderId = res.data.data?.id || res.data.id || '—';
-      clearCart();
-      setSuccess({ orderId });
+      const { order_id, key } = rzpOrderRes.data;
+
+      // 3. Open Razorpay checkout modal
+      await new Promise((resolve, reject) => {
+        const options = {
+          key,
+          amount:   amountPaise,
+          currency: 'INR',
+          name:     'H²B³ Cashew',
+          description: `Order — ${cartItems.map(i => i.name).join(', ')}`,
+          image:    '/assets/cashewlogo.png',
+          order_id,
+          prefill: {
+            name:    addr.name  || user.name  || '',
+            contact: addr.phone || user.mobile || '',
+          },
+          theme: { color: '#C9972B' },
+          modal: {
+            ondismiss: () => {
+              setError('Payment cancelled. Please try again.');
+              setLoading(false);
+              resolve('dismissed');
+            },
+          },
+          handler: async (response) => {
+            try {
+              // 4. Verify payment signature on backend
+              const verifyRes = await api.post('/api/payment/verify', {
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+              });
+
+              if (!verifyRes.data.success) {
+                setError('Payment verification failed. Contact support.');
+                setLoading(false);
+                resolve('failed');
+                return;
+              }
+
+              // 5. Place the order in our DB
+              const items = cartItems.map(item => ({
+                product_id: item.id,
+                quantity:   item.qty,
+              }));
+
+              const orderRes = await api.post('/api/orders', {
+                customer_id:    user.id,
+                items,
+                address:        addressStr,
+                payment_method: payMethod,
+                total_amount:   parseFloat(grandTotal.toFixed(2)),
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+              });
+
+              const orderId = orderRes.data.data?.id || orderRes.data.id || '—';
+              clearCart();
+              setSuccess({ orderId, paymentId: response.razorpay_payment_id });
+              resolve('success');
+            } catch (err) {
+              setError(err.response?.data?.message || err.message || 'Order failed after payment.');
+              setLoading(false);
+              resolve('error');
+            }
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', (resp) => {
+          setError(`Payment failed: ${resp.error.description}`);
+          setLoading(false);
+          resolve('failed');
+        });
+        rzp.open();
+      });
+
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Order failed. Please try again.');
-    } finally {
+      setError(err.response?.data?.message || err.message || 'Something went wrong.');
       setLoading(false);
     }
   };
@@ -448,6 +532,11 @@ console.log("Cart Items checking:", cartItems);
         </h2>
         <p style={{ fontSize: 15, color: '#4B5563', marginBottom: 6 }}>
           Order <strong style={{ color: '#1A1A1A' }}>#{success.orderId}</strong> has been placed successfully.
+        </p>
+        <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>
+          Payment ID: <code style={{ background: '#F3F4F6', padding: '2px 6px', borderRadius: 4 }}>
+            {success.paymentId}
+          </code>
         </p>
         <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 36 }}>
           We'll pack and dispatch your cashews soon.

@@ -28,6 +28,7 @@ const invoiceRoutes  = require('./routes/invoiceRoutes');
 const reportRoutes   = require('./routes/reportRoutes');
 const auditRoutes    = require('./routes/auditRoutes');
 const adminRoutes    = require('./routes/adminUserRoutes');
+const paymentRoutes  = require('./routes/paymentRoutes');
 
 // Initialize Express app and HTTP server
 const app = express();
@@ -124,6 +125,9 @@ app.use('/api/audit-logs', auditRoutes);
 // Admin user management + dashboard stats
 app.use('/api/admins',     adminRoutes);
 app.use('/api/admin',      adminRoutes);  // /api/admin/stats alias
+
+// Razorpay payment — create order + verify signature
+app.use('/api/payment',    paymentRoutes);
 
 // ─── 404 HANDLER ─────────────────────────────────────────────────────────────
 
