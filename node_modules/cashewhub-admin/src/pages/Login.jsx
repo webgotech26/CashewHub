@@ -47,7 +47,7 @@ export default function Login() {
           {/* Logo + brand */}
           <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:52 }}>
             <img
-              src="/assets/cashewlogo.png"
+              src="/assets/logoo.png"
               alt="H²B³ Cashew"
               style={{
                 width:54, height:54, borderRadius:'50%', objectFit:'cover',

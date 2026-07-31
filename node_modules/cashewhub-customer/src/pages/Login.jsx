@@ -54,8 +54,8 @@ export default function Login() {
           {/* Logo + brand */}
           <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:52 }}>
             <img
-              src="/assets/cashewlogo.png"
-              alt="H²B³ Cashew"
+              src="/assets/logoo.png"
+              alt="Pretichor Naturals"
               style={{
                 width:54, height:54, borderRadius:'50%', objectFit:'cover',
                 boxShadow:'0 4px 16px rgba(0,0,0,0.4), 0 0 0 3px rgba(201,151,43,0.4)',
@@ -68,7 +68,7 @@ export default function Login() {
                 fontSize:20, fontWeight:800, color:'#fff',
                 textShadow:'0 1px 8px rgba(0,0,0,0.3)',
               }}>
-                H²B³ Cashew
+                Pretichor Naturals
               </div>
               <div style={{
                 fontSize:10, fontWeight:700, color:'rgba(245,200,66,0.9)',
@@ -82,7 +82,7 @@ export default function Login() {
           {/* Heading */}
           <h1 className="login-brand-name">
             Farm Fresh<br />
-            <em>Cashews</em><br />
+            <em>Naturals</em><br />
             From Panruti
           </h1>
 
@@ -115,7 +115,7 @@ export default function Login() {
 
           {/* Heading */}
           <h2 className="login-title">Welcome Back</h2>
-          <p className="login-subtitle">Sign in to your H²B³ Cashew account</p>
+          <p className="login-subtitle">Sign in to your Pretichor Naturals account</p>
 
           {/* Error */}
           {error && (
