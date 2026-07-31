@@ -42,8 +42,7 @@ export default function AboutPage() {
 
       {/* ── WHO WE ARE ───────────────────────────────────── */}
       <section style={{ padding:'72px 0' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 48px',
-          display:'grid', gridTemplateColumns:'1fr 1fr', gap:60, alignItems:'center' }}>
+        <div className="about-who-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,48px)' }}>
           <div>
             <div style={{ fontSize:11, fontWeight:700, color:'#C9972B',
               textTransform:'uppercase', letterSpacing:2, marginBottom:12 }}>Who We Are</div>
@@ -129,7 +128,7 @@ export default function AboutPage() {
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
               fontWeight:800, color:'#1A1A1A' }}>Our Products</h2>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:22 }}>
+          <div className="about-products-grid">
             {[
               {
                 img:   '/assets/premium.png',
@@ -184,7 +183,7 @@ export default function AboutPage() {
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
               fontWeight:800, color:'#1A1A1A' }}>Why People Trust Us</h2>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+          <div className="why-us-grid">
             {VALUES.map(v => (
               <div key={v.title} style={{ background:'#FDF8F3', borderRadius:18, padding:'26px 22px',
                 border:'1px solid #EBEBEB', transition:'all 0.25s' }}

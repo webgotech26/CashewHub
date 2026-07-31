@@ -1998,3 +1998,161 @@ p, h1, h2, h3, h4, h5, h6, span, a, button, label {
     min-width: unset;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE — Page-level inline-style overrides
+   These target pages that use inline styles (About, Home, etc.)
+   via CSS classes added directly in the JSX markup.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── About page "Who We Are" 2-col grid ───────────────── */
+.about-who-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .about-who-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+/* ── About / Home "Why Us" 4-col grid ─────────────────── */
+.why-us-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+@media (max-width: 900px)  { .why-us-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 480px)  { .why-us-grid { grid-template-columns: 1fr !important; gap: 14px !important; } }
+
+/* ── About Products 3-col grid ────────────────────────── */
+.about-products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+@media (max-width: 900px)  { .about-products-grid { grid-template-columns: 1fr 1fr !important; } }
+@media (max-width: 540px)  { .about-products-grid { grid-template-columns: 1fr !important; gap: 14px !important; } }
+
+/* ── Home "Why Us" values 4-col ───────────────────────── */
+.home-why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+@media (max-width: 900px)  { .home-why-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 480px)  { .home-why-grid { grid-template-columns: 1fr !important; gap: 14px !important; } }
+
+/* ── Home product preview auto-fill grid ──────────────── */
+.home-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 540px) {
+  .home-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── Contact info cards 4-col ─────────────────────────── */
+.contact-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media (max-width: 900px)  { .contact-cards-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 480px)  { .contact-cards-grid { grid-template-columns: 1fr !important; gap: 12px !important; } }
+
+/* ── Checkout 2-col layout ────────────────────────────── */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .checkout-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .checkout-sticky {
+    position: static !important;
+  }
+}
+
+/* ── Global section padding on mobile ─────────────────── */
+@media (max-width: 768px) {
+  .section-pad   { padding: 44px 0 !important; }
+  .section-inner { padding: 0 16px !important; }
+  .section-inner-wide { padding: 0 16px !important; }
+}
+
+/* ── Hero slideshow heading clamp ────────────────────── */
+@media (max-width: 540px) {
+  .hero-slide-title {
+    font-size: clamp(22px, 8vw, 38px) !important;
+    line-height: 1.15 !important;
+  }
+  .hero-slide-subtitle { font-size: 13px !important; }
+  .hero-slide-buttons  { flex-direction: column !important; gap: 10px !important; }
+  .hero-slide-buttons button { width: 100% !important; }
+}
+
+/* ── Shop page hero heading ───────────────────────────── */
+@media (max-width: 540px) {
+  .shop-hero-title { font-size: clamp(24px, 8vw, 40px) !important; }
+  .shop-hero-sub   { font-size: 13px !important; }
+}
+
+/* ── About page hero ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .about-hero { padding: 60px 20px !important; }
+  .about-hero h1 { font-size: clamp(28px, 8vw, 42px) !important; }
+}
+
+/* ── Contact page hero ────────────────────────────────── */
+@media (max-width: 640px) {
+  .contact-hero { padding: 60px 20px !important; }
+  .contact-hero h1 { font-size: clamp(28px, 8vw, 40px) !important; }
+}
+
+/* ── About page collage image ─────────────────────────── */
+@media (max-width: 768px) {
+  .about-collage { min-height: 240px !important; }
+  .about-collage > div:first-child { min-height: 240px !important; }
+}
+
+/* ── Toast centering ──────────────────────────────────── */
+@media (max-width: 400px) {
+  .shop-toast {
+    width: calc(100vw - 32px) !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+}
+
+/* ── Tap target sizes ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .ch-cart-btn,
+  .ch-wishlist-btn,
+  .ch-hamburger {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* ── Shop product grid extra-small fix ────────────────── */
+@media (max-width: 380px) {
+  .shop-product-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .pc-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}

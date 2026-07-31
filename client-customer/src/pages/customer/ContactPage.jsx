@@ -57,9 +57,8 @@ export default function ContactPage() {
       </section>
 
       {/* ══ INFO CARDS ════════════════════════════════════ */}
-      <section style={{ background:'#F8F4EF', padding:'52px 48px 44px' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto',
-          display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+      <section style={{ background:'#F8F4EF', padding:'52px clamp(16px,4vw,48px) 44px' }}>
+        <div className="contact-cards-grid" style={{ maxWidth:1100, margin:'0 auto' }}>
           {[
             {
               icon: (

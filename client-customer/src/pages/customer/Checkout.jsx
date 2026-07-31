@@ -590,12 +590,7 @@ export default function Checkout() {
       </div>
 
       {/* ── 2-column grid ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 360px',
-        gap: 28,
-        alignItems: 'start',
-      }}>
+      <div className="checkout-grid">
 
         {/* ══════════════════════════════════════════════
             LEFT COLUMN — Address + Order Review
@@ -647,9 +642,9 @@ export default function Checkout() {
         {/* ══════════════════════════════════════════════
             RIGHT COLUMN — Sticky summary + Payment
             ══════════════════════════════════════════════ */}
-        <div style={{
+        <div className="checkout-sticky" style={{
           display: 'flex', flexDirection: 'column', gap: 20,
-          position: 'sticky', top: 88,   /* sits just below the 72px header */
+          position: 'sticky', top: 88,
         }}>
 
           {/* ── Price Summary ── */}

@@ -302,7 +302,7 @@ export default function HomePage() {
           </div>
 
           {/* Products from DB — shared ProductCard component (same as ShopPage) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20, marginBottom: 40 }}>
+          <div className="home-products-grid" style={{ marginBottom: 40 }}>
             {products.slice(0, 8).map(product => (
               <ProductCard key={product.id} product={product} onView={null} />
             ))}
@@ -332,7 +332,7 @@ export default function HomePage() {
               What Makes Us Different
             </h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+          <div className="home-why-grid">
             {WHY_US.map(w => (
               <div key={w.title} style={{
                 background: '#fff', borderRadius: 20, padding: 28,
