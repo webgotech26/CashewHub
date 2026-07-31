@@ -120,9 +120,8 @@ export default function ContactPage() {
       </section>
 
       {/* ══ FORM + SIDEBAR ════════════════════════════════ */}
-      <section style={{ padding:'0 48px 80px', background:'#F8F4EF' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto',
-          display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:28, alignItems:'start' }}>
+      <section style={{ padding:'0 clamp(16px,4vw,48px) 80px', background:'#F8F4EF' }}>
+        <div className="contact-form-grid" style={{ maxWidth:1100, margin:'0 auto' }}>
 
           {/* Contact Form */}
           <div style={{
@@ -143,7 +142,7 @@ export default function ContactPage() {
             )}
 
             <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div className="contact-name-phone-grid">
                 {[
                   { label:'Your Name *', key:'name', type:'text', placeholder:'e.g. Ravi Kumar', req:true },
                   { label:'Phone Number', key:'phone', type:'tel', placeholder:'+91 XXXXX XXXXX', req:false },

@@ -2156,3 +2156,96 @@ p, h1, h2, h3, h4, h5, h6, span, a, button, label {
     gap: 10px !important;
   }
 }
+
+/* ── Contact page grids ───────────────────────────────── */
+.contact-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media (max-width: 900px) { .contact-cards-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 480px) { .contact-cards-grid { grid-template-columns: 1fr !important; gap: 12px !important; } }
+
+.contact-form-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .contact-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.contact-name-phone-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 480px) {
+  .contact-name-phone-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── About page inner sections padding ────────────────── */
+@media (max-width: 768px) {
+  .about-who-grid    { padding: 0 16px !important; }
+  .about-section-pad { padding: 48px 16px !important; }
+}
+
+/* ── Home WHY section padding ─────────────────────────── */
+@media (max-width: 768px) {
+  .home-why-section { padding: 48px 16px !important; }
+}
+
+/* ── Checkout mobile input grids ──────────────────────── */
+@media (max-width: 540px) {
+  .checkout-addr-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .checkout-addr-grid > div[style*="span 2"],
+  .checkout-addr-grid > div[style*="span 1"] {
+    grid-column: span 1 !important;
+  }
+}
+
+/* ── Ensure all sections have safe side padding on mobile */
+@media (max-width: 768px) {
+  section {
+    padding-left: clamp(14px, 4vw, 48px);
+    padding-right: clamp(14px, 4vw, 48px);
+  }
+  section > div[style*="maxWidth"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* ── About "Who We Are" section outer padding ─────────── */
+@media (max-width: 768px) {
+  .about-who-section {
+    padding: 44px 16px !important;
+  }
+}
+
+/* ── About products section outer padding ─────────────── */
+@media (max-width: 768px) {
+  .about-products-section {
+    padding: 44px 16px !important;
+  }
+}
+
+/* ── CTA section buttons stack on mobile ──────────────── */
+@media (max-width: 540px) {
+  .cta-buttons {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .cta-buttons button {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+}

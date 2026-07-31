@@ -41,9 +41,8 @@ export default function AboutPage() {
       </section>
 
       {/* ── WHO WE ARE ───────────────────────────────────── */}
-      <section style={{ padding:'72px 0' }}>
+      <section className="about-who-section" style={{ padding:'72px 0' }}>
         <div className="about-who-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,48px)' }}>
-          <div>
             <div style={{ fontSize:11, fontWeight:700, color:'#C9972B',
               textTransform:'uppercase', letterSpacing:2, marginBottom:12 }}>Who We Are</div>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800,
