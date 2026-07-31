@@ -83,11 +83,11 @@ export default function Login() {
           <h1 className="login-brand-name">
             Farm Fresh<br />
             <em>Naturals</em><br />
-            From Panruti
+            From India
           </h1>
 
           <p className="login-brand-sub">
-            Direct from our farms in Tamil Nadu.
+            Direct from our farms in India.
             W180 to W450 grades, roasted and flavoured —
             all freshly packed and delivered.
           </p>

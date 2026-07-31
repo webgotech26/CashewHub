@@ -24,32 +24,42 @@ export default function ContactPage() {
     <div style={{ fontFamily: "'DM Sans',sans-serif", background: '#fff' }}>
 
       {/* ══ HERO ══════════════════════════════════════════ */}
-      <section style={{ position: 'relative', overflow: 'hidden', minHeight: 320 }}>
+      <section style={{
+        position: 'relative', overflow: 'hidden',
+        padding: '80px clamp(20px,5vw,80px) 72px',
+        textAlign: 'center',
+        background: '#FDFBF7',
+        borderBottom: '1px solid rgba(201,151,43,0.12)',
+      }}>
+        {/* Radial amber glow — top centre */}
+        <div style={{
+          position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
+          width: '80%', maxWidth: 800, height: 400,
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.18) 0%, rgba(253,230,138,0.07) 45%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Warm bottom fade */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/assets/pexels-towfiqu-barbhuiya-3440682-9017852.jpg)',
-          backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(253,251,247,0.55) 100%)',
+          pointerEvents: 'none',
         }} />
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 1,
-          background: 'linear-gradient(135deg,rgba(26,10,0,0.85) 0%,rgba(61,26,0,0.75) 100%)',
-        }} />
-        <div style={{ position:'relative', zIndex:2, maxWidth:580, margin:'0 auto',
-          padding:'90px 24px 90px', textAlign:'center' }}>
+
+        <div style={{ position:'relative', zIndex:2, maxWidth:580, margin:'0 auto', padding:'10px 24px 10px' }}>
           <div style={{
             display:'inline-flex', alignItems:'center', gap:8,
-            background:'rgba(201,151,43,0.15)', border:'1px solid rgba(201,151,43,0.4)',
-            color:'#F5C842', fontSize:11, fontWeight:700, textTransform:'uppercase',
+            background:'rgba(201,151,43,0.1)', border:'1px solid rgba(201,151,43,0.3)',
+            color:'#92400E', fontSize:11, fontWeight:700, textTransform:'uppercase',
             letterSpacing:2.5, padding:'6px 18px', borderRadius:30, marginBottom:24,
           }}>Contact Us</div>
           <h1 style={{
-            fontFamily:"'Playfair Display',serif", fontSize:50, fontWeight:800,
-            color:'#fff', lineHeight:1.12, marginBottom:18,
+            fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,5vw,50px)', fontWeight:800,
+            color:'#1C1917', lineHeight:1.12, marginBottom:18,
           }}>
             We'd Love to<br />
-            <span style={{ color:'#F5C842', fontStyle:'italic' }}>Hear From You</span>
+            <span style={{ color:'#C9972B', fontStyle:'italic' }}>Hear From You</span>
           </h1>
-          <p style={{ fontSize:16, color:'rgba(255,255,255,0.62)', lineHeight:1.85 }}>
+          <p style={{ fontSize:'clamp(14px,2vw,16px)', color:'#78716C', lineHeight:1.85 }}>
             Bulk orders, product queries, or just a hello —<br />
             we're available every day from 9AM to 10PM.
           </p>
@@ -66,7 +76,7 @@ export default function ContactPage() {
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
               ),
-              label:'Our Location', v1:'Panruti, Tamil Nadu', v2:'India', href:'https://maps.google.com/?q=Panruti,Tamil+Nadu',
+              label:'Our Location', v1:'India', v2:'Serving pan-India', href:null,
             },
             {
               icon: (
@@ -303,9 +313,9 @@ export default function ContactPage() {
                 Our Location
               </h3>
               <p style={{ fontSize:14, color:'#6B6B6B', lineHeight:1.7, marginBottom:14 }}>
-                Panruti, Cuddalore District<br />Tamil Nadu — India
+                India
               </p>
-              <a href="https://maps.google.com/?q=Panruti,Tamil+Nadu" target="_blank" rel="noreferrer"
+              <a href="https://maps.google.com/?q=India" target="_blank" rel="noreferrer"
                 style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:13,
                   fontWeight:700, color:'#fff',
                   background:'linear-gradient(135deg,#1a0a00,#3d1a00)',

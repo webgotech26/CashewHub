@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 
 const STEPS = [
   {
     step: '01', title: 'Picking', subtitle: 'We Get It Fresh',
     bg: 'linear-gradient(135deg,#1B4332,#2D6A4F)',
     image: '/assets/pexels-jens-f-2153787630-33154105.jpg',
-    desc: 'We get fresh cashews directly from farms in Panruti, Tamil Nadu. Only ripe and good ones are taken. They come to our unit the same day or next day.',
-    points: ['Fresh from Panruti farms', 'Only ripe ones selected', 'Comes to our unit same day', 'No sitting in heat'],
+    desc: 'We get fresh cashews directly from our farms in India. Only ripe and good ones are taken. They come to our unit the same day or next day.',
+    points: ['Fresh from our farms', 'Only ripe ones selected', 'Comes to our unit same day', 'No sitting in heat'],
   },
   {
     step: '02', title: 'Shelling', subtitle: 'Remove Outer Shell',
@@ -87,10 +87,10 @@ export default function ProcessingPage() {
             color:'#fff', lineHeight:1.15, marginBottom:18 }}>
             From Raw Cashew<br />
             <span style={{ color:'#F0CA6D', fontStyle:'italic' }}>to Your Pack</span><br />
-            <span style={{ fontSize:'clamp(16px,3vw,22px)', fontWeight:600, color:'rgba(255,255,255,0.7)', fontStyle:'normal', fontFamily:"'DM Sans',sans-serif" }}>Processed in Panruti, Tamil Nadu</span>
+            <span style={{ fontSize:'clamp(16px,3vw,22px)', fontWeight:600, color:'rgba(255,255,255,0.7)', fontStyle:'normal', fontFamily:"'DM Sans',sans-serif" }}>Processed in India</span>
           </h1>
           <p style={{ fontSize:16, color:'rgba(255,255,255,0.62)', lineHeight:1.8, maxWidth:520, margin:'0 auto' }}>
-            Here is how we process cashews — from picking to packing. Every step is done in our Panruti unit.
+            Here is how we process cashews — from picking to packing. Every step is done in our own unit.
           </p>
         </div>
       </section>

@@ -143,28 +143,31 @@ export default function ShopPage() {
       {/* ── Shop Hero ──────────────────────────────────── */}
       <section style={{
         position:'relative', overflow:'hidden',
-        minHeight:'70vh', display:'flex', alignItems:'center',
+        padding:'72px clamp(16px,4vw,56px) 64px',
+        background:'#FDFBF7',
+        borderBottom:'1px solid rgba(201,151,43,0.12)',
       }}>
-        {/* BG Image */}
+        {/* Radial amber glow — top centre */}
+        <div style={{
+          position:'absolute', top:'-80px', left:'50%', transform:'translateX(-50%)',
+          width:'70%', maxWidth:700, height:360,
+          background:'radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.18) 0%, rgba(253,230,138,0.08) 40%, transparent 70%)',
+          pointerEvents:'none',
+        }} />
+        {/* Warm bottom fade */}
         <div style={{
           position:'absolute', inset:0,
-          backgroundImage:'url(/assets/pexels-valeriya-21558697.jpg)',
-          backgroundSize:'cover', backgroundPosition:'center', zIndex:0,
+          background:'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(253,251,247,0.6) 100%)',
+          pointerEvents:'none',
         }} />
-        {/* Overlay */}
-        <div style={{
-          position:'absolute', inset:0, zIndex:1,
-          background:'linear-gradient(90deg,rgba(10,4,0,0.88) 0%,rgba(10,4,0,0.6) 60%,rgba(10,4,0,0.2) 100%)',
-        }} />
-        <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 clamp(16px, 4vw, 56px)', position:'relative', zIndex:2, width:'100%' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.7)', textTransform:'uppercase',
-            letterSpacing:2, marginBottom:14 }}>Our Collection</div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px, 5vw, 58px)', fontWeight:800,
-            color:'#fff', marginBottom:16, lineHeight:1.1,
-            textShadow:'0 2px 20px rgba(0,0,0,0.4)' }}>
+        <div style={{ maxWidth:1200, margin:'0 auto', position:'relative', zIndex:1, width:'100%' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'#C9972B', textTransform:'uppercase',
+            letterSpacing:2.5, marginBottom:14 }}>Our Collection</div>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px, 5vw, 52px)', fontWeight:800,
+            color:'#1C1917', marginBottom:16, lineHeight:1.1 }}>
             Premium<br />Natural Shop
           </h1>
-          <p style={{ fontSize:'clamp(13px, 2vw, 16px)', color:'rgba(255,255,255,0.85)', marginBottom:32, maxWidth:460,
+          <p style={{ fontSize:'clamp(13px, 2vw, 16px)', color:'#78716C', marginBottom:36, maxWidth:460,
             lineHeight:1.8 }}>
             Cashews, wood-pressed oils, homemade brownies — all natural, freshly packed.
           </p>
@@ -173,26 +176,30 @@ export default function ShopPage() {
           <div style={{ display:'flex', gap:12, maxWidth:520 }}>
             <div style={{ flex:1, position:'relative' }}>
               <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
-                color:'#9CA3AF', fontSize:16 }}>🔍</span>
+                color:'#A8A29E', fontSize:16 }}>🔍</span>
               <input
                 type="text" placeholder="Search products..."
                 value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width:'100%', padding:'12px 16px 12px 42px', borderRadius:30,
-                  border:'none', fontSize:14, outline:'none',
-                  background:'rgba(255,255,255,0.12)', color:'#fff',
-                  backdropFilter:'blur(4px)' }}
+                  border:'1.5px solid #E7E2D9', fontSize:14, outline:'none',
+                  background:'#fff', color:'#1C1917',
+                  boxShadow:'0 2px 8px rgba(0,0,0,0.06)',
+                  transition:'border-color 0.2s, box-shadow 0.2s' }}
+                onFocus={e => { e.target.style.borderColor='#C9972B'; e.target.style.boxShadow='0 0 0 3px rgba(201,151,43,0.12)'; }}
+                onBlur={e => { e.target.style.borderColor='#E7E2D9'; e.target.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; }}
               />
             </div>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{
-              padding:'12px 16px', borderRadius:30, border:'none', fontSize:13, fontWeight:600,
-              background:'rgba(255,255,255,0.12)', color:'#fff', cursor:'pointer', outline:'none',
-              backdropFilter:'blur(4px)',
+              padding:'12px 18px', borderRadius:30, border:'1.5px solid #E7E2D9',
+              fontSize:13, fontWeight:600,
+              background:'#fff', color:'#44403C', cursor:'pointer', outline:'none',
+              boxShadow:'0 2px 8px rgba(0,0,0,0.06)',
             }}>
-              <option value="default" style={{ color:'#000' }}>Sort: Default</option>
-              <option value="price-asc" style={{ color:'#000' }}>Price: Low → High</option>
-              <option value="price-desc" style={{ color:'#000' }}>Price: High → Low</option>
-              <option value="name-asc" style={{ color:'#000' }}>Name: A–Z</option>
-              <option value="stock" style={{ color:'#000' }}>In Stock First</option>
+              <option value="default">Sort: Default</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="name-asc">Name: A–Z</option>
+              <option value="stock">In Stock First</option>
             </select>
           </div>
         </div>

@@ -14,26 +14,40 @@ export default function AboutPage() {
     <div style={{ fontFamily: "'DM Sans',sans-serif", background: '#fff' }}>
 
       {/* ── HERO ─────────────────────────────────────────── */}
-      <section style={{ position:'relative', padding:'90px 48px 80px', textAlign:'center', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0,
-          backgroundImage:'url(/assets/pexels-nandamends-30878379.jpg)',
-          backgroundSize:'cover', backgroundPosition:'center', zIndex:0 }} />
-        <div style={{ position:'absolute', inset:0, zIndex:1,
-          background:'linear-gradient(135deg,rgba(26,10,0,0.88) 0%,rgba(61,26,0,0.82) 100%)' }} />
+      <section style={{
+        padding:'80px clamp(20px,5vw,80px) 72px',
+        textAlign:'center',
+        background:'#FDFBF7',
+        borderBottom:'1px solid rgba(201,151,43,0.12)',
+        position:'relative', overflow:'hidden',
+      }}>
+        {/* Radial amber glow — top centre */}
+        <div style={{
+          position:'absolute', top:'-80px', left:'50%', transform:'translateX(-50%)',
+          width:'80%', maxWidth:800, height:400,
+          background:'radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.18) 0%, rgba(253,230,138,0.07) 45%, transparent 70%)',
+          pointerEvents:'none',
+        }} />
+        {/* Warm base fade */}
+        <div style={{
+          position:'absolute', inset:0,
+          background:'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(253,251,247,0.55) 100%)',
+          pointerEvents:'none',
+        }} />
 
-        <div style={{ maxWidth:680, margin:'0 auto', position:'relative', zIndex:2 }}>
+        <div style={{ maxWidth:680, margin:'0 auto', position:'relative', zIndex:1 }}>
           <div style={{ display:'inline-flex', alignItems:'center', gap:8,
-            background:'rgba(201,151,43,0.15)', border:'1px solid rgba(201,151,43,0.4)',
-            color:'#F5C842', fontSize:11, fontWeight:700, textTransform:'uppercase',
+            background:'rgba(201,151,43,0.1)', border:'1px solid rgba(201,151,43,0.3)',
+            color:'#92400E', fontSize:11, fontWeight:700, textTransform:'uppercase',
             letterSpacing:2, padding:'6px 16px', borderRadius:30, marginBottom:24 }}>
             About Us
           </div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:46, fontWeight:800,
-            color:'#fff', lineHeight:1.15, marginBottom:18 }}>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,5vw,46px)', fontWeight:800,
+            color:'#1C1917', lineHeight:1.15, marginBottom:18 }}>
             We Are Pretichor Naturals —<br />
-            <span style={{ color:'#F5C842', fontStyle:'italic' }}>Premium Naturals</span>
+            <span style={{ color:'#C9972B', fontStyle:'italic' }}>Premium Naturals</span>
           </h1>
-          <p style={{ fontSize:16, color:'rgba(255,255,255,0.68)', lineHeight:1.8 }}>
+          <p style={{ fontSize:'clamp(14px,2vw,16px)', color:'#78716C', lineHeight:1.8 }}>
             We grow, process and sell premium natural products.
             Direct from us to you — simple as that.
           </p>
@@ -50,10 +64,10 @@ export default function AboutPage() {
               textTransform:'uppercase', letterSpacing:2, marginBottom:12 }}>Who We Are</div>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800,
               color:'#1A1A1A', marginBottom:18, lineHeight:1.25 }}>
-              A Natural Products Business<br />from Tamil Nadu
+              A Natural Products Business<br />from India
             </h2>
             <p style={{ fontSize:15, color:'#6B6B6B', lineHeight:1.85, marginBottom:14 }}>
-              We are based in Panruti, Tamil Nadu. We have our own processing unit where we
+              We are based in India. We have our own processing unit where we
               handle everything — from sourcing to packing — without middlemen.
             </p>
             <p style={{ fontSize:15, color:'#6B6B6B', lineHeight:1.85, marginBottom:14 }}>
@@ -115,7 +129,7 @@ export default function AboutPage() {
             {/* Caption bar */}
             <div style={{ background:'#1a0a00', padding:'14px 22px', textAlign:'center' }}>
               <span style={{ fontFamily:"'Playfair Display',serif", fontSize:14,
-                color:'#F5C842', fontWeight:700 }}>Made &amp; Packed in Panruti, Tamil Nadu</span>
+                color:'#F5C842', fontWeight:700 }}>Made &amp; Packed in India</span>
             </div>
           </div>
         </div>
@@ -135,7 +149,7 @@ export default function AboutPage() {
               {
                 img:   '/assets/premium.png',
                 title: 'Premium Cashews',
-                desc:  'W180, W240, W320 grades and roasted varieties — all hand-selected, carefully processed and freshly packed in Panruti, Tamil Nadu.',
+                desc:  'W180, W240, W320 grades and roasted varieties — all hand-selected, carefully processed and freshly packed in India.',
                 tag:   '🥜 Cashews',
               },
               {

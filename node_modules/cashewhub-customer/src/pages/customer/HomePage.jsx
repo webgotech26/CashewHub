@@ -18,45 +18,44 @@ const SLIDES = [
     btn2Path: '/home/shop',
   },
   {
-    image: '/assets/slide2.png',
-    tag: 'ROASTED & FLAVOURED',
-    title: 'Masala, Pepper',
-    titleHighlight: '& More Varieties',
+    image: '/assets/homeslide1.png', // Unga public/assets/ la irukra gingelly image filename
+    tag: 'WOOD PRESSED OILS',
+    title: 'Pure Tradition in',
+    titleHighlight: 'Every Drop of Gingelly Oil',
     titleEnd: '',
-    subtitle: 'From classic salted to spicy masala and bold pepper, enjoy a range of irresistible flavours crafted for every taste.',
+    subtitle: 'Extracted using traditional wood-pressed methods from the finest sesame seeds, retaining natural nutrients, rich aroma, and authentic taste.',
+    btn1Text: 'Shop Now →',
+    btn1Path: '/home/shop',
+    btn2Text: 'View Oils',
+    btn2Path: '/home/shop',
+  },
+  {
+    image: '/assets/homeslide2.png', // Unga public/assets/ la irukra groundnut image filename
+    tag: '100% NATURAL OILS',
+    title: 'Golden Richness of',
+    titleHighlight: 'Cold Pressed Groundnut Oil',
+    titleEnd: '',
+    subtitle: 'Naturally extracted pure groundnut oil packed with essential fatty acids and nutrients for your everyday healthy cooking.',
+    btn1Text: 'Shop Now →',
+    btn1Path: '/home/shop',
+    btn2Text: 'Explore Benefits',
+    btn2Path: '/home/shop',
+  },
+  {
+    image: '/assets/homeslide3.png', // Unga public/assets/ la irukra brownie image filename
+    tag: 'HEALTHY SNACKING',
+    title: 'Indulgent Brownies,',
+    titleHighlight: 'Happy Moments',
+    titleEnd: '',
+    subtitle: 'Rich in flavor, crafted with premium natural ingredients and pure love to satisfy your sweet cravings guilt-free.',
     btn1Text: 'Shop Now →',
     btn1Path: '/home/shop',
     btn2Text: 'View Flavours',
     btn2Path: '/home/shop',
   },
-  {
-    image: '/assets/slide3.png',
-    tag: 'QUALITY YOU CAN TRUST',
-    title: 'Quality in Every',
-    titleHighlight: 'Handpicked Batch',
-    titleEnd: '',
-    subtitle: 'We carefully select every batch, maintain high hygiene standards, and pack every order with care so you receive the finest cashews every time.',
-    btn1Text: 'Shop Now →',
-    btn1Path: '/home/shop',
-    btn2Text: 'Learn More',
-    btn2Path: '/home/about',
-  },
-  {
-    image: '/assets/slide4.png',
-    tag: 'HEALTHY SNACKING',
-    title: 'Healthy Bites,',
-    titleHighlight: 'Happy Moments',
-    titleEnd: '',
-    subtitle: 'Rich in protein, healthy fats, vitamins, and minerals, our premium cashews are the perfect snack for work, travel, fitness, and family time.',
-    btn1Text: 'Shop Now →',
-    btn1Path: '/home/shop',
-    btn2Text: 'Know Benefits',
-    btn2Path: '/home/shop',
-  },
 ];
-
 const FEATURES = [
-  { icon: '🌿', title: 'From Our Farms',    desc: 'Grown in Panruti, Tamil Nadu — direct from us to you' },
+  { icon: '🌿', title: 'From Our Farms',    desc: 'Grown in India — direct from us to you' },
   { icon: '✅', title: 'No Chemicals',       desc: 'No preservatives, no artificial colour or flavour' },
   { icon: '🚚', title: 'Quick Delivery',     desc: 'Usually delivered within 3–5 days across India' },
   { icon: '💎', title: 'All Grades',         desc: 'W180, W240, W320, W450 — pick what suits you' },
@@ -66,7 +65,7 @@ const WHY_US = [
   {
     icon: '🌱',
     title: 'We Grow It Here',
-    desc: 'Our nuts come from Panruti farms. No middlemen — straight from us to your door.',
+    desc: 'Our nuts come from our farms. No middlemen — straight from us to your door.',
   },
   {
     icon: '🔍',
@@ -155,7 +154,8 @@ export default function HomePage() {
         {/* Text content */}
         <div style={{
           position: 'relative', zIndex: 2,
-          maxWidth: 1200, margin: '0 auto', padding: 'clamp(32px,6vw,56px) clamp(16px,4vw,56px)',
+          width: '100%',
+          padding: 'clamp(32px,6vw,56px) clamp(16px,4vw,48px)',
           minHeight: '55vh', display: 'flex', alignItems: 'center',
         }}>
           <div style={{
@@ -222,24 +222,6 @@ export default function HomePage() {
         </div>
 
        
-
-        {/* Arrows */}
-        {[
-          { side: 'left',  pos: 20,  icon: '‹', fn: () => goTo((current - 1 + SLIDES.length) % SLIDES.length) },
-          { side: 'right', pos: 20,  icon: '›', fn: () => goTo((current + 1) % SLIDES.length) },
-        ].map(btn => (
-          <button key={btn.side} onClick={btn.fn} style={{
-            position: 'absolute', [btn.side]: btn.pos, top: '50%', transform: 'translateY(-50%)',
-            zIndex: 3, background: 'rgba(255,255,255,0.15)',
-            border: '1.5px solid rgba(255,255,255,0.3)', color: '#fff',
-            width: 46, height: 46, borderRadius: '50%', fontSize: 22,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(4px)', transition: 'background 0.2s',
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,151,43,0.5)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-          >{btn.icon}</button>
-        ))}
 
         {/* Counter */}
         
@@ -322,29 +304,102 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           WHY CHOOSE US — real facts only
          ══════════════════════════════════════ */}
-      <section style={{ background: '#FDF8F3', padding: '80px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#C9972B',
-              textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Why Pretichor Naturals</div>
-            <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 38,
-              fontWeight: 800, color: '#1A1A1A' }}>
+      <section style={{
+        background: 'linear-gradient(160deg, #FAFAF8 0%, #FDF8F0 60%, #FBF6ED 100%)',
+        padding: 'clamp(60px,8vw,96px) 0',
+        borderTop: '1px solid rgba(201,151,43,0.1)',
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,4vw,48px)' }}>
+
+          {/* Section header */}
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(201,151,43,0.1)', border: '1px solid rgba(201,151,43,0.25)',
+              color: '#92400E', fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: 2.5, padding: '5px 16px', borderRadius: 30, marginBottom: 18,
+            }}>
+              Why Pretichor Naturals
+            </div>
+            <h2 style={{
+              fontFamily: "'Playfair Display',serif", fontSize: 'clamp(26px,4vw,40px)',
+              fontWeight: 800, color: '#1C1917', letterSpacing: '-0.3px',
+            }}>
               What Makes Us Different
             </h2>
           </div>
+
+          {/* Cards grid */}
           <div className="home-why-grid">
-            {WHY_US.map(w => (
-              <div key={w.title} style={{
-                background: '#fff', borderRadius: 20, padding: 28,
-                border: '1px solid #EBEBEB', boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                transition: 'all 0.25s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.04)'; }}
+            {WHY_US.map((w, idx) => (
+              <div
+                key={w.title}
+                style={{
+                  background: 'rgba(255,255,255,0.85)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: 24,
+                  padding: '32px 28px',
+                  border: '1px solid rgba(231,226,217,0.8)',
+                  boxShadow: '0 2px 16px rgba(0,0,0,0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0,
+                  cursor: 'default',
+                  transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1), box-shadow 0.28s ease, border-color 0.28s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 48px rgba(201,151,43,0.14), 0 4px 16px rgba(0,0,0,0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(201,151,43,0.45)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(231,226,217,0.8)';
+                }}
               >
-                <div style={{ fontSize: 36, marginBottom: 14 }}>{w.icon}</div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A', marginBottom: 8 }}>{w.title}</h3>
-                <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.75 }}>{w.desc}</p>
+                {/* Subtle top-right corner accent */}
+                <div style={{
+                  position: 'absolute', top: -20, right: -20,
+                  width: 80, height: 80, borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(201,151,43,0.07) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                }} />
+
+                {/* Icon badge */}
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+                  border: '1px solid rgba(201,151,43,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, marginBottom: 20,
+                  boxShadow: '0 4px 12px rgba(201,151,43,0.15)',
+                  flexShrink: 0,
+                }}>
+                  {w.icon}
+                </div>
+
+                {/* Step indicator */}
+                <div style={{
+                  fontSize: 10, fontWeight: 800, color: '#C9972B',
+                  textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8,
+                }}>
+                  0{idx + 1}
+                </div>
+
+                <h3 style={{
+                  fontSize: 16, fontWeight: 700, color: '#1C1917',
+                  marginBottom: 10, lineHeight: 1.3, letterSpacing: '-0.1px',
+                }}>
+                  {w.title}
+                </h3>
+                <p style={{
+                  fontSize: 13.5, color: '#78716C', lineHeight: 1.75, margin: 0,
+                }}>
+                  {w.desc}
+                </p>
               </div>
             ))}
           </div>
