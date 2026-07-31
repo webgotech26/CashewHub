@@ -1,6 +1,6 @@
 /**
  * utils/email.js
- * Email notification utility for H²B³ Cashew — sends order confirmations to customers.
+ * Email notification utility for Pretichor Naturals — sends order confirmations to customers.
  *
  * Uses nodemailer with Gmail SMTP (or any SMTP provider).
  * Reads credentials exclusively from environment variables.
@@ -10,7 +10,7 @@
  *   EMAIL_PORT       — SMTP port (e.g., 587 for TLS)
  *   EMAIL_USER       — Your email address
  *   EMAIL_PASSWORD   — App password (not regular password!)
- *   EMAIL_FROM       — Sender email display (e.g., "H²B³ Cashew <noreply@h2b3cashew.com>")
+ *   EMAIL_FROM       — Sender email display (e.g., "Pretichor Naturals <noreply@pretichor.com>")
  *
  * For Gmail:
  *   1. Enable 2FA on your Google account
@@ -70,7 +70,7 @@ function getTransporter() {
  * @returns {Promise<void>}
  */
 async function sendOrderConfirmationEmail({ customerEmail, customerName, orderData }) {
-  const from = process.env.EMAIL_FROM || `"H²B³ Cashew" <${process.env.EMAIL_USER}>`;
+  const from = process.env.EMAIL_FROM || `"Pretichor Naturals" <${process.env.EMAIL_USER}>`;
 
   // Build items table rows
   const itemRows = (orderData.items || [])
@@ -105,7 +105,7 @@ async function sendOrderConfirmationEmail({ customerEmail, customerName, orderDa
           <tr>
             <td style="background: linear-gradient(135deg, #C9972B, #F5C842); padding: 32px 40px; text-align: center;">
               <h1 style="margin: 0; color: #1a0a00; font-size: 28px; font-weight: 800;">
-                🌰 H²B³ Cashew
+                🌿 Pretichor Naturals
               </h1>
               <p style="margin: 8px 0 0; color: rgba(26,10,0,0.8); font-size: 13px; font-weight: 600; letter-spacing: 1px;">
                 PREMIUM QUALITY NUTS
@@ -207,7 +207,7 @@ async function sendOrderConfirmationEmail({ customerEmail, customerName, orderDa
           <tr>
             <td style="background: #1a1a1a; padding: 24px 40px; text-align: center;">
               <p style="margin: 0 0 8px; color: rgba(255,255,255,0.8); font-size: 13px;">
-                Thank you for choosing H²B³ Cashew
+                Thank you for choosing Pretichor Naturals
               </p>
               <p style="margin: 0; color: rgba(255,255,255,0.5); font-size: 11px;">
                 Panruti, Tamil Nadu · Fresh from our farms to your door
@@ -226,7 +226,7 @@ async function sendOrderConfirmationEmail({ customerEmail, customerName, orderDa
   const mailOptions = {
     from,
     to: customerEmail,
-    subject: `Order Confirmation #${orderData.id} — H²B³ Cashew`,
+    subject: `Order Confirmation #${orderData.id} — Pretichor Naturals`,
     html: htmlBody,
   };
 

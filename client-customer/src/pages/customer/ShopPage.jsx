@@ -162,11 +162,11 @@ export default function ShopPage() {
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px, 5vw, 58px)', fontWeight:800,
             color:'#fff', marginBottom:16, lineHeight:1.1,
             textShadow:'0 2px 20px rgba(0,0,0,0.4)' }}>
-            Premium<br />Cashew Shop
+            Premium<br />Natural Shop
           </h1>
           <p style={{ fontSize:'clamp(13px, 2vw, 16px)', color:'rgba(255,255,255,0.85)', marginBottom:32, maxWidth:460,
             lineHeight:1.8 }}>
-            All grades, all varieties — freshly packed and delivered to you.
+            Cashews, wood-pressed oils, homemade brownies — all natural, freshly packed.
           </p>
 
           {/* Search */}
@@ -175,7 +175,7 @@ export default function ShopPage() {
               <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
                 color:'#9CA3AF', fontSize:16 }}>🔍</span>
               <input
-                type="text" placeholder="Search cashews..."
+                type="text" placeholder="Search products..."
                 value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width:'100%', padding:'12px 16px 12px 42px', borderRadius:30,
                   border:'none', fontSize:14, outline:'none',

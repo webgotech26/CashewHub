@@ -27,7 +27,7 @@ export default function SplashScreen({ onDone }) {
         opacity: 0,
       }}>
         <img
-          src="/assets/cashewlogo.png"
+          src="/assets/logoo.png"
           alt="H²B³ Cashew"
           style={{
             width: 160, height: 160,

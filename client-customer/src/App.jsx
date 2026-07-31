@@ -4,6 +4,7 @@
  * No admin routes. Runs on port 3000.
  */
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ScrollToTop from './Components/ScrollToTop';
 
 import Login          from './pages/Login';
 import Register       from './pages/Register';
@@ -14,7 +15,6 @@ import CustomerLayout from './pages/customer/CustomerLayout';
 import HomePage           from './pages/customer/HomePage';
 import ShopPage           from './pages/customer/ShopPage';
 import AboutPage          from './pages/customer/AboutPage';
-import ProcessingPage     from './pages/customer/ProcessingPage';
 import ContactPage        from './pages/customer/ContactPage';
 import Checkout           from './pages/customer/Checkout';
 import MyOrders           from './pages/customer/MyOrders';
@@ -25,7 +25,9 @@ import WishlistPage       from './pages/customer/WishlistPage';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* Public auth */}
       <Route path="/"         element={<Navigate to="/home" replace />} />
       <Route path="/login"    element={<Login />} />
@@ -37,7 +39,6 @@ export default function App() {
         <Route index              element={<HomePage />} />
         <Route path="shop"        element={<ShopPage />} />
         <Route path="about"       element={<AboutPage />} />
-        <Route path="processing"  element={<ProcessingPage />} />
         <Route path="contact"     element={<ContactPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
 
@@ -50,6 +51,7 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<Navigate to="/home" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }

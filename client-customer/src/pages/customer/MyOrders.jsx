@@ -99,7 +99,7 @@ function EmptyState({ onShop }) {
       </h2>
       <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7,
         maxWidth: 320, margin: '0 auto 32px', fontFamily: FONT }}>
-        Browse our premium cashew collection and place your first order.
+        Browse our premium natural collection and place your first order.
       </p>
 
       <div style={{ display: 'flex', justifyContent: 'center',
@@ -121,7 +121,7 @@ function EmptyState({ onShop }) {
         cursor: 'pointer', boxShadow: `0 6px 20px ${GOLD}40`,
         letterSpacing: 0.3,
       }}>
-        Shop Premium Cashews →
+        Shop Pretichor Naturals →
       </button>
     </div>
   );

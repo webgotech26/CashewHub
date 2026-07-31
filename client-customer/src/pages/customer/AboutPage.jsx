@@ -1,10 +1,10 @@
 ﻿import { useNavigate } from 'react-router-dom';
 
 const VALUES = [
-  { icon: '🌿', title: 'No Chemicals',      desc: 'No preservatives, no artificial colour. Just cashews — nothing extra added.' },
-  { icon: '🤝', title: 'Direct from Us',    desc: 'We grow and sell our cashews. No middlemen. Price is fair and straight.' },
-  { icon: '💎', title: 'Checked Before Pack', desc: 'We check every batch before packing. Bad ones are set aside. Only good ones go out.' },
-  { icon: '📦', title: 'Fresh Stock',       desc: 'We pack fresh. You will not get old, sitting stock.' },
+  { icon: '🌿', title: 'No Chemicals',        desc: 'No preservatives, no artificial colour or flavour. Just pure natural goodness — nothing extra added.' },
+  { icon: '🤝', title: 'Direct from Us',      desc: 'We source, process and sell ourselves. No middlemen. Fair price, straight from us to you.' },
+  { icon: '💎', title: 'Checked Before Pack', desc: 'Every batch is inspected before packing. Only products that meet our standards go out.' },
+  { icon: '📦', title: 'Fresh Stock',         desc: 'We pack fresh and dispatch quickly. You always get products at peak quality.' },
 ];
 
 export default function AboutPage() {
@@ -30,11 +30,11 @@ export default function AboutPage() {
           </div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:46, fontWeight:800,
             color:'#fff', lineHeight:1.15, marginBottom:18 }}>
-            We Are H²B³ Cashew —<br />
-            <span style={{ color:'#F5C842', fontStyle:'italic' }}>Premium Cashews</span>
+            We Are Pretichor Naturals —<br />
+            <span style={{ color:'#F5C842', fontStyle:'italic' }}>Premium Naturals</span>
           </h1>
           <p style={{ fontSize:16, color:'rgba(255,255,255,0.68)', lineHeight:1.8 }}>
-            We grow, process and sell cashews.
+            We grow, process and sell premium natural products.
             Direct from us to you — simple as that.
           </p>
         </div>
@@ -49,28 +49,72 @@ export default function AboutPage() {
               textTransform:'uppercase', letterSpacing:2, marginBottom:12 }}>Who We Are</div>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:800,
               color:'#1A1A1A', marginBottom:18, lineHeight:1.25 }}>
-              A Cashew Business<br />from Tamil Nadu
+              A Natural Products Business<br />from Tamil Nadu
             </h2>
             <p style={{ fontSize:15, color:'#6B6B6B', lineHeight:1.85, marginBottom:14 }}>
-              We are based in Tamil Nadu. We have our own cashew processing unit here.
-              We do not buy from others and resell — we process it ourselves.
+              We are based in Panruti, Tamil Nadu. We have our own processing unit where we
+              handle everything — from sourcing to packing — without middlemen.
             </p>
             <p style={{ fontSize:15, color:'#6B6B6B', lineHeight:1.85, marginBottom:14 }}>
-              We sell W180, W240, W320, W450 grades. Also roasted and flavoured varieties.
-              All packed in our own unit.
+              We sell premium cashews (W180, W240, W320 &amp; roasted varieties), wood-pressed
+              oils extracted the traditional way, and handmade brownies baked fresh with
+              quality ingredients. All made and packed in-house.
             </p>
             <p style={{ fontSize:15, color:'#6B6B6B', lineHeight:1.85 }}>
-              No preservatives. No artificial anything. Just cashews.
+              No preservatives. No artificial anything. Just pure natural goodness.
             </p>
           </div>
 
           <div style={{ borderRadius:24, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.16)' }}>
-            <img src="/assets/pexels-towfiqu-barbhuiya-3440682-9017852.jpg" alt="Our cashews"
-              style={{ width:'100%', height:340, objectFit:'cover', display:'block' }}
-              onError={e => e.target.style.display='none'} />
-            <div style={{ background:'#1a0a00', padding:'16px 22px', textAlign:'center' }}>
-              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:15,
-                color:'#F5C842', fontWeight:700 }}>Processed in Panruti, Tamil Nadu</span>
+            {/* Product collage — 3 tiles showing the full range */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gridTemplateRows:'auto auto', gap:3, background:'#1a0a00' }}>
+              {/* Cashews — large left tile spanning both rows */}
+              <div style={{ gridRow:'1 / 3', background:'#F7F4EF', position:'relative', minHeight:340 }}>
+                <img
+                  src="/assets/premium.png"
+                  alt="Premium Cashews"
+                  style={{ width:'100%', height:'100%', objectFit:'contain', padding:20, display:'block' }}
+                  onError={e => e.target.style.display='none'}
+                />
+                <span style={{
+                  position:'absolute', bottom:10, left:10,
+                  background:'rgba(26,10,0,0.72)', color:'#F5C842',
+                  fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:20, letterSpacing:0.5,
+                }}>🥜 Cashews</span>
+              </div>
+              {/* Oil — top-right tile */}
+              <div style={{ background:'#FAFAF5', position:'relative', height:168 }}>
+                <img
+                  src="/assets/groundant.png"
+                  alt="Wood Pressed Oil"
+                  style={{ width:'100%', height:'100%', objectFit:'contain', padding:12, display:'block' }}
+                  onError={e => e.target.style.display='none'}
+                />
+                <span style={{
+                  position:'absolute', bottom:8, left:8,
+                  background:'rgba(26,10,0,0.72)', color:'#F5C842',
+                  fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:20, letterSpacing:0.5,
+                }}>🫙 Oils</span>
+              </div>
+              {/* Brownie — bottom-right tile */}
+              <div style={{ background:'#2C1A0E', position:'relative', height:168 }}>
+                <img
+                  src="/assets/brownie.png"
+                  alt="Homemade Brownie"
+                  style={{ width:'100%', height:'100%', objectFit:'contain', padding:12, display:'block' }}
+                  onError={e => e.target.style.display='none'}
+                />
+                <span style={{
+                  position:'absolute', bottom:8, left:8,
+                  background:'rgba(26,10,0,0.72)', color:'#F5C842',
+                  fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:20, letterSpacing:0.5,
+                }}>🍫 Brownies</span>
+              </div>
+            </div>
+            {/* Caption bar */}
+            <div style={{ background:'#1a0a00', padding:'14px 22px', textAlign:'center' }}>
+              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:14,
+                color:'#F5C842', fontWeight:700 }}>Made &amp; Packed in Panruti, Tamil Nadu</span>
             </div>
           </div>
         </div>
@@ -85,23 +129,45 @@ export default function AboutPage() {
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
               fontWeight:800, color:'#1A1A1A' }}>Our Products</h2>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:22 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:22 }}>
             {[
-              { img:'/assets/pexels-towfiqu-barbhuiya-3440682-9017852.jpg',
-                title:'W Grade Cashews',
-                desc:'W180, W240, W320, W450 — available in 250g, 500g and 1kg packs.' },
-              { img:'/assets/pexels-hatdieubaokhanh-com-2155729267-34449058.jpg',
-                title:'Bulk Orders',
-                desc:'Bulk packs for families, sweet shops and resellers. Contact us for pricing.' },
+              {
+                img:   '/assets/premium.png',
+                title: 'Premium Cashews',
+                desc:  'W180, W240, W320 grades and roasted varieties — all hand-selected, carefully processed and freshly packed in Panruti, Tamil Nadu.',
+                tag:   '🥜 Cashews',
+              },
+              {
+                img:   '/assets/groundant.png',
+                title: 'Wood Pressed Oils',
+                desc:  'Gingelly oil and groundnut oil extracted the traditional way using wooden cold-press. No heat, no chemicals — full natural flavour retained.',
+                tag:   '🫙 Oils',
+              },
+              {
+                img:   '/assets/brownie.png',
+                title: 'Homemade Brownies',
+                desc:  'Rich, fudgy brownies baked fresh with premium-quality ingredients. Made in small batches so every piece is soft, moist and delicious.',
+                tag:   '🍫 Brownies',
+              },
             ].map(item => (
               <div key={item.title} style={{ borderRadius:18, overflow:'hidden', background:'#fff',
-                border:'1px solid #EBEBEB', boxShadow:'0 4px 16px rgba(0,0,0,0.05)' }}>
-                <img src={item.img} alt={item.title}
-                  style={{ width:'100%', height:220, objectFit:'cover', display:'block' }}
-                  onError={e => e.target.parentElement.style.display='none'} />
-                <div style={{ padding:'18px 22px' }}>
-                  <h3 style={{ fontSize:15, fontWeight:700, color:'#1A1A1A', marginBottom:6 }}>{item.title}</h3>
-                  <p style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.7 }}>{item.desc}</p>
+                border:'1px solid #EBEBEB', boxShadow:'0 4px 16px rgba(0,0,0,0.05)',
+                display:'flex', flexDirection:'column' }}>
+                <div style={{ position:'relative', background:'#F7F4EF', height:200,
+                  display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                  <img src={item.img} alt={item.title}
+                    style={{ width:'100%', height:'100%', objectFit:'contain', padding:16 }}
+                    onError={e => { e.target.style.display='none'; }} />
+                  <span style={{
+                    position:'absolute', top:12, left:12,
+                    background:'rgba(26,10,0,0.75)', color:'#F5C842',
+                    fontSize:10, fontWeight:700, padding:'4px 10px', borderRadius:20,
+                    letterSpacing:0.5,
+                  }}>{item.tag}</span>
+                </div>
+                <div style={{ padding:'18px 22px', flex:1 }}>
+                  <h3 style={{ fontSize:15, fontWeight:700, color:'#1A1A1A', marginBottom:8 }}>{item.title}</h3>
+                  <p style={{ fontSize:13, color:'#9CA3AF', lineHeight:1.75 }}>{item.desc}</p>
                 </div>
               </div>
             ))}

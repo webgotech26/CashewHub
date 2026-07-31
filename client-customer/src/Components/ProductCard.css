@@ -79,8 +79,18 @@
 
 .pc-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
 @media (max-width:1280px) { .pc-grid { grid-template-columns: repeat(3,1fr); } }
-@media (max-width:900px)  { .pc-grid { grid-template-columns: repeat(2,1fr); gap: 16px; } }
-@media (max-width:480px)  { .pc-grid { grid-template-columns: 1fr; gap: 14px; } }
+@media (max-width:900px)  { .pc-grid { grid-template-columns: repeat(2,1fr); gap: 14px; } }
+@media (max-width:480px)  { .pc-grid { grid-template-columns: repeat(2,1fr); gap: 10px; } }
+
+/* Mobile card sizing tweaks */
+@media (max-width:480px) {
+  .pc-img-wrap      { height: 160px; }
+  .pc-name          { font-size: 13px; }
+  .pc-price         { font-size: 18px; }
+  .pc-body          { padding: 10px 12px; gap: 3px; }
+  .pc-footer        { padding: 0 12px 12px; }
+  .pc-btn-cart      { padding: 10px; font-size: 12px; }
+}
 
 .pc-skeleton { border-radius: 20px; overflow: hidden; background: #fff; border: 1px solid #F0F0F0; pointer-events: none; }
 .pc-skeleton__img { height: 200px; background: linear-gradient(90deg,#F0F0F0 25%,#FAFAFA 50%,#F0F0F0 75%); background-size: 200% 100%; animation: pcShimmer 1.4s infinite; }

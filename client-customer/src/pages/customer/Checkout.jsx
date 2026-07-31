@@ -117,85 +117,86 @@ function SectionTitle({ icon, children }) {
   );
 }
 
-/* ─── Address form ──────────────────────────────────────────── */
-function AddressForm({ addr, setAddr, saved, onSave }) {
-  const update = (field, val) => setAddr(prev => ({ ...prev, [field]: val }));
-
-  const Field = ({ id, label, placeholder, half, type = 'text' }) => (
-    <div style={{ gridColumn: half ? 'span 1' : 'span 2' }}>
+/* ─── AddressField — MODULE SCOPE (never inside another component) ──
+   Defining components inside a render function gives them a new
+   identity every render → React unmounts + remounts → focus lost.
+   ──────────────────────────────────────────────────────────────── */
+function AddressField({ id, label, placeholder, type = 'text', colSpan = 2, value, onChange }) {
+  return (
+    <div style={{ gridColumn: `span ${colSpan}` }}>
       <label htmlFor={id} style={labelStyle}>{label}</label>
       <input
         id={id}
         type={type}
-        value={addr[id] || ''}
+        value={value}
         placeholder={placeholder}
-        onChange={e => update(id, e.target.value)}
+        onChange={onChange}
         style={inputStyle}
-        onFocus={e => e.target.style.borderColor = '#C9972B'}
-        onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+        onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+        onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
       />
     </div>
   );
+}
 
+/* ─── Address form ──────────────────────────────────────────── */
+function AddressForm({ addr, onFieldChange, saved, onSave }) {
   return (
     <div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '14px 16px',
-      }}>
-        {/* Full name — full width */}
-        <Field id="name"     label="Full Name *"             placeholder="e.g. Ramesh Kumar"  />
-        {/* Phone — full width */}
-        <Field id="phone"    label="Phone Number *"          placeholder="10-digit mobile number" type="tel" />
-        {/* House no — full width */}
-        <Field id="house"    label="House / Flat / Block No *" placeholder="e.g. 12B, 3rd Floor" />
-        {/* Area — full width */}
-        <Field id="area"     label="Area / Street / Locality *" placeholder="e.g. Anna Nagar" />
-        {/* Pincode — half */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
+
+        <AddressField id="name"  label="Full Name *"                placeholder="e.g. Ramesh Kumar"        value={addr.name}    onChange={e => onFieldChange('name',  e.target.value)}              />
+        <AddressField id="phone" label="Phone Number *"             placeholder="10-digit mobile number"   value={addr.phone}   onChange={e => onFieldChange('phone', e.target.value)} type="tel"   />
+        <AddressField id="house" label="House / Flat / Block No *"  placeholder="e.g. 12B, 3rd Floor"      value={addr.house}   onChange={e => onFieldChange('house', e.target.value)}              />
+        <AddressField id="area"  label="Area / Street / Locality *" placeholder="e.g. Anna Nagar"          value={addr.area}    onChange={e => onFieldChange('area',  e.target.value)}              />
+
+        {/* Pincode — half width */}
         <div>
           <label htmlFor="pincode" style={labelStyle}>Pincode *</label>
           <input
             id="pincode"
             type="text"
             maxLength={6}
-            value={addr.pincode || ''}
+            value={addr.pincode}
             placeholder="6-digit PIN"
-            onChange={e => update('pincode', e.target.value.replace(/\D/g, ''))}
+            onChange={e => onFieldChange('pincode', e.target.value.replace(/\D/g, ''))}
             style={inputStyle}
-            onFocus={e => e.target.style.borderColor = '#C9972B'}
-            onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+            onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+            onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
           />
         </div>
-        {/* City — half */}
+
+        {/* City — half width */}
         <div>
           <label htmlFor="city" style={labelStyle}>City *</label>
           <input
             id="city"
             type="text"
-            value={addr.city || ''}
+            value={addr.city}
             placeholder="e.g. Chennai"
-            onChange={e => update('city', e.target.value)}
+            onChange={e => onFieldChange('city', e.target.value)}
             style={inputStyle}
-            onFocus={e => e.target.style.borderColor = '#C9972B'}
-            onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+            onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+            onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
           />
         </div>
+
         {/* State — full width */}
         <div style={{ gridColumn: 'span 2' }}>
           <label htmlFor="state" style={labelStyle}>State *</label>
           <select
             id="state"
-            value={addr.state || ''}
-            onChange={e => update('state', e.target.value)}
+            value={addr.state}
+            onChange={e => onFieldChange('state', e.target.value)}
             style={{ ...inputStyle, cursor: 'pointer' }}
-            onFocus={e => e.target.style.borderColor = '#C9972B'}
-            onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+            onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+            onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
           >
             <option value="">Select state…</option>
             {STATES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+
       </div>
 
       {/* Save address button */}
@@ -204,8 +205,7 @@ function AddressForm({ addr, setAddr, saved, onSave }) {
           type="button"
           onClick={onSave}
           style={{
-            padding: '9px 22px',
-            borderRadius: 8,
+            padding: '9px 22px', borderRadius: 8,
             border: '1.5px solid #1A1A1A',
             background: saved ? '#1A1A1A' : 'transparent',
             color: saved ? '#fff' : '#1A1A1A',
@@ -325,7 +325,11 @@ export default function Checkout() {
   const [couponError,    setCouponError]    = useState(null);
   const [appliedCoupon,  setAppliedCoupon]  = useState(null); // { code, discount_amount, ... }
 
-  /* Derived totals */
+  /* ── Stable field change handler — avoids new function on every render ── */
+  const handleFieldChange = (field, val) => {
+    setAddr(prev => ({ ...prev, [field]: val }));
+    setAddrSaved(false);
+  };
   const subtotal      = cartTotal;
   const gst           = subtotal * 0.05;
   const discount      = appliedCoupon ? appliedCoupon.discount_amount : 0;
@@ -414,9 +418,9 @@ export default function Checkout() {
           key,
           amount:   amountPaise,
           currency: 'INR',
-          name:     'H²B³ Cashew',
+          name:     'Pretichor Naturals',
           description: `Order — ${cartItems.map(i => i.name).join(', ')}`,
-          image:    '/assets/cashewlogo.png',
+          image:    '/assets/logoo.png',
           order_id,
           prefill: {
             name:    addr.name  || user.name  || '',
@@ -539,7 +543,7 @@ export default function Checkout() {
           </code>
         </p>
         <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 36 }}>
-          We'll pack and dispatch your cashews soon.
+          We'll pack and dispatch your order soon.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/home/orders')} style={{
@@ -603,10 +607,7 @@ export default function Checkout() {
             <SectionTitle icon="📍">Delivery Address</SectionTitle>
             <AddressForm
               addr={addr}
-              setAddr={(updater) => {
-                setAddr(updater);
-                setAddrSaved(false); // un-save when fields change
-              }}
+              onFieldChange={handleFieldChange}
               saved={addrSaved}
               onSave={() => {
                 if (buildAddressString()) setAddrSaved(true);

@@ -46,29 +46,29 @@ export default function Register() {
         <div style={{ position:'relative', zIndex:2 }}>
 
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:48 }}>
-          <img src="/assets/cashewlogo.png" alt="" style={{ width:50, height:50, borderRadius:'50%', objectFit:'cover' }}
+          <img src="/assets/logoo.png" alt="" style={{ width:50, height:50, borderRadius:'50%', objectFit:'cover' }}
             onError={e => e.target.style.display='none'} />
           <div>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:'#fff' }}>H²B³ Cashew</div>
-            <div style={{ fontSize:10, color:'#F5C842', fontWeight:600, textTransform:'uppercase', letterSpacing:1.5 }}>Premium Quality Nuts</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:'#fff' }}>Pretichor Naturals</div>
+            <div style={{ fontSize:10, color:'#F5C842', fontWeight:600, textTransform:'uppercase', letterSpacing:1.5 }}>PREMIUM NATURAL PRODUCTS</div>
           </div>
         </div>
 
         <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:36, fontWeight:800,
           color:'#fff', lineHeight:1.2, marginBottom:14 }}>
           Join the<br />
-          <span style={{ color:'#F5C842', fontStyle:'italic' }}>H²B³ Cashew</span><br />
+          <span style={{ color:'#F5C842', fontStyle:'italic' }}>Pretichor Naturals</span><br />
           Family Today
         </h1>
         <p style={{ fontSize:14, color:'rgba(255,255,255,0.65)', lineHeight:1.85, marginBottom:40 }}>
-          Create a free account and get access to premium cashews, exclusive deals and easy order tracking.
+          Create a free account and get access to premium natural products, exclusive deals and easy order tracking.
         </p>
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {[
             ['1','Create your account','Takes less than 2 minutes'],
-            ['2','Browse our catalogue','Premium cashew varieties'],
-            ['3','Place your order','Fast delivery, fresh cashews'],
+            ['2','Browse our catalogue','Premium natural varieties'],
+            ['3','Place your order','Fast delivery, fresh products'],
           ].map(([num,title,sub]) => (
             <div key={num} style={{ display:'flex', alignItems:'center', gap:14 }}>
               <div style={{ width:36, height:36, borderRadius:'50%',
