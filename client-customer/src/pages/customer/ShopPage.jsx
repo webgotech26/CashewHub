@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { getProductVisual } from '../../utils/productVisual';
@@ -94,13 +95,14 @@ function QuickView({ product, onClose }) {
 
 /* ── Main Shop Page ───────────────────────────────────────────── */
 export default function ShopPage() {
-  const [products, setProducts]   = useState([]);
+  const location = useLocation();
+  const [products, setProducts]     = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
-  const [search, setSearch]       = useState('');
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+  const [search, setSearch]         = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [sortBy, setSortBy]       = useState('default');
+  const [sortBy, setSortBy]         = useState('default');
   const [viewProduct, setViewProduct] = useState(null);
 
   const fetchData = useCallback(() => {
@@ -111,14 +113,26 @@ export default function ShopPage() {
     ])
       .then(([pRes, cRes]) => {
         setProducts(pRes.data.data || []);
-        setCategories((cRes.data.data || []).filter(c => c.id && c.name));
+        const cats = (cRes.data.data || []).filter(c => c.id && c.name);
+        setCategories(cats);
+
+        // Pre-select category from ?category=oils URL param
+        const params  = new URLSearchParams(location.search);
+        const catParam = (params.get('category') || '').toLowerCase().trim();
+        if (catParam) {
+          const matched = cats.find(c =>
+            c.name.toLowerCase().includes(catParam) ||
+            catParam.includes(c.name.toLowerCase())
+          );
+          if (matched) setActiveCategory(String(matched.id));
+        }
       })
       .catch(err => {
         if (!err.response) setError('Cannot reach the server. Please check if backend is running.');
         else setError(`Error: ${err.response?.data?.message || 'Something went wrong'}`);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [location.search]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

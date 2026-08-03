@@ -96,12 +96,23 @@ export default function CartDrawer({ onClose }) {
             <button
               onClick={clearCart}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 12, color: '#9ca3af', textAlign: 'center',
-                textDecoration: 'underline',
+                background: '#1C1917',
+                border: '1.5px solid #292524',
+                borderRadius: 10,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#F5F5F4',
+                textAlign: 'center',
+                padding: '10px 16px',
+                width: '100%',
+                letterSpacing: 0.2,
+                transition: 'background 0.2s ease',
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#DC2626'; e.currentTarget.style.borderColor = '#DC2626'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#1C1917'; e.currentTarget.style.borderColor = '#292524'; }}
             >
-              Clear cart
+              🗑 Clear Cart
             </button>
           </div>
         )}

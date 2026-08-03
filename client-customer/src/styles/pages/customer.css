@@ -896,15 +896,38 @@
   cursor: pointer;
   flex-shrink: 0;
   user-select: none;
+  text-decoration: none;           /* remove Link underline */
+  color: inherit;
+}
+
+.ch-header__brand:hover {
+  opacity: 0.88;
+  text-decoration: none;
+}
+
+/* Clean round logo wrapper — white background so image is visible on any header */
+.ch-header__logo-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(201,151,43,0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .ch-header__logo {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center;
-  flex-shrink: 0;
+  display: block;
+  /* Remove blend mode so logo renders on white bg without darkening */
 }
 
 .ch-header__brand-text {
@@ -927,6 +950,28 @@
   color: #C9972B;
   text-transform: uppercase;
   letter-spacing: 1.6px;
+}
+
+/* ── Mobile — center the brand in the header ───────────────── */
+@media (max-width: 900px) {
+  .ch-header {
+    /* Override to 3-col: hamburger | brand (centered) | actions */
+    grid-template-columns: 44px 1fr 44px !important;
+    justify-items: center;
+  }
+  .ch-header__brand {
+    justify-self: center;
+  }
+  .ch-header__actions {
+    justify-self: end;
+    gap: 6px !important;
+  }
+  .ch-header__brand-tag {
+    display: none;   /* too much text on small screens */
+  }
+  .ch-header__brand-name {
+    font-size: 16px !important;
+  }
 }
 
 /* ── CENTER: Nav links ─────────────────────────────────────── */
@@ -2549,4 +2594,31 @@ html, body, #root {
   section[style*="padding:'60px 48px'"] {
     padding: 44px 16px !important;
   }
+}
+
+/* ── Hide WhatsApp button when cart drawer is open ───────────── */
+/* The cart overlay is present in DOM when drawer is open */
+.shop-cart-overlay ~ * a[href*="wa.me"],
+body:has(.shop-cart-overlay) a[href*="wa.me"] {
+  display: none !important;
+}
+
+/* ── Hide number input spinners everywhere in cart ───────────── */
+.shop-cart-item__qty input[type="number"]::-webkit-inner-spin-button,
+.shop-cart-item__qty input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+}
+.shop-cart-item__qty input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+/* Also hide spinners globally in cart drawer */
+.shop-cart-drawer input[type="number"]::-webkit-inner-spin-button,
+.shop-cart-drawer input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+}
+.shop-cart-drawer input[type="number"] {
+  -moz-appearance: textfield !important;
 }

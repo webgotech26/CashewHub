@@ -27,7 +27,7 @@ const SLIDES = [
     btn1Text: 'Shop Now →',
     btn1Path: '/home/shop',
     btn2Text: 'View Oils',
-    btn2Path: '/home/shop',
+    btn2Path: '/home/shop?category=oils',
   },
   {
     image: '/assets/homeslide2.png', // Unga public/assets/ la irukra groundnut image filename
@@ -39,7 +39,7 @@ const SLIDES = [
     btn1Text: 'Shop Now →',
     btn1Path: '/home/shop',
     btn2Text: 'Explore Benefits',
-    btn2Path: '/home/shop',
+    btn2Path: '/home/shop?category=oils',
   },
   {
     image: '/assets/homeslide3.png', // Unga public/assets/ la irukra brownie image filename
@@ -51,7 +51,7 @@ const SLIDES = [
     btn1Text: 'Shop Now →',
     btn1Path: '/home/shop',
     btn2Text: 'View Flavours',
-    btn2Path: '/home/shop',
+    btn2Path: '/home/shop?category=brownies',
   },
 ];
 const FEATURES = [

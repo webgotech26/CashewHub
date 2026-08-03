@@ -1,7 +1,9 @@
 ﻿import { useState } from 'react';
 
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ hidden = false }) {
   const [hovered, setHovered] = useState(false);
+
+  if (hidden) return null;
 
   return (
     <a

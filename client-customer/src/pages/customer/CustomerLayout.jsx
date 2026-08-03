@@ -180,20 +180,21 @@ function Layout() {
          ---------------------------------------------------------- */}
       <header className="ch-header">
 
-        {/* -- LEFT: Brand --------------------------------- */}
-        <div className="ch-header__brand" onClick={() => navigate('/home')}>
-          <img
-            src="/assets/logoo.png"
-            alt="Pretichor Naturals logo"
-            className="ch-header__logo"
-            style={{ mixBlendMode: 'multiply' }}
-            onError={e => { e.target.style.display = 'none'; }}
-          />
+        {/* -- LEFT: Brand — Link to home -------------------- */}
+        <Link to="/home" className="ch-header__brand" style={{ textDecoration: 'none' }}>
+          <div className="ch-header__logo-wrap">
+            <img
+              src="/assets/logoo.png"
+              alt="Pretichor Naturals logo"
+              className="ch-header__logo"
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+          </div>
           <div className="ch-header__brand-text">
             <span className="ch-header__brand-name">Pretichor Naturals</span>
             <span className="ch-header__brand-tag">PREMIUM NATURAL PRODUCTS</span>
           </div>
-        </div>
+        </Link>
 
         {/* -- CENTER: Nav links --------------------------- */}
         <nav className="ch-nav" aria-label="Main navigation">
@@ -539,8 +540,8 @@ function Layout() {
         </div>
       </footer>
 
-      {/* WhatsApp Floating Button */}
-      <WhatsAppButton />
+      {/* WhatsApp Floating Button — hidden when cart is open */}
+      <WhatsAppButton hidden={cartOpen} />
 
       {/* Back to top */}
       <BackToTop />
