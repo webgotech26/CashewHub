@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useEffect } from 'react';
-import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, Link } from 'react-router-dom';
 import { FiSearch, FiHeart, FiShoppingBag, FiUser, FiChevronDown } from 'react-icons/fi';
 import { CartProvider, useCart } from '../../context/CartContext';
 import { ToastProvider } from '../../context/ToastContext';
