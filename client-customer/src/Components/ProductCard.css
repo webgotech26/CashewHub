@@ -22,7 +22,8 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 220px;          /* fixed height — tall enough for jar products */
+  /* Aspect ratio instead of fixed height — card scales with column width */
+  aspect-ratio: 1 / 1;
   background: #F7F4EF;
   overflow: hidden;
   flex-shrink: 0;
@@ -72,7 +73,22 @@
 .pc-low-stock { margin-left: auto; font-size: 10px; font-weight: 700; color: #F59E0B; }
 
 .pc-footer { padding: 0 18px 18px; }
-.pc-btn-cart { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #1A1A1A; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s ease, transform 0.15s ease; }
+.pc-btn-cart {
+  width: 100%;
+  min-height: 44px;           /* WCAG 2.5.5 touch target */
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
 .pc-btn-cart:hover:not(:disabled) { background: #333; transform: translateY(-1px); }
 .pc-btn-cart--added    { background: #16a34a !important; }
 .pc-btn-cart--disabled { background: #E5E5E5 !important; color: #9CA3AF !important; cursor: not-allowed !important; transform: none !important; }
@@ -83,13 +99,22 @@
 @media (max-width:480px)  { .pc-grid { grid-template-columns: repeat(2,1fr); gap: 10px; } }
 
 /* Mobile card sizing tweaks */
-@media (max-width:480px) {
-  .pc-img-wrap      { height: 160px; }
+@media (max-width: 480px) {
+  /* aspect-ratio handles image scaling — just tune body */
   .pc-name          { font-size: 13px; }
   .pc-price         { font-size: 18px; }
   .pc-body          { padding: 10px 12px; gap: 3px; }
   .pc-footer        { padding: 0 12px 12px; }
   .pc-btn-cart      { padding: 10px; font-size: 12px; }
+  /* Skeleton image height to match aspect ratio at 2-col width */
+  .pc-skeleton__img { aspect-ratio: 1 / 1; height: auto; }
+}
+
+@media (max-width: 360px) {
+  .pc-name  { font-size: 12px; }
+  .pc-price { font-size: 16px; }
+  .pc-body  { padding: 8px 10px; }
+  .pc-footer { padding: 0 10px 10px; }
 }
 
 .pc-skeleton { border-radius: 20px; overflow: hidden; background: #fff; border: 1px solid #F0F0F0; pointer-events: none; }

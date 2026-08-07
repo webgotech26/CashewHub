@@ -3118,3 +3118,150 @@ body:has(.shop-cart-overlay) a[href*="wa.me"] {
     min-height: -webkit-fill-available !important;
   }
 }
+
+
+/* ================================================================
+   FLUID TYPOGRAPHY — clamp-based scale for all screen sizes
+   Prevents headings from breaking letter-by-letter on mobile.
+   min = 320px viewport, max = 1280px viewport
+   ================================================================ */
+
+/* Page-level h1 headings (hero sections) */
+h1 {
+  font-size: clamp(24px, 5vw, 52px);
+  line-height: 1.15;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Section headings */
+h2 {
+  font-size: clamp(20px, 3.5vw, 36px);
+  line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+h3 {
+  font-size: clamp(16px, 2.5vw, 26px);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+/* Playfair Display hero title (BannerSlider, ShopPage hero, etc.) */
+.hero-slide-title,
+.shop-hero__title,
+.hero-title {
+  font-size: clamp(22px, 5.5vw, 56px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto;
+}
+
+/* Section sub-headings on content pages */
+.section-heading {
+  font-size: clamp(20px, 3vw, 38px);
+  line-height: 1.2;
+}
+
+/* Body copy — fluid but readable minimum */
+p, li {
+  font-size: clamp(13px, 2vw, 16px);
+  line-height: 1.75;
+}
+
+/* Price display in product cards */
+.pc-price {
+  font-size: clamp(18px, 2.5vw, 22px) !important;
+}
+
+/* Product card name — two-line clamp already in place, size is fine */
+.pc-name {
+  font-size: clamp(12px, 1.8vw, 15px) !important;
+}
+
+/* Navbar brand name — already handled at 900px but add clamp */
+.ch-header__brand-name {
+  font-size: clamp(14px, 2vw, 20px) !important;
+}
+
+/* Section eyebrow labels (uppercase small text) */
+.section-eyebrow {
+  font-size: clamp(9px, 1.2vw, 11px);
+  letter-spacing: 2px;
+}
+
+/* Button text — never shrinks below readable size */
+button, .btn {
+  font-size: clamp(12px, 1.5vw, 15px);
+}
+
+/* ── Container padding — fluid safe zones ─────────────────────── */
+/* Wraps any max-width container to use fluid horizontal padding */
+.fluid-container {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Section vertical rhythm ─────────────────────────────────── */
+.section-padding {
+  padding-block: clamp(44px, 8vw, 96px);
+}
+
+/* ── Global spacing tokens (CSS custom properties) ───────────── */
+:root {
+  --space-xs:  clamp(8px,  1.5vw, 12px);
+  --space-sm:  clamp(12px, 2vw,   20px);
+  --space-md:  clamp(20px, 3vw,   32px);
+  --space-lg:  clamp(32px, 5vw,   56px);
+  --space-xl:  clamp(48px, 7vw,   80px);
+  --space-2xl: clamp(64px, 10vw,  120px);
+}
+
+/* ── Prevent any element from causing horizontal scroll ──────── */
+* {
+  min-width: 0;         /* flexbox/grid items can shrink below content width */
+  max-width: 100%;
+}
+
+/* Images and media always fluid */
+img, video, svg, canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Category filter chips — horizontal scroll on mobile ─────── */
+@media (max-width: 640px) {
+  .shop-filter-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  .shop-filter-chips::-webkit-scrollbar { display: none; }
+  .shop-filter-chips > button { flex-shrink: 0; }
+}
+
+/* ── Shop toolbar (category + sort) — stack on mobile ────────── */
+@media (max-width: 640px) {
+  .shop-toolbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .shop-toolbar > div:last-child {
+    width: 100%;
+  }
+  .shop-toolbar select {
+    width: 100% !important;
+  }
+}

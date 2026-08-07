@@ -6,6 +6,7 @@ import { ToastProvider } from '../../context/ToastContext';
 import CartDrawer from '../../Components/CartDrawer';
 import WhatsAppButton from '../../Components/WhatsAppButton';
 import BackToTop from '../../Components/BackToTop';
+import InstallAppButton from '../../Components/InstallAppButton';
 import { getWishlist } from '../customer/WishlistPage';
 import '../../styles/pages/customer.css';
 
@@ -562,6 +563,9 @@ function Layout() {
 
       {/* Back to top */}
       <BackToTop />
+
+      {/* PWA Install prompt — shows after 3s when browser supports A2HS */}
+      <InstallAppButton />
     </div>
   );
 }

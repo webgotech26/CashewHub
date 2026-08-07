@@ -368,15 +368,13 @@ export default function ShopPage() {
 
         {/* ── Loading Skeleton ───────────────────────── */}
         {loading && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:24 }}>
+          <div className="pc-grid">
             {[...Array(8)].map((_, i) => (
-              <div key={i} style={{ borderRadius:20, overflow:'hidden', background:'#fff',
-                border:'1px solid #F0F0F0' }}>
-                <div style={{ height:200, background:'linear-gradient(90deg,#F0F0F0 25%,#FAFAFA 50%,#F0F0F0 75%)',
-                  backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
-                <div style={{ padding:18, display:'flex', flexDirection:'column', gap:8 }}>
+              <div key={i} className="pc-skeleton">
+                <div className="pc-skeleton__img" />
+                <div className="pc-skeleton__body">
                   {[40,80,60,50].map((w,j) => (
-                    <div key={j} style={{ height:j===1?14:10, width:`${w}%`, borderRadius:4, background:'#F0F0F0' }} />
+                    <div key={j} className="pc-skeleton__line" style={{ width:`${w}%` }} />
                   ))}
                 </div>
               </div>
@@ -470,7 +468,7 @@ export default function ShopPage() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:24 }}>
+          <div className="pc-grid">
             {filtered.map(p => (
               <ProductCard key={p.id} product={p} onView={setViewProduct} />
             ))}
