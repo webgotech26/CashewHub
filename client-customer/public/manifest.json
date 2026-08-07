@@ -1,0 +1,61 @@
+{
+  "name": "Petrichor Naturals",
+  "short_name": "Petrichor",
+  "description": "Premium natural cashews, wood-pressed oils and homemade brownies — farm fresh, zero preservatives.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1A1208",
+  "theme_color": "#C9972B",
+  "lang": "en-IN",
+  "categories": ["shopping", "food"],
+  "icons": [
+    {
+      "src": "/assets/logoo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logoo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/logoo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/cashewlogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop Now",
+      "short_name": "Shop",
+      "description": "Browse our full product catalogue",
+      "url": "/home/shop",
+      "icons": [
+        { "src": "/assets/logoo.png", "sizes": "96x96", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "My Orders",
+      "short_name": "Orders",
+      "description": "Track and manage your orders",
+      "url": "/home/orders",
+      "icons": [
+        { "src": "/assets/logoo.png", "sizes": "96x96", "type": "image/png" }
+      ]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

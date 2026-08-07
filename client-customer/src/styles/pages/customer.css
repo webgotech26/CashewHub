@@ -1034,13 +1034,17 @@
 
 .ch-search__icon {
   position: absolute;
-  left: 13px;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #9CA3AF;
   display: flex;
   align-items: center;
+  justify-content: center;
   pointer-events: none;
   z-index: 1;
   transition: color 0.2s ease;
+  line-height: 1;
 }
 
 .ch-search:focus-within .ch-search__icon {
@@ -1048,7 +1052,7 @@
 }
 
 .ch-search__input {
-  padding: 9px 18px 9px 40px;
+  padding: 9px 40px 9px 40px;
   border: 1.5px solid #E8E8E8;
   border-radius: 30px;
   font-size: 13.5px;
@@ -1057,8 +1061,10 @@
   background: rgba(248,247,245,0.9);
   color: #1A1A1A;
   width: 200px;
+  height: 40px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+  box-sizing: border-box;
 }
 
 .ch-search__input::placeholder { color: #B0B7BF; }
@@ -1069,6 +1075,31 @@
   background: #FFFFFF;
   width: 260px;
 }
+
+/* Clear button inside navbar search */
+.ch-search__clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #EBEBEB;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  color: #6B7280;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s;
+  z-index: 2;
+}
+
+.ch-search__clear:hover { background: #D1D5DB; color: #1A1A1A; }
 
 /* Profile icon button */
 .ch-profile-wrap {
@@ -2616,4 +2647,474 @@ body:has(.shop-cart-overlay) a[href*="wa.me"] {
 }
 .shop-cart-drawer input[type="number"] {
   -moz-appearance: textfield !important;
+}
+
+
+/* ================================================================
+   MOBILE AUDIT FIX — 320px → 860px
+   Covers all remaining responsive gaps found in audit:
+   Login/Register card, ProductDetail 2-col, review section,
+   Checkout address grid, cart drawer padding, header micro fixes.
+   ================================================================ */
+
+/* ── Login & Register: fix floating card on mobile ──────────── */
+@media (max-width: 860px) {
+  /* Root container: switch to single-column, show only form */
+  .login-root,
+  .register-root {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    padding: clamp(24px,6vw,48px) clamp(16px,5vw,32px) !important;
+  }
+
+  /* Left dark panel — hidden on mobile (handled by JSX style too) */
+  .login-left-panel,
+  .register-left-panel {
+    display: none !important;
+  }
+
+  /* Right floating card: remove the negative overlap margin,
+     take full width, reset right-side padding */
+  .login-card-wrap,
+  .register-card-wrap {
+    padding: 0 !important;
+    min-height: unset !important;
+    flex: unset !important;
+    width: 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── Login/Register form card itself ─────────────────────────── */
+@media (max-width: 860px) {
+  /* The card uses inline marginLeft:'-60px' — override */
+  .login-form-card,
+  .register-form-card {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    border-radius: 20px !important;
+    padding: clamp(28px,6vw,44px) clamp(20px,6vw,44px) !important;
+  }
+}
+
+/* Extra-small phones: 320px–420px */
+@media (max-width: 480px) {
+  .login-form-card,
+  .register-form-card {
+    border-radius: 16px !important;
+    padding: 28px 18px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  }
+}
+
+/* ── ProductDetailPage — 2-col layout ────────────────────────── */
+@media (max-width: 768px) {
+  /* Main product grid: image + details */
+  .product-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  /* Reviews 2-col */
+  .review-section-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  /* Related products 4-col */
+  .related-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+@media (max-width: 480px) {
+  .product-detail-image {
+    height: 280px !important;
+  }
+  .product-detail-price {
+    font-size: 32px !important;
+  }
+  .related-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* ── Checkout address form grid ──────────────────────────────── */
+@media (max-width: 540px) {
+  /* The address form uses inline grid-template-columns: '1fr 1fr' */
+  .checkout-addr-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  /* Force all span-2 children to full width */
+  .checkout-addr-grid > * {
+    grid-column: span 1 !important;
+  }
+}
+
+/* ── Checkout coupon input row ───────────────────────────────── */
+@media (max-width: 420px) {
+  .coupon-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .coupon-row button {
+    width: 100% !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* ── Cart drawer — inner padding on tiny phones ─────────────── */
+@media (max-width: 360px) {
+  .shop-cart-drawer {
+    width: 100vw !important;
+  }
+  .shop-cart-drawer__header,
+  .shop-cart-drawer__items,
+  .shop-cart-drawer__footer {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .shop-cart-item {
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .shop-cart-item__img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .shop-cart-drawer__title {
+    font-size: 15px !important;
+  }
+}
+
+/* ── My Orders — action buttons row ─────────────────────────── */
+@media (max-width: 480px) {
+  /* The action buttons use flex; ensure they don't overflow */
+  .order-action-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .order-action-row button {
+    width: 100% !important;
+  }
+}
+
+/* ── Profile page — sidebar collapses to tabs on mobile ─────── */
+@media (max-width: 768px) {
+  .profile-sidebar {
+    display: none !important;
+  }
+  .profile-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Account nav tabs — horizontal scroll on phones ─────────── */
+@media (max-width: 640px) {
+  .acct-ns-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .acct-ns-tabs::-webkit-scrollbar { display: none; }
+  .acct-ns-tab {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+  }
+}
+
+/* ── Wishlist page grid ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .wishlist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+@media (max-width: 360px) {
+  .wishlist-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── BannerSlider — ensure hero slider never overflows ──────── */
+@media (max-width: 640px) {
+  .banner-slide {
+    min-height: 52vh !important;
+    max-height: 60vh !important;
+  }
+  .banner-slide-content {
+    padding: 28px 16px !important;
+  }
+  .banner-slide-title {
+    font-size: clamp(20px, 7vw, 32px) !important;
+    line-height: 1.2 !important;
+  }
+  .banner-slide-subtitle {
+    font-size: 13px !important;
+  }
+  .banner-slide-buttons {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .banner-slide-buttons button,
+  .banner-slide-buttons a {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── Header: ensure profile dropdown doesn't clip ───────────── */
+@media (max-width: 480px) {
+  .ch-profile-dropdown {
+    right: -4px !important;
+    min-width: 220px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+}
+
+/* ── Shop search bar: sort select full-width on mobile ──────── */
+@media (max-width: 540px) {
+  .shop-search-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+    max-width: 100% !important;
+  }
+  .shop-search-row > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .shop-search-row select {
+    border-radius: 30px !important;
+  }
+}
+
+/* ── Prevent iOS tap highlight on all interactive elements ───── */
+@media (max-width: 768px) {
+  button, a, [role="button"], input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ── Safe bottom padding for mobile browsers with home bar ───── */
+@media (max-width: 768px) {
+  .shop-layout {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .shop-cart-drawer__footer {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+
+/* ================================================================
+   FINAL RESPONSIVE PASS — ProductDetail + OrderDetail + misc
+   ================================================================ */
+
+/* ── ProductDetail: trust badges 3-col → wrap on mobile ─────── */
+@media (max-width: 540px) {
+  .product-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  /* trust badges row inside product detail */
+  .product-trust-badges {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+  .product-trust-badges > div {
+    padding: 10px 6px !important;
+  }
+  .product-trust-badges > div > div:first-child {
+    font-size: 16px !important;
+  }
+  .product-trust-badges > div > div:last-child {
+    font-size: 10px !important;
+  }
+}
+
+/* ── ProductDetail: image height on small screens ────────────── */
+@media (max-width: 540px) {
+  .product-detail-image-wrap {
+    height: 260px !important;
+    border-radius: 16px !important;
+  }
+}
+@media (max-width: 380px) {
+  .product-detail-image-wrap {
+    height: 220px !important;
+  }
+}
+
+/* ── ReviewSection grid ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .review-section-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* ── Related products grid ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .related-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+@media (max-width: 360px) {
+  .related-products-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── OrderDetailPage: 2-col layout → 1-col on mobile ─────────── */
+@media (max-width: 768px) {
+  .order-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .order-detail-sidebar {
+    position: static !important;
+  }
+}
+
+/* ── OrderDetailPage: tracker steps → compress on tiny screens ─ */
+@media (max-width: 400px) {
+  .order-tracker-step span:last-child {
+    display: none !important;
+  }
+  .order-tracker-step > div:first-child {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+  .order-tracker-connector {
+    height: 2px !important;
+  }
+}
+
+/* ── Checkout: saved-address radio cards ─────────────────────── */
+@media (max-width: 480px) {
+  .saved-addr-label {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+  .saved-addr-label p {
+    font-size: 12px !important;
+  }
+}
+
+/* ── ProfilePage address cards grid ─────────────────────────── */
+@media (max-width: 480px) {
+  .address-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── ProfilePage address form 2-col → 1-col ─────────────────── */
+@media (max-width: 540px) {
+  .addr-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* ── WishlistPage: page padding ─────────────────────────────── */
+@media (max-width: 640px) {
+  .wishlist-page {
+    padding: 20px 14px 60px !important;
+  }
+}
+
+/* ── Global: prevent fixed-px padding from overflowing ──────── */
+@media (max-width: 480px) {
+  /* Any section with large hard-coded padding */
+  div[style*="padding: '40px 48px'"],
+  div[style*="padding:'40px 48px'"],
+  div[style*="padding: '32px 48px'"],
+  div[style*="padding:'32px 48px'"] {
+    padding: 20px 14px !important;
+  }
+}
+
+/* ── ShopPage hero search row ────────────────────────────────── */
+@media (max-width: 480px) {
+  .shop-search-row {
+    flex-direction: column !important;
+  }
+  .shop-search-row > div,
+  .shop-search-row select {
+    width: 100% !important;
+    border-radius: 30px !important;
+  }
+}
+
+/* ── Qty stepper in product detail ──────────────────────────── */
+@media (max-width: 380px) {
+  .qty-stepper {
+    gap: 6px !important;
+  }
+  .qty-stepper button {
+    width: 36px !important;
+    height: 40px !important;
+  }
+  .qty-stepper span {
+    font-size: 14px !important;
+    min-width: 18px !important;
+  }
+}
+
+/* ── Checkout success screen buttons ─────────────────────────── */
+@media (max-width: 480px) {
+  .checkout-success-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .checkout-success-actions button {
+    width: 100% !important;
+  }
+}
+
+/* ── ProfilePage stats row → wrap on mobile ─────────────────── */
+@media (max-width: 480px) {
+  .profile-stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .profile-stats-row > div {
+    padding: 12px 8px !important;
+  }
+  .profile-stats-row p:first-child {
+    font-size: 18px !important;
+  }
+  .profile-stats-row p:last-child {
+    font-size: 10px !important;
+  }
+}
+
+/* ── BannerSlider dots — bigger tap targets on mobile ────────── */
+@media (max-width: 640px) {
+  .banner-dot {
+    width: 10px !important;
+    height: 10px !important;
+    min-width: 10px !important;
+    min-height: 10px !important;
+    margin: 0 4px !important;
+  }
+}
+
+/* ── Fix iOS 100vh issue (address bar eats space) ────────────── */
+@supports (-webkit-touch-callout: none) {
+  .login-right-col,
+  .login-left-panel,
+  .register-left-panel {
+    min-height: -webkit-fill-available !important;
+  }
 }

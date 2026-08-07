@@ -143,7 +143,7 @@ function AddressField({ id, label, placeholder, type = 'text', colSpan = 2, valu
 function AddressForm({ addr, onFieldChange, saved, onSave }) {
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
+      <div className="checkout-addr-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
 
         <AddressField id="name"  label="Full Name *"                placeholder="e.g. Ramesh Kumar"        value={addr.name}    onChange={e => onFieldChange('name',  e.target.value)}              />
         <AddressField id="phone" label="Phone Number *"             placeholder="10-digit mobile number"   value={addr.phone}   onChange={e => onFieldChange('phone', e.target.value)} type="tel"   />
@@ -567,7 +567,7 @@ export default function Checkout() {
         <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 36 }}>
           We'll pack and dispatch your order soon.
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="checkout-success-actions" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/home/orders')} style={{
             background: '#1A1A1A', color: '#fff', border: 'none',
             borderRadius: 10, padding: '12px 28px', fontSize: 14,
@@ -878,7 +878,7 @@ export default function Checkout() {
             ) : (
               /* Input state */
               <div>
-                <div style={{ display: 'flex', gap: 8 }}>
+              <div className="coupon-row" style={{ display: 'flex', gap: 8 }}>
                   <input
                     type="text"
                     value={couponCode}

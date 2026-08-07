@@ -253,26 +253,29 @@ export default function Login() {
           RIGHT: Floating card — OVERLAPS left panel
           negative left margin creates the overlap effect
          ════════════════════════════════════════ */}
-      <div style={{
+      <div className="login-right-col" style={{
         position: 'relative', zIndex: 10,
         flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '48px 48px 48px 0',
+        padding: 'clamp(32px,6vh,48px) clamp(16px,4vw,48px) clamp(32px,6vh,48px) 0',
+        overflowY: 'auto',
+        minHeight: '100vh',
+        boxSizing: 'border-box',
       }}>
         {/* The card — glassmorphism + deep shadow + slight left overlap */}
-        <div style={{
+        <div className="login-float-card" style={{
           background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderRadius: 28,
-          padding: '52px 48px',
+          padding: 'clamp(32px,5vh,52px) clamp(24px,4vw,48px)',
           width: '100%',
           maxWidth: 460,
-          /* KEY: negative marginLeft to overlap over left panel */
           marginLeft: '-60px',
-          /* Multi-layer premium shadow */
+          marginTop: 'auto',
+          marginBottom: 'auto',
           boxShadow: `
             0 0 0 1px rgba(0,0,0,0.04),
             0 4px 6px rgba(0,0,0,0.05),
@@ -426,6 +429,21 @@ export default function Login() {
         @media (max-width: 860px) {
           .login-container-inner > div:first-child { display: none !important; }
           .login-container-inner { justify-content: center; }
+        }
+        @media (max-width: 860px) {
+          /* Remove the left-overlap margin so card centres properly */
+          .login-float-card { margin-left: 0 !important; }
+          /* Remove right-offset padding from the column */
+          .login-right-col {
+            padding: clamp(32px,6vh,48px) clamp(16px,5vw,32px) !important;
+            min-height: unset !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .login-float-card {
+            border-radius: 16px !important;
+            padding: 28px 18px !important;
+          }
         }
       `}</style>
     </div>

@@ -259,24 +259,28 @@ export default function Register() {
       </div>
 
       {/* ── RIGHT PANEL — floating card overlaps left ── */}
-      <div style={{
+      <div className="login-right-col" style={{
         position: 'relative', zIndex: 10,
         flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '48px 48px 48px 0',
+        padding: 'clamp(32px,6vh,48px) clamp(16px,4vw,48px) clamp(32px,6vh,48px) 0',
         overflowY: 'auto',
+        minHeight: '100vh',
+        boxSizing: 'border-box',
       }}>
-        <div style={{
+        <div className="login-float-card" style={{
           background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderRadius: 28,
-          padding: '44px 48px',
+          padding: 'clamp(32px,5vh,44px) clamp(24px,4vw,48px)',
           width: '100%',
           maxWidth: 480,
           marginLeft: '-60px',
+          marginTop: 'auto',
+          marginBottom: 'auto',
           boxShadow: `
             0 0 0 1px rgba(0,0,0,0.04),
             0 4px 6px rgba(0,0,0,0.05),
@@ -286,6 +290,7 @@ export default function Register() {
           `,
           border: '1px solid rgba(255,255,255,0.6)',
           position: 'relative',
+          boxSizing: 'border-box',
         }}>
 
           {/* Top glass highlight edge */}
@@ -490,6 +495,24 @@ export default function Register() {
       <style>{`
         @media (max-width: 860px) {
           .reg-left { display: none !important; }
+          .login-right-col {
+            padding: clamp(32px,6vh,48px) clamp(16px,5vw,32px) !important;
+            min-height: 100vh !important;
+          }
+          .login-float-card {
+            margin-left: 0 !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .login-float-card {
+            border-radius: 16px !important;
+            padding: 28px 18px !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .login-float-card {
+            padding: 24px 14px !important;
+          }
         }
       `}</style>
     </div>

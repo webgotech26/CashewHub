@@ -225,11 +225,22 @@ function Layout() {
                 if (e.key === 'Enter' && search.trim()) {
                   e.preventDefault();
                   navigate(`/home/shop?search=${encodeURIComponent(search.trim())}`);
-                  setSearch('');  // clear navbar input after navigating
+                  setSearch('');
                 }
               }}
               aria-label="Search products"
             />
+            {/* Clear button — only visible when there is typed text */}
+            {search && (
+              <button
+                className="ch-search__clear"
+                type="button"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
           </div>
 
           {/* 2. Wishlist button � navigates to /home/wishlist */}

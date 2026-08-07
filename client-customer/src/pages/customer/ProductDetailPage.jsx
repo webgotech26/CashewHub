@@ -91,7 +91,7 @@ function ReviewSection({ productId }) {
         Customer Reviews
       </h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'start' }}>
+      <div className="review-section-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'start' }}>
 
         {/* LEFT — Aggregate stats + Write review */}
         <div>
@@ -397,8 +397,9 @@ export default function ProductDetailPage() {
 
       {/* Breadcrumb */}
       <div style={{ background:'#fff', borderBottom:'1px solid #F0F0F0' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'14px 48px',
-          display:'flex', alignItems:'center', gap:8, fontSize:13, color:'#9CA3AF' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', padding:'14px clamp(16px,4vw,48px)',
+          display:'flex', alignItems:'center', gap:8, fontSize:13, color:'#9CA3AF',
+          flexWrap:'wrap', overflowX:'hidden' }}>
           {[['Home','/home'],['Shop','/home/shop']].map(([l,p]) => (
             <span key={l} style={{ display:'flex', alignItems:'center', gap:8 }}>
               <button onClick={() => navigate(p)} style={{ background:'none', border:'none',
@@ -414,12 +415,12 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth:1100, margin:'0 auto', padding:'40px 48px' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:52, alignItems:'start' }}>
+      <div style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(24px,3vw,40px) clamp(16px,4vw,48px)' }}>
+        <div className="product-detail-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:52, alignItems:'start' }}>
 
           {/* LEFT — Image */}
           <div>
-            <div onClick={() => product.image_url && setZoomed(true)} style={{
+            <div className="product-detail-image-wrap" onClick={() => product.image_url && setZoomed(true)} style={{
               borderRadius:24, overflow:'hidden',
               background: product.image_url ? '#F7F4EF' : visual.bg,
               height:420, display:'flex', alignItems:'center', justifyContent:'center',
@@ -460,7 +461,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Trust badges */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
+            <div className="product-trust-badges" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
               {[['🌿','No Preservatives'],['📦','Fresh Packed'],['🚚','Fast Delivery']].map(([icon,text]) => (
                 <div key={text} style={{ background:'#fff', borderRadius:12, padding:'12px 10px',
                   border:'1px solid #EBEBEB', textAlign:'center' }}>
@@ -614,7 +615,7 @@ export default function ProductDetailPage() {
                 borderRadius:20, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer',
               }}>View All →</button>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+            <div className="related-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
               {related.map(p => {
                 const v = getProductVisual(p.name);
                 return (

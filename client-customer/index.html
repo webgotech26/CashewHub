@@ -2,11 +2,82 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Viewport — prevents zooming on input focus on iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary meta -->
     <title>Petrichor Naturals — Premium Natural Products</title>
+    <meta name="description" content="Premium cashews, wood-pressed oils and homemade brownies from Petrichor Naturals. Farm fresh, zero preservatives, delivered to your door." />
+    <meta name="keywords" content="cashews, wood pressed oil, brownies, natural products, Petrichor Naturals, organic, farm fresh" />
+    <meta name="author" content="Petrichor Naturals" />
+
+    <!-- PWA: Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- PWA: Theme color — shown in browser chrome and Android task switcher -->
+    <meta name="theme-color" content="#C9972B" />
+    <!-- Dark-mode variant: use the dark earthy background -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1A1208" />
+
+    <!-- PWA: iOS Safari specific -->
+    <!-- Hides Safari address bar so app feels native when added to Home Screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Controls the status bar appearance on iOS (black-translucent = full-screen behind status bar) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- App name shown under the icon on iOS Home Screen -->
+    <meta name="apple-mobile-web-app-title" content="Petrichor" />
+    <!-- iOS touch icon — used when user adds to Home Screen on Apple devices -->
+    <link rel="apple-touch-icon" href="/assets/logoo.png" />
+    <!-- Optional: specific sizes for different Apple device resolutions -->
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/logoo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/logoo.png" />
+
+    <!-- PWA: iOS Safari splash screens (startup images) -->
+    <!-- These show while the app is launching in standalone mode -->
+    <!-- iPhone 14 Pro Max -->
+    <link rel="apple-touch-startup-image"
+      media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
+      href="/assets/logoo.png" />
+    <!-- iPhone SE -->
+    <link rel="apple-touch-startup-image"
+      media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+      href="/assets/logoo.png" />
+
+    <!-- PWA: Microsoft / Windows tiles -->
+    <meta name="msapplication-TileColor" content="#1A1208" />
+    <meta name="msapplication-TileImage" content="/assets/logoo.png" />
+    <meta name="msapplication-config" content="none" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/cashewlogo.png" />
+    <link rel="shortcut icon" href="/assets/cashewlogo.png" />
+
+    <!-- Open Graph (social sharing) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Petrichor Naturals — Premium Natural Products" />
+    <meta property="og:description" content="Farm-fresh cashews, wood-pressed oils and homemade brownies. Zero preservatives, delivered to your door." />
+    <meta property="og:image" content="/assets/logoo.png" />
+    <meta property="og:site_name" content="Petrichor Naturals" />
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Petrichor Naturals" />
+    <meta name="twitter:description" content="Premium natural products — cashews, oils, brownies." />
+    <meta name="twitter:image" content="/assets/logoo.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Prevent FOUC on initial dark-background pages (Login/Register) -->
+    <style>
+      html { background: #1A1208; }
+      body { margin: 0; background: #FAFAFA; }
+      /* Instant safe-area padding for devices with notches/home bars */
+      body { padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0) 0; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
