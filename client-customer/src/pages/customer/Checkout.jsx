@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Checkout.jsx — Premium 2-column checkout
  *
  * Left  (65%): Delivery Address form  +  Order Review
@@ -306,10 +306,32 @@ export default function Checkout() {
   const { cartItems, cartTotal, clearCart, effectivePrice } = useCart();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  /* Saved addresses from Profile page (stored in localStorage) */
+  const [savedAddresses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('saved_addresses') || '[]'); }
+    catch { return []; }
+  });
+  const [selectedSavedId, setSelectedSavedId] = useState(() => {
+    // Auto-select the default address if one exists
+    try {
+      const addrs = JSON.parse(localStorage.getItem('saved_addresses') || '[]');
+      const def = addrs.find(a => a.isDefault);
+      return def ? def.id : null;
+    } catch { return null; }
+  });
+
   /* Address state */
-  const [addr, setAddr] = useState({
-    name: user.name || '', phone: user.mobile || '',
-    house: '', area: '', pincode: '', city: '', state: '',
+  const [addr, setAddr] = useState(() => {
+    // Pre-fill from default saved address if available
+    try {
+      const addrs = JSON.parse(localStorage.getItem('saved_addresses') || '[]');
+      const def = addrs.find(a => a.isDefault);
+      if (def?.fields) return { ...def.fields };
+    } catch {}
+    return {
+      name: user.name || '', phone: user.mobile || '',
+      house: '', area: '', pincode: '', city: '', state: '',
+    };
   });
   const [addrSaved, setAddrSaved] = useState(false);
 
@@ -418,7 +440,7 @@ export default function Checkout() {
           key,
           amount:   amountPaise,
           currency: 'INR',
-          name:     'Pretichor Naturals',
+          name:     'Petrichor Naturals',
           description: `Order — ${cartItems.map(i => i.name).join(', ')}`,
           image:    '/assets/logoo.png',
           order_id,
@@ -600,15 +622,121 @@ export default function Checkout() {
           {/* ── 1. Delivery Address ── */}
           <Card>
             <SectionTitle icon="📍">Delivery Address</SectionTitle>
-            <AddressForm
-              addr={addr}
-              onFieldChange={handleFieldChange}
-              saved={addrSaved}
-              onSave={() => {
-                if (buildAddressString()) setAddrSaved(true);
-                else setError('Please fill in all required fields before saving.');
-              }}
-            />
+
+            {/* ── Saved address picker (only when addresses exist) ── */}
+            {savedAddresses.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#4B5563',
+                  marginBottom: 10, letterSpacing: 0.2 }}>
+                  Select a saved address:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {savedAddresses.map(a => (
+                    <label key={a.id} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12,
+                      padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+                      border: `1.5px solid ${selectedSavedId === a.id ? '#C9972B' : '#E5E7EB'}`,
+                      background: selectedSavedId === a.id ? '#FDF8F0' : '#FAFAFA',
+                      transition: 'all 0.18s',
+                    }}>
+                      <input
+                        type="radio"
+                        name="saved_address"
+                        checked={selectedSavedId === a.id}
+                        onChange={() => {
+                          setSelectedSavedId(a.id);
+                          // If the saved address has structured fields, fill them in
+                          if (a.fields) {
+                            setAddr({ ...a.fields });
+                          } else {
+                            // Legacy: plain text address — put it in 'area' field
+                            setAddr(prev => ({ ...prev, area: a.text || '' }));
+                          }
+                          setAddrSaved(true);
+                        }}
+                        style={{ accentColor: '#C9972B', marginTop: 2, flexShrink: 0 }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 13, color: '#111', margin: 0, lineHeight: 1.6 }}>
+                          {a.fields
+                            ? `${a.fields.name} · ${a.fields.phone} | ${a.fields.house}, ${a.fields.area}, ${a.fields.city} - ${a.fields.pincode}, ${a.fields.state}`
+                            : a.text}
+                        </p>
+                        {a.isDefault && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#C9972B',
+                            background: 'rgba(201,151,43,0.1)', padding: '2px 8px',
+                            borderRadius: 20, marginTop: 4, display: 'inline-block',
+                            textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+
+                  {/* Option to fill in a new address manually */}
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
+                    border: `1.5px solid ${selectedSavedId === 'new' ? '#1A1A1A' : '#E5E7EB'}`,
+                    background: selectedSavedId === 'new' ? '#F9F9F9' : '#FAFAFA',
+                    transition: 'all 0.18s',
+                  }}>
+                    <input
+                      type="radio"
+                      name="saved_address"
+                      checked={selectedSavedId === 'new'}
+                      onChange={() => {
+                        setSelectedSavedId('new');
+                        setAddr({ name: user.name || '', phone: user.mobile || '',
+                          house: '', area: '', pincode: '', city: '', state: '' });
+                        setAddrSaved(false);
+                      }}
+                      style={{ accentColor: '#1A1A1A', flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
+                      + Use a different address
+                    </span>
+                  </label>
+                </div>
+
+                {/* Divider before manual form */}
+                {(selectedSavedId === 'new' || !selectedSavedId) && (
+                  <div style={{ borderTop: '1px dashed #E5E7EB', margin: '18px 0 0' }} />
+                )}
+              </div>
+            )}
+
+            {/* Show form when: no saved addresses OR "new address" selected */}
+            {(savedAddresses.length === 0 || selectedSavedId === 'new' || !selectedSavedId) && (
+              <AddressForm
+                addr={addr}
+                onFieldChange={(field, val) => {
+                  handleFieldChange(field, val);
+                  // Save structured fields so this can be persisted later
+                }}
+                saved={addrSaved}
+                onSave={() => {
+                  if (buildAddressString()) {
+                    setAddrSaved(true);
+                    // Save structured fields to localStorage for future orders
+                    try {
+                      const existing = JSON.parse(localStorage.getItem('saved_addresses') || '[]');
+                      const newEntry = {
+                        id: Date.now(),
+                        text: buildAddressString(),
+                        fields: { ...addr },
+                        isDefault: existing.length === 0,
+                      };
+                      const updated = [...existing, newEntry];
+                      localStorage.setItem('saved_addresses', JSON.stringify(updated));
+                    } catch {}
+                  } else {
+                    setError('Please fill in all required fields before saving.');
+                  }
+                }}
+              />
+            )}
           </Card>
 
           {/* ── 2. Order Review ── */}
@@ -653,9 +781,9 @@ export default function Checkout() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'Subtotal',         value: `₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,     green: false },
-                { label: 'GST (5%)',          value: `₹${gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,          green: false },
-                { label: 'Delivery Charges', value: 'FREE',                                                                    green: true  },
+                { label: 'Subtotal',         value: `₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,     green: false, strike: false },
+                { label: 'GST (5%)',          value: `₹${gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,          green: false, strike: false },
+                { label: 'Delivery Charges', value: 'FREE',                                                                    green: true,  strike: false },
               ].map(({ label, value, green }) => (
                 <div key={label} style={{
                   display: 'flex', justifyContent: 'space-between',
@@ -667,6 +795,27 @@ export default function Checkout() {
                   </span>
                 </div>
               ))}
+
+              {/* Coupon discount row — shown only when applied */}
+              {appliedCoupon && (
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  fontSize: 14, color: '#15803D',
+                  background: '#F0FDF4', border: '1px solid #BBF7D0',
+                  borderRadius: 8, padding: '8px 10px', marginTop: 4,
+                }}>
+                  <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    🎟 {appliedCoupon.code}
+                    <button onClick={removeCoupon} title="Remove coupon" style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: '#DC2626', fontSize: 13, padding: '0 2px', lineHeight: 1,
+                    }}>×</button>
+                  </span>
+                  <span style={{ fontWeight: 700 }}>
+                    − ₹{appliedCoupon.discount_amount.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -684,10 +833,96 @@ export default function Checkout() {
                 ₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
+            {appliedCoupon && (
+              <p style={{ fontSize: 12, color: '#15803D', fontWeight: 600, marginTop: 4 }}>
+                🎉 You save ₹{appliedCoupon.discount_amount.toFixed(2)} with coupon!
+              </p>
+            )}
 
             <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>
               Inclusive of all taxes
             </p>
+          </Card>
+
+          {/* ── Coupon Code ── */}
+          <Card>
+            <SectionTitle icon="🎟">Promo Code</SectionTitle>
+
+            {appliedCoupon ? (
+              /* Applied state */
+              <div style={{
+                background: '#F0FDF4', border: '1.5px solid #86EFAC',
+                borderRadius: 12, padding: '14px 16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>✅</span>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#15803D', margin: 0 }}>
+                      {appliedCoupon.code} applied!
+                    </p>
+                    <p style={{ fontSize: 12, color: '#16A34A', margin: '2px 0 0' }}>
+                      {appliedCoupon.discount_type === 'percentage'
+                        ? `${appliedCoupon.discount_value}% off`
+                        : `₹${appliedCoupon.discount_value} flat off`}
+                      {' · '}saving ₹{appliedCoupon.discount_amount.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={removeCoupon} style={{
+                  background: 'none', border: '1.5px solid #FCA5A5', color: '#DC2626',
+                  borderRadius: 8, padding: '6px 14px', fontSize: 12,
+                  fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                }}>Remove</button>
+              </div>
+            ) : (
+              /* Input state */
+              <div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(null); }}
+                    onKeyDown={e => { if (e.key === 'Enter') applyCoupon(); }}
+                    placeholder="Enter promo code"
+                    maxLength={30}
+                    style={{
+                      flex: 1, padding: '11px 14px',
+                      border: `1.5px solid ${couponError ? '#FECACA' : '#E5E7EB'}`,
+                      borderRadius: 10, fontSize: 14, fontFamily: 'inherit',
+                      outline: 'none', background: '#FAFAFA', color: '#111',
+                      letterSpacing: 1, fontWeight: 600, textTransform: 'uppercase',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+                    onBlur={e  => { e.target.style.borderColor = couponError ? '#FECACA' : '#E5E7EB'; }}
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    style={{
+                      padding: '11px 20px', borderRadius: 10, border: 'none',
+                      background: couponLoading || !couponCode.trim()
+                        ? '#E5E7EB'
+                        : 'linear-gradient(135deg,#1A1A1A,#333)',
+                      color: couponLoading || !couponCode.trim() ? '#9CA3AF' : '#fff',
+                      fontSize: 13, fontWeight: 700, cursor: couponLoading || !couponCode.trim() ? 'not-allowed' : 'pointer',
+                      flexShrink: 0, transition: 'all 0.2s', fontFamily: 'inherit',
+                    }}
+                  >
+                    {couponLoading ? '…' : 'Apply'}
+                  </button>
+                </div>
+
+                {/* Error */}
+                {couponError && (
+                  <p style={{ fontSize: 12, color: '#DC2626', marginTop: 8,
+                    fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    ❌ {couponError}
+                  </p>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* ── Payment Options ── */}

@@ -5,6 +5,293 @@ import { useToast } from '../../context/ToastContext';
 import api from '../../services/api';
 import { getProductVisual } from '../../utils/productVisual';
 
+/* ── Star Rating Display ─────────────────────────────────────── */
+function StarRow({ rating, size = 16, interactive = false, onRate }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div style={{ display: 'flex', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(n => (
+        <span
+          key={n}
+          onClick={() => interactive && onRate && onRate(n)}
+          onMouseEnter={() => interactive && setHovered(n)}
+          onMouseLeave={() => interactive && setHovered(0)}
+          style={{
+            fontSize: size, lineHeight: 1,
+            cursor: interactive ? 'pointer' : 'default',
+            color: n <= (hovered || rating) ? '#F59E0B' : '#E5E7EB',
+            transition: 'color 0.12s',
+            userSelect: 'none',
+          }}
+        >★</span>
+      ))}
+    </div>
+  );
+}
+
+/* ── Review Section — fetch + submit ─────────────────────────── */
+function ReviewSection({ productId }) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isLoggedIn = Boolean(localStorage.getItem('token'));
+
+  const [reviews,    setReviews]    = useState([]);
+  const [avgRating,  setAvgRating]  = useState(0);
+  const [total,      setTotal]      = useState(0);
+  const [loading,    setLoading]    = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  /* Form state */
+  const [rating,  setRating]  = useState(0);
+  const [comment, setComment] = useState('');
+  const [formMsg, setFormMsg] = useState(null); // { type: 'success'|'error', text }
+
+  const fetchReviews = () => {
+    setLoading(true);
+    api.get(`/api/reviews/product/${productId}`)
+      .then(r => {
+        setReviews(r.data.data?.reviews || []);
+        setAvgRating(r.data.data?.avg_rating || 0);
+        setTotal(r.data.data?.total || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchReviews(); }, [productId]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (rating === 0) { setFormMsg({ type: 'error', text: 'Please select a star rating.' }); return; }
+    setSubmitting(true); setFormMsg(null);
+    try {
+      await api.post('/api/reviews', { product_id: productId, rating, comment: comment.trim() });
+      setFormMsg({ type: 'success', text: 'Review submitted! It will appear after moderation.' });
+      setRating(0); setComment('');
+      fetchReviews();
+    } catch (err) {
+      setFormMsg({ type: 'error', text: err.response?.data?.message || 'Failed to submit review.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* Distribution bar widths */
+  const dist = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: reviews.filter(r => r.rating === star).length,
+    pct: total > 0 ? Math.round((reviews.filter(r => r.rating === star).length / total) * 100) : 0,
+  }));
+
+  return (
+    <div style={{ marginTop: 64 }}>
+      <h2 style={{
+        fontFamily: "'Playfair Display',serif", fontSize: 24,
+        fontWeight: 800, color: '#1A1A1A', marginBottom: 32,
+      }}>
+        Customer Reviews
+      </h2>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, alignItems: 'start' }}>
+
+        {/* LEFT — Aggregate stats + Write review */}
+        <div>
+          {/* Rating summary */}
+          <div style={{
+            background: '#fff', borderRadius: 20, border: '1px solid #EBEBEB',
+            padding: '24px 28px', marginBottom: 24,
+            boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontFamily: "'Playfair Display',serif",
+                  fontSize: 52, fontWeight: 800, color: '#1A1A1A', lineHeight: 1,
+                }}>
+                  {avgRating.toFixed(1)}
+                </div>
+                <StarRow rating={Math.round(avgRating)} size={18} />
+                <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 6 }}>
+                  {total} review{total !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {dist.map(({ star, count, pct }) => (
+                  <div key={star} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: '#6B6B6B', width: 14, flexShrink: 0 }}>{star}</span>
+                    <span style={{ fontSize: 12, color: '#F59E0B' }}>★</span>
+                    <div style={{
+                      flex: 1, height: 6, borderRadius: 3,
+                      background: '#F0F0F0', overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        width: `${pct}%`, height: '100%', borderRadius: 3,
+                        background: 'linear-gradient(90deg,#F59E0B,#FBBF24)',
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 11, color: '#9CA3AF', width: 18, flexShrink: 0 }}>{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Write review form */}
+          <div style={{
+            background: '#fff', borderRadius: 20, border: '1px solid #EBEBEB',
+            padding: '24px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+          }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A', marginBottom: 16 }}>
+              Write a Review
+            </h3>
+
+            {!isLoggedIn ? (
+              <div style={{
+                background: '#FDF8F3', borderRadius: 12, padding: '16px 18px',
+                border: '1px solid #F0E8D0', fontSize: 14, color: '#6B4A1A',
+              }}>
+                Please <a href="/login" style={{ color: '#C9972B', fontWeight: 700 }}>log in</a> to write a review.
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                {/* Star picker */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#4A4A4A',
+                    textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 8 }}>
+                    Your Rating *
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <StarRow rating={rating} size={28} interactive onRate={setRating} />
+                    {rating > 0 && (
+                      <span style={{ fontSize: 12, color: '#9CA3AF' }}>
+                        {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][rating]}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#4A4A4A',
+                    textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 8 }}>
+                    Your Review (optional)
+                  </label>
+                  <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    placeholder="Share your experience with this product…"
+                    maxLength={500}
+                    rows={4}
+                    style={{
+                      width: '100%', padding: '12px 14px',
+                      border: '1.5px solid #E5E7EB', borderRadius: 12,
+                      fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                      resize: 'vertical', boxSizing: 'border-box',
+                      background: '#FAFAFA', color: '#111',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+                    onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+                  />
+                  <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'right', marginTop: 4 }}>
+                    {comment.length}/500
+                  </p>
+                </div>
+
+                {/* Feedback message */}
+                {formMsg && (
+                  <div style={{
+                    padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+                    fontSize: 13, fontWeight: 600,
+                    background: formMsg.type === 'success' ? '#F0FDF4' : '#FEF2F2',
+                    color:      formMsg.type === 'success' ? '#15803D' : '#B91C1C',
+                    border:     `1px solid ${formMsg.type === 'success' ? '#86EFAC' : '#FECACA'}`,
+                  }}>
+                    {formMsg.type === 'success' ? '✅' : '❌'} {formMsg.text}
+                  </div>
+                )}
+
+                <button type="submit" disabled={submitting || rating === 0} style={{
+                  padding: '12px 28px', borderRadius: 12, border: 'none',
+                  background: submitting || rating === 0 ? '#E5E7EB' : 'linear-gradient(135deg,#1a0a00,#3d1a00)',
+                  color: submitting || rating === 0 ? '#9CA3AF' : '#fff',
+                  fontSize: 14, fontWeight: 700, cursor: submitting || rating === 0 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                }}>
+                  {submitting ? 'Submitting…' : 'Submit Review'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT — Review list */}
+        <div>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ borderRadius: 16, height: 120,
+                  background: 'linear-gradient(90deg,#F0F0F0 25%,#FAFAFA 50%,#F0F0F0 75%)',
+                  backgroundSize: '200% 100%', animation: 'pcShimmer 1.4s infinite' }} />
+              ))}
+            </div>
+          ) : reviews.length === 0 ? (
+            <div style={{
+              background: '#fff', borderRadius: 20, border: '1px solid #EBEBEB',
+              padding: '48px 28px', textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
+              <p style={{ fontSize: 14, color: '#9CA3AF', fontWeight: 500 }}>
+                No reviews yet. Be the first to share your experience!
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {reviews.map(r => (
+                <div key={r.id} style={{
+                  background: '#fff', borderRadius: 16, border: '1px solid #F0F0F0',
+                  padding: '20px 22px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {/* Avatar initial */}
+                      <div style={{
+                        width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                        background: 'linear-gradient(135deg,#C9972B,#F5C842)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 14, fontWeight: 800, color: '#1a0a00',
+                      }}>
+                        {(r.customer_name || 'A').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>
+                          {r.customer_name || 'Customer'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>
+                          {new Date(r.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit', month: 'short', year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <StarRow rating={r.rating} size={14} />
+                  </div>
+                  {r.comment && (
+                    <p style={{ fontSize: 14, color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
+                      "{r.comment}"
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 const GRADE_INFO = {
   w180: { label:'W180 — Largest',      color:'#7B3F00', desc:'~180 kernels/lb. Best for gifting.' },
   w210: { label:'W210 — Extra Large',  color:'#8B4513', desc:'~210 kernels/lb. Premium snacking.' },

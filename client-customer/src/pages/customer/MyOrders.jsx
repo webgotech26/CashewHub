@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MyOrders.jsx  — v3 Premium Spacious
  * Order History page — horizontal top-nav, no sidebar.
  *
@@ -8,6 +8,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useCart } from '../../context/CartContext';
+import { useToast } from '../../context/ToastContext';
 import OrderCard from '../../Components/orders/OrderCard';
 import { GOLD, DARK, MUTED, FONT } from '../../Components/orders/tokens';
 import '../../styles/pages/account-layout.css';
@@ -121,7 +123,7 @@ function EmptyState({ onShop }) {
         cursor: 'pointer', boxShadow: `0 6px 20px ${GOLD}40`,
         letterSpacing: 0.3,
       }}>
-        Shop Pretichor Naturals →
+        Shop Petrichor Naturals →
       </button>
     </div>
   );
@@ -130,6 +132,8 @@ function EmptyState({ onShop }) {
 /* ── MyOrders page ─────────────────────────────────────────────── */
 export default function MyOrders() {
   const navigate  = useNavigate();
+  const { addToCart } = useCart();
+  const { showToast } = useToast();
   const user      = JSON.parse(localStorage.getItem('user') || '{}');
   const avatarUrl = localStorage.getItem('avatar_url') || '';
   const initials  = (user.name || user.email || 'C').charAt(0).toUpperCase();
@@ -146,6 +150,41 @@ export default function MyOrders() {
       .catch(err => setError(err.response?.data?.message || 'Failed to load orders.'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  /* ── Reorder handler ───────────────────────────────────────────
+     Fetches order detail (which includes items with product info),
+     then adds each item to cart with its quantity.
+  ─────────────────────────────────────────────────────────────── */
+  const handleReorder = useCallback(async (orderId) => {
+    const res = await api.get(`/api/orders/${orderId}`);
+    const items = res.data.data?.items || [];
+
+    if (items.length === 0) {
+      showToast('No items found in this order.', 'error');
+      return;
+    }
+
+    items.forEach(item => {
+      const product = {
+        id:             item.product_id,
+        name:           item.product_name,
+        price:          item.unit_price,
+        image_url:      item.image_url || null,
+        unit:           item.unit || 'kg',
+        stock_quantity: 999, // we can't know current stock here; cart will not block
+      };
+      // Add qty times (addToCart increments by 1 each call)
+      const qty = Number(item.quantity) || 1;
+      for (let i = 0; i < qty; i++) addToCart(product);
+    });
+
+    showToast(
+      `${items.length} item${items.length !== 1 ? 's' : ''} added to cart! 🛒`,
+      'success'
+    );
+  }, [addToCart, showToast]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -220,6 +259,7 @@ export default function MyOrders() {
                   order={order}
                   onView={id  => navigate(`/home/orders/${id}`)}
                   onTrack={id => navigate(`/home/orders/${id}`)}
+                  onReorder={handleReorder}
                 />
               ))}
             </div>

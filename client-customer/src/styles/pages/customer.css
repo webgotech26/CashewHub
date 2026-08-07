@@ -905,29 +905,24 @@
   text-decoration: none;
 }
 
-/* Clean round logo wrapper — white background so image is visible on any header */
+/* Logo wrapper — transparent, no circle background, just sized + centered */
 .ch-header__logo-wrap {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(201,151,43,0.2);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   flex-shrink: 0;
+  /* No background, no border, no shadow — logo sits cleanly on the white navbar */
 }
 
 .ch-header__logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;   /* never crop — show the full logo */
   object-position: center;
   display: block;
-  /* Remove blend mode so logo renders on white bg without darkening */
+  border-radius: 0;      /* no circular clip */
 }
 
 .ch-header__brand-text {

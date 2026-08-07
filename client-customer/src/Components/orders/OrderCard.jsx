@@ -46,7 +46,7 @@ function CalendarIcon() {
   );
 }
 
-export default function OrderCard({ order, onView, onTrack }) {
+export default function OrderCard({ order, onView, onTrack, onReorder }) {
   const [hovered, setHovered] = useState(false);
 
   const isDelivered = order.status === 'delivered';
@@ -242,6 +242,7 @@ export default function OrderCard({ order, onView, onTrack }) {
           status={order.status}
           onView={onView}
           onAction={onTrack}
+          onReorder={onReorder}
         />
 
       </div>

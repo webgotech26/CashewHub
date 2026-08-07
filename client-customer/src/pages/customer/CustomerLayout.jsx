@@ -185,13 +185,13 @@ function Layout() {
           <div className="ch-header__logo-wrap">
             <img
               src="/assets/logoo.png"
-              alt="Pretichor Naturals logo"
+              alt="Petrichor Naturals logo"
               className="ch-header__logo"
               onError={e => { e.target.style.display = 'none'; }}
             />
           </div>
           <div className="ch-header__brand-text">
-            <span className="ch-header__brand-name">Pretichor Naturals</span>
+            <span className="ch-header__brand-name">Petrichor Naturals</span>
             <span className="ch-header__brand-tag">PREMIUM NATURAL PRODUCTS</span>
           </div>
         </Link>
@@ -221,7 +221,13 @@ function Layout() {
               placeholder="Search products…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && search.trim()) { e.preventDefault(); navigate(`/home/shop?search=${encodeURIComponent(search.trim())}`); } }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && search.trim()) {
+                  e.preventDefault();
+                  navigate(`/home/shop?search=${encodeURIComponent(search.trim())}`);
+                  setSearch('');  // clear navbar input after navigating
+                }
+              }}
               aria-label="Search products"
             />
           </div>
@@ -316,7 +322,7 @@ function Layout() {
               <img src="/assets/logoo.png" alt="" style={{ width:40, height:40, borderRadius:'50%', objectFit:'cover' }}
                 onError={e => e.target.style.display='none'} />
               <div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:700, color:'#1A1A1A' }}>Pretichor Naturals</div>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:700, color:'#1A1A1A' }}>Petrichor Naturals</div>
                 <div style={{ fontSize:10, color:'#C9972B', fontWeight:600, textTransform:'uppercase', letterSpacing:1 }}>PREMIUM NATURAL PRODUCTS</div>
               </div>
               <button onClick={() => setMobileMenuOpen(false)} style={{
@@ -419,7 +425,7 @@ function Layout() {
                 <img src="/assets/logoo.png" alt="" style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover' }}
                   onError={e => e.target.style.display='none'} />
                 <div>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#fff' }}>Pretichor Naturals</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#fff' }}>Petrichor Naturals</div>
                   <div style={{ fontSize:10, color:'#F5C842', fontWeight:600, textTransform:'uppercase', letterSpacing:1.5 }}>PREMIUM NATURAL PRODUCTS</div>
                 </div>
               </div>
@@ -427,7 +433,7 @@ function Layout() {
                 Natural products from India — premium cashews, wood-pressed oils and homemade brownies. Freshly packed and delivered to your door.
               </p>
               <div style={{ display:'flex', gap:10 }}>
-                <a href="https://wa.me/916374139363?text=Hello%20Pretichor%20Naturals,%20I%20want%20to%20know%20more%20about%20your%20products." target="_blank" rel="noreferrer"
+                <a href="https://wa.me/916374139363?text=Hello%20Petrichor%20Naturals,%20I%20want%20to%20know%20more%20about%20your%20products." target="_blank" rel="noreferrer"
                   style={{ width:36, height:36, borderRadius:10, background:'rgba(255,255,255,0.08)',
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:18, textDecoration:'none', transition:'background 0.2s',
@@ -530,7 +536,7 @@ function Layout() {
           <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:24,
             display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
             <p style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>
-              © {new Date().getFullYear()} Pretichor Naturals. All rights reserved.
+              © {new Date().getFullYear()} Petrichor Naturals. All rights reserved.
             </p>
             <p style={{ fontSize:12, color:'rgba(255,255,255,0.3)' }}>
               Made with 🌿 in India

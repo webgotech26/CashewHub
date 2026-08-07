@@ -44,7 +44,7 @@ export default function AboutPage() {
           </div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,5vw,46px)', fontWeight:800,
             color:'#1C1917', lineHeight:1.15, marginBottom:18 }}>
-            We Are Pretichor Naturals —<br />
+            We Are Petrichor Naturals —<br />
             <span style={{ color:'#C9972B', fontStyle:'italic' }}>Premium Naturals</span>
           </h1>
           <p style={{ fontSize:'clamp(14px,2vw,16px)', color:'#78716C', lineHeight:1.8 }}>

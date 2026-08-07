@@ -576,21 +576,63 @@ function TabAddresses() {
     catch { return []; }
   });
   const [adding,  setAdding]  = useState(false);
-  const [newAddr, setNewAddr] = useState('');
+
+  /* Structured form fields */
+  const emptyFields = { name:'', phone:'', house:'', area:'', pincode:'', city:'', state:'' };
+  const [newFields, setNewFields] = useState(emptyFields);
+
+  const STATES_LIST = [
+    'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
+    'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
+    'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
+    'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu',
+    'Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
+    'Andaman & Nicobar','Chandigarh','Dadra & Nagar Haveli','Daman & Diu',
+    'Delhi','Jammu & Kashmir','Ladakh','Lakshadweep','Puducherry',
+  ];
+
+  const fieldInput = (label, key, type = 'text', placeholder = '') => (
+    <div key={key}>
+      <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#6B7280',
+        textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 5 }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={newFields[key]}
+        placeholder={placeholder}
+        onChange={e => setNewFields(prev => ({ ...prev, [key]: e.target.value }))}
+        style={{ width: '100%', padding: '10px 12px', borderRadius: 10, boxSizing: 'border-box',
+          border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', fontFamily: FONT,
+          background: '#FAFAFA', transition: 'border-color 0.2s' }}
+        onFocus={e => { e.target.style.borderColor = GOLD; }}
+        onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+      />
+    </div>
+  );
 
   const save = () => {
-    if (!newAddr.trim()) return;
-    const updated = [...addresses,
-      { id: Date.now(), text: newAddr.trim(), isDefault: addresses.length === 0 }];
+    const { name, phone, house, area, pincode, city, state } = newFields;
+    if (!name.trim() || !phone.trim() || !house.trim() || !area.trim() || !pincode.trim() || !city.trim() || !state) return;
+    const text = `${name}, ${phone} | ${house}, ${area}, ${city} - ${pincode}, ${state}`;
+    const updated = [...addresses, {
+      id: Date.now(),
+      text,
+      fields: { ...newFields },
+      isDefault: addresses.length === 0,
+    }];
     setAddresses(updated);
     localStorage.setItem('saved_addresses', JSON.stringify(updated));
-    setNewAddr(''); setAdding(false);
+    setNewFields(emptyFields);
+    setAdding(false);
   };
+
   const remove = id => {
     const updated = addresses.filter(a => a.id !== id);
     localStorage.setItem('saved_addresses', JSON.stringify(updated));
     setAddresses(updated);
   };
+
   const setDefault = id => {
     const updated = addresses.map(a => ({ ...a, isDefault: a.id === id }));
     localStorage.setItem('saved_addresses', JSON.stringify(updated));
@@ -607,22 +649,38 @@ function TabAddresses() {
           </PrimaryBtn>
         } />
 
-      {/* Add form */}
+      {/* Add form — structured fields */}
       {adding && (
         <div style={{ background: '#FAFAFA', borderRadius: 14, padding: 20,
           border: '1px solid #EBEBEB', marginBottom: 20 }}>
-          <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700,
-            color: GOLD, display: 'block', marginBottom: 10,
-            textTransform: 'uppercase', letterSpacing: 1 }}>
-            Delivery Address
-          </label>
-          <textarea value={newAddr} onChange={e => setNewAddr(e.target.value)}
-            placeholder="Street, Area, City, State, Pincode" rows={3}
-            style={{ width: '100%', padding: '10px 0',
-              border: 'none', borderBottom: '1.5px solid #E5E7EB',
-              fontSize: 13, outline: 'none', fontFamily: FONT,
-              resize: 'vertical', boxSizing: 'border-box', background: 'transparent' }} />
-          <PrimaryBtn onClick={save} style={{ marginTop: 14, fontSize: 13, padding: '9px 20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px', marginBottom: 14 }}>
+            {fieldInput('Full Name',     'name',    'text', 'e.g. Ravi Kumar')}
+            {fieldInput('Mobile Number', 'phone',   'tel',  '+91 XXXXX XXXXX')}
+            {fieldInput('House / Flat',  'house',   'text', 'e.g. 12B, 3rd Floor')}
+            {fieldInput('Area / Street', 'area',    'text', 'e.g. Anna Nagar')}
+            {fieldInput('Pincode',       'pincode', 'text', '6-digit PIN')}
+            {fieldInput('City',          'city',    'text', 'e.g. Chennai')}
+          </div>
+          {/* State — full width */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontFamily: FONT, fontSize: 11, fontWeight: 700, color: '#6B7280',
+              textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 5 }}>
+              State
+            </label>
+            <select
+              value={newFields.state}
+              onChange={e => setNewFields(prev => ({ ...prev, state: e.target.value }))}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, boxSizing: 'border-box',
+                border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none',
+                fontFamily: FONT, background: '#FAFAFA', cursor: 'pointer' }}
+              onFocus={e => { e.target.style.borderColor = GOLD; }}
+              onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+            >
+              <option value="">Select state…</option>
+              {STATES_LIST.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <PrimaryBtn onClick={save} style={{ marginTop: 4, fontSize: 13, padding: '10px 22px' }}>
             Save Address
           </PrimaryBtn>
         </div>
@@ -655,7 +713,11 @@ function TabAddresses() {
                 }}>{IC.addresses}</div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontFamily: FONT, fontSize: 13, color: DARK,
-                    margin: 0, lineHeight: 1.65 }}>{a.text}</p>
+                    margin: 0, lineHeight: 1.65 }}>
+                    {a.fields
+                      ? `${a.fields.name} · ${a.fields.phone}\n${a.fields.house}, ${a.fields.area}, ${a.fields.city} - ${a.fields.pincode}, ${a.fields.state}`
+                      : a.text}
+                  </p>
                   {a.isDefault && (
                     <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700,
                       color: GOLD, background: `${GOLD}15`, border: `1px solid ${GOLD}30`,

@@ -28,7 +28,7 @@ export default function SplashScreen({ onDone }) {
       }}>
         <img
           src="/assets/logoo.png"
-          alt="Pretichor Naturals"
+          alt="Petrichor Naturals"
           style={{
             width: 160, height: 160,
             borderRadius: '50%',
@@ -51,7 +51,7 @@ export default function SplashScreen({ onDone }) {
           fontSize: 32, fontWeight: 800, color: '#fff',
           letterSpacing: '-0.5px',
         }}>
-          Pretichor Naturals
+          Petrichor Naturals
         </div>
         <div style={{
           fontSize: 12, fontWeight: 600, color: '#C9972B',

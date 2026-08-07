@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { getProductVisual } from '../../utils/productVisual';
@@ -95,15 +95,23 @@ function QuickView({ product, onClose }) {
 
 /* ── Main Shop Page ───────────────────────────────────────────── */
 export default function ShopPage() {
-  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts]     = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
-  const [search, setSearch]         = useState('');
+  // Initialize search from URL param so navbar search pre-fills the input
+  const [search, setSearch]         = useState(() => searchParams.get('search') || '');
   const [activeCategory, setActiveCategory] = useState('all');
   const [sortBy, setSortBy]         = useState('default');
   const [viewProduct, setViewProduct] = useState(null);
+
+  // Sync search input whenever the URL ?search= param changes
+  // (e.g., navigating here from navbar)
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearch(urlSearch);
+  }, [searchParams]);
 
   const fetchData = useCallback(() => {
     setLoading(true); setError(null);
@@ -116,9 +124,8 @@ export default function ShopPage() {
         const cats = (cRes.data.data || []).filter(c => c.id && c.name);
         setCategories(cats);
 
-        // Pre-select category from ?category=oils URL param
-        const params  = new URLSearchParams(location.search);
-        const catParam = (params.get('category') || '').toLowerCase().trim();
+        // Pre-select category from ?category= URL param
+        const catParam = (searchParams.get('category') || '').toLowerCase().trim();
         if (catParam) {
           const matched = cats.find(c =>
             c.name.toLowerCase().includes(catParam) ||
@@ -132,7 +139,7 @@ export default function ShopPage() {
         else setError(`Error: ${err.response?.data?.message || 'Something went wrong'}`);
       })
       .finally(() => setLoading(false));
-  }, [location.search]);
+  }, [searchParams]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -193,7 +200,18 @@ export default function ShopPage() {
                 color:'#A8A29E', fontSize:16 }}>🔍</span>
               <input
                 type="text" placeholder="Search products..."
-                value={search} onChange={e => setSearch(e.target.value)}
+                value={search}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSearch(val);
+                  // Keep URL in sync so the browser back-button still works
+                  setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    if (val.trim()) next.set('search', val.trim());
+                    else next.delete('search');
+                    return next;
+                  }, { replace: true });
+                }}
                 style={{ width:'100%', padding:'12px 16px 12px 42px', borderRadius:30,
                   border:'1.5px solid #E7E2D9', fontSize:14, outline:'none',
                   background:'#fff', color:'#1C1917',

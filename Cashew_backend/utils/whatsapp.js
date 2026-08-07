@@ -1,6 +1,6 @@
-/**
+﻿/**
  * utils/whatsapp.js
- * Twilio WhatsApp notification utility for Pretichor Naturals.
+ * Twilio WhatsApp notification utility for Petrichor Naturals.
  *
  * ── Two separate message flows ───────────────────────────────────────
  *   sendWhatsAppAlert(orderData)                          → ADMIN alert
@@ -111,7 +111,7 @@ async function sendWhatsAppAlert(orderData) {
 
   const body = [
     `🔔 *NEW ORDER ALERT*`,
-    `🌿 *Pretichor Naturals — Admin Panel*`,
+    `🌿 *Petrichor Naturals — Admin Panel*`,
     SEP,
     ``,
     `📋 *Order Details*`,
@@ -217,7 +217,7 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
 
   const body = [
     `✅ *ORDER CONFIRMED!*`,
-    `🌿 *Pretichor Naturals*`,
+    `🌿 *Petrichor Naturals*`,
     SEP,
     ``,
     `Hi *${customerName || 'there'}!* 👋`,
@@ -250,7 +250,7 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
     `   📞 Call / WhatsApp: *+91 82209 60887*`,
     `   🕘 Hours: 9 AM – 10 PM (Mon – Sat)`,
     ``,
-    `Thank you for choosing Pretichor Naturals! 🌿❤️`,
+    `Thank you for choosing Petrichor Naturals! 🌿❤️`,
   ].join('\n');
 
   const msg = await getTwilioClient().messages.create({ from, to: custTo, body });

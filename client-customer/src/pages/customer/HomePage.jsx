@@ -319,7 +319,7 @@ export default function HomePage() {
               color: '#92400E', fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
               letterSpacing: 2.5, padding: '5px 16px', borderRadius: 30, marginBottom: 18,
             }}>
-              Why Pretichor Naturals
+              Why Petrichor Naturals
             </div>
             <h2 style={{
               fontFamily: "'Playfair Display',serif", fontSize: 'clamp(26px,4vw,40px)',

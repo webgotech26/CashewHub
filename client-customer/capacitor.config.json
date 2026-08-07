@@ -1,6 +1,6 @@
-{
-  "appId": "com.pretichor.naturals",
-  "appName": "Pretichor Naturals",
+﻿{
+  "appId": "com.Petrichor.naturals",
+  "appName": "Petrichor Naturals",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
