@@ -119,13 +119,15 @@ export default function Register() {
       }} />
 
       {/* ── LEFT PANEL ── */}
-      <div style={{
+      <div className="login-left-panel-hide" style={{
         position: 'relative', zIndex: 2,
         width: '50%', minHeight: '100vh',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center',
-        padding: '64px 60px 64px 72px',
+        padding: 'clamp(32px,6vh,64px) clamp(20px,4vw,72px)',
         flexShrink: 0,
+        overflowY: 'auto',
+        boxSizing: 'border-box',
       }}>
 
         {/* Brand badge */}
@@ -494,13 +496,16 @@ export default function Register() {
       {/* Mobile: hide left panel, center form */}
       <style>{`
         @media (max-width: 860px) {
-          .reg-left { display: none !important; }
+          /* login-left-panel-hide targets the left content div */
+          .login-left-panel-hide { display: none !important; }
           .login-right-col {
             padding: clamp(32px,6vh,48px) clamp(16px,5vw,32px) !important;
             min-height: 100vh !important;
+            justify-content: center !important;
           }
           .login-float-card {
             margin-left: 0 !important;
+            max-width: 100% !important;
           }
         }
         @media (max-width: 480px) {

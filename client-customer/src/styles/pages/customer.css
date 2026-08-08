@@ -3265,3 +3265,162 @@ img, video, svg, canvas {
     width: 100% !important;
   }
 }
+
+
+/* ================================================================
+   MOBILE CRITICAL FIXES — Hero text, Navbar icons, Login/Register
+   Addresses visible layout bugs on 320px–420px screens.
+   ================================================================ */
+
+/* ── 1. Login/Register left panel — hidden on mobile ─────────── */
+@media (max-width: 860px) {
+  .login-left-panel-hide {
+    display: none !important;
+  }
+  /* Right column takes full width when left is hidden */
+  .login-right-col {
+    padding: clamp(28px, 6vh, 48px) clamp(16px, 5vw, 32px) !important;
+    min-height: 100vh !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .login-float-card {
+    margin-left: 0 !important;
+    max-width: min(460px, calc(100vw - 32px)) !important;
+    width: 100% !important;
+  }
+}
+@media (max-width: 480px) {
+  .login-float-card {
+    border-radius: 16px !important;
+    padding: 28px 18px !important;
+  }
+}
+@media (max-width: 360px) {
+  .login-float-card {
+    padding: 22px 14px !important;
+  }
+}
+
+/* ── 2. Hero section heading — fluid, no hard breaks ─────────── */
+@media (max-width: 640px) {
+  .hero-slide-title,
+  section h1 {
+    font-size: clamp(22px, 7.5vw, 36px) !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
+    /* Remove hard <br> effect — handled in JSX now */
+  }
+  /* Subtitle */
+  section > div p,
+  .hero-subtitle {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+    max-width: 100% !important;
+  }
+  /* Hero badge / eyebrow */
+  .hero-badge {
+    font-size: 10px !important;
+    padding: 5px 12px !important;
+    letter-spacing: 1.2px !important;
+  }
+}
+
+/* ── 3. Hero buttons — stack & full width below 400px ────────── */
+@media (max-width: 400px) {
+  /* The hero button row uses flexWrap:wrap in JSX — buttons are flex:1 0 auto */
+  /* Force them to full width on very small phones */
+  section div[style*="flexWrap"] > button,
+  section div[style*="flex-wrap"] > button {
+    flex: 1 1 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── 4. Navbar actions — prevent icon crowding ───────────────── */
+@media (max-width: 900px) {
+  /* Already hidden: .ch-nav, .ch-search, .ch-icon-btn (profile) */
+  /* Ensure remaining icons (wishlist + cart + hamburger) have breathing room */
+  .ch-header__actions {
+    gap: 4px !important;
+  }
+  .ch-wishlist-btn,
+  .ch-cart-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 380px) {
+  /* At 320–380px: brand text truncates gracefully */
+  .ch-header__brand-name {
+    font-size: 13px !important;
+    max-width: 140px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .ch-header {
+    padding: 0 8px !important;
+    gap: 4px !important;
+  }
+  /* Tighten icon gap further */
+  .ch-header__actions {
+    gap: 2px !important;
+  }
+}
+
+/* ── 5. Ticker scroll — prevent overflow on mobile ───────────── */
+@media (max-width: 640px) {
+  /* Ticker uses whiteSpace:nowrap which is fine — just ensure no bleed */
+  section[style*="tickerScroll"],
+  .ticker-section {
+    overflow: hidden !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* ── 6. Products section — fluid padding ─────────────────────── */
+@media (max-width: 640px) {
+  /* The section now uses clamp() in JSX, but belt-and-braces: */
+  .products-preview-section {
+    padding: 40px 0 !important;
+  }
+  .products-preview-section > div {
+    padding-inline: 14px !important;
+  }
+  /* Section title */
+  .products-preview-section h2 {
+    font-size: clamp(20px, 6vw, 30px) !important;
+  }
+}
+
+/* ── 7. WHY US section card text — no overflow ───────────────── */
+@media (max-width: 540px) {
+  .why-us-card h3,
+  .home-why-grid div h3 {
+    font-size: 14px !important;
+  }
+  .why-us-card p,
+  .home-why-grid div p {
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+  }
+}
+
+/* ── 8. Global: prevent any inline 48px padding from bleeding ── */
+/* Belt-and-braces for any page that hasn't been updated yet */
+@media (max-width: 640px) {
+  [style*="padding: '0 48px'"],
+  [style*="padding:'0 48px'"],
+  [style*='padding: "0 48px"'] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}

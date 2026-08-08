@@ -176,44 +176,51 @@ export default function HomePage() {
               {slide.tag}
             </div>
 
-            {/* Heading */}
-            <h1 style={{
+            {/* Heading — no hard <br> on mobile, fluid size */}
+            <h1 className="hero-slide-title" style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(30px, 6vw, 62px)',
-              fontWeight: 800, color: '#FFFFFF', lineHeight: 1.1, marginBottom: 16,
+              fontSize: 'clamp(26px, 5.5vw, 62px)',
+              fontWeight: 800, color: '#FFFFFF',
+              lineHeight: 1.15, marginBottom: 16,
               textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              hyphens: 'none',
             }}>
-              {slide.title}<br />
-              <span style={{ fontStyle: 'italic' }}>{slide.titleHighlight}</span><br />
-              {slide.titleEnd}
+              {slide.title}{' '}
+              <span style={{ fontStyle: 'italic', display: 'inline' }}>{slide.titleHighlight}</span>
+              {slide.titleEnd && <>{' '}{slide.titleEnd}</>}
             </h1>
 
             <p style={{
               fontSize: 'clamp(13px, 2vw, 16px)',
               color: 'rgba(255,255,255,0.9)',
-              lineHeight: 1.8, marginBottom: 28, maxWidth: 460,
+              lineHeight: 1.75, marginBottom: 28,
+              maxWidth: '100%',               /* never wider than the container */
               textShadow: '0 1px 6px rgba(0,0,0,0.5)',
             }}>
               {slide.subtitle}
             </p>
 
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {/* Buttons — wrap cleanly on mobile */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={() => navigate(slide.btn1Path)} style={{
                 background: 'linear-gradient(135deg,#C9972B,#F5C842)',
                 color: '#1a0a00', border: 'none', borderRadius: 30,
-                padding: '14px 28px', fontSize: 14, fontWeight: 800,
+                padding: '13px clamp(18px,3vw,28px)', fontSize: 14, fontWeight: 800,
                 cursor: 'pointer', boxShadow: '0 8px 24px rgba(201,151,43,0.4)',
-                whiteSpace: 'nowrap',
+                whiteSpace: 'nowrap', flex: '1 0 auto',
+                minWidth: 0, maxWidth: '100%',
               }}>
                 {slide.btn1Text}
               </button>
               <button onClick={() => navigate(slide.btn2Path)} style={{
                 background: 'rgba(255,255,255,0.1)', color: '#fff',
                 border: '1.5px solid rgba(255,255,255,0.35)', borderRadius: 30,
-                padding: '13px 24px', fontSize: 14, fontWeight: 600,
+                padding: '12px clamp(14px,2.5vw,24px)', fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', backdropFilter: 'blur(4px)',
-                whiteSpace: 'nowrap',
+                whiteSpace: 'nowrap', flex: '1 0 auto',
+                minWidth: 0, maxWidth: '100%',
               }}>
                 {slide.btn2Text}
               </button>
@@ -269,8 +276,8 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           PRODUCTS PREVIEW — from DB
          ══════════════════════════════════════ */}
-      <section style={{ padding: '80px 0', background: '#fff' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+      <section style={{ padding: 'clamp(44px,8vw,80px) 0', background: '#fff' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px,4vw,48px)' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#C9972B',
               textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>🌿 Our Collection</div>
@@ -411,20 +418,27 @@ export default function HomePage() {
          ══════════════════════════════════════ */}
       <section style={{
         background: 'linear-gradient(135deg,#C9972B,#F5C842)',
-        padding: '64px 48px', textAlign: 'center',
+        padding: 'clamp(44px,8vw,80px) clamp(16px,4vw,48px)',
+        textAlign: 'center',
       }}>
-        <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 34,
-          fontWeight: 800, color: '#1a0a00', marginBottom: 12 }}>
+        <h2 style={{
+          fontFamily: "'Playfair Display',serif",
+          fontSize: 'clamp(22px,4vw,34px)',
+          fontWeight: 800, color: '#1a0a00', marginBottom: 12,
+          wordBreak: 'break-word',
+        }}>
           Ready to Order?
         </h2>
-        <p style={{ fontSize: 15, color: 'rgba(26,10,0,0.65)', marginBottom: 32 }}>
+        <p style={{ fontSize: 'clamp(13px,2vw,15px)', color: 'rgba(26,10,0,0.65)', marginBottom: 32, maxWidth: 480, margin: '0 auto 32px' }}>
           Fresh batch available now. Free delivery on orders above ₹499.
         </p>
         <button onClick={() => navigate('/home/shop')} style={{
           background: '#1a0a00', color: '#F5C842', border: 'none',
-          borderRadius: 30, padding: '16px 40px', fontSize: 15,
+          borderRadius: 30, padding: 'clamp(12px,2vh,16px) clamp(24px,4vw,40px)',
+          fontSize: 'clamp(13px,1.5vw,15px)',
           fontWeight: 800, cursor: 'pointer',
           boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          minHeight: 48,
         }}>
           Shop Now →
         </button>

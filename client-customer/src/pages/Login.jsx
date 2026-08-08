@@ -106,13 +106,15 @@ export default function Login() {
       }} />
 
       {/* ── LEFT CONTENT ── */}
-      <div style={{
+      <div className="login-left-panel-hide" style={{
         position: 'relative', zIndex: 2,
         width: '50%', minHeight: '100vh',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center',
-        padding: '64px 60px 64px 72px',
+        padding: 'clamp(32px,6vh,64px) clamp(20px,4vw,72px)',
         flexShrink: 0,
+        overflowY: 'auto',
+        boxSizing: 'border-box',
       }}>
 
         {/* Brand badge */}
@@ -426,23 +428,32 @@ export default function Login() {
 
       {/* Mobile responsive */}
       <style>{`
+        /* Hide left panel on mobile — show only the form card */
         @media (max-width: 860px) {
-          .login-container-inner > div:first-child { display: none !important; }
-          .login-container-inner { justify-content: center; }
-        }
-        @media (max-width: 860px) {
+          /* The left content div has zIndex:2 and width:50% — hide it */
+          .login-left-panel-hide { display: none !important; }
+
           /* Remove the left-overlap margin so card centres properly */
-          .login-float-card { margin-left: 0 !important; }
-          /* Remove right-offset padding from the column */
+          .login-float-card {
+            margin-left: 0 !important;
+            max-width: 100% !important;
+          }
+          /* Right column: full width, proper padding */
           .login-right-col {
             padding: clamp(32px,6vh,48px) clamp(16px,5vw,32px) !important;
-            min-height: unset !important;
+            min-height: 100vh !important;
+            justify-content: center !important;
           }
         }
         @media (max-width: 480px) {
           .login-float-card {
             border-radius: 16px !important;
             padding: 28px 18px !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .login-float-card {
+            padding: 24px 14px !important;
           }
         }
       `}</style>

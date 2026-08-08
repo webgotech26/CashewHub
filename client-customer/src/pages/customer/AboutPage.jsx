@@ -136,13 +136,13 @@ export default function AboutPage() {
       </section>
 
       {/* ── PRODUCTS ─────────────────────────────────────── */}
-      <section style={{ background:'#FDF8F3', padding:'72px 0' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 48px' }}>
+      <section style={{ background:'#FDF8F3', padding:'clamp(44px,8vw,72px) 0' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,48px)' }}>
           <div style={{ textAlign:'center', marginBottom:44 }}>
             <div style={{ fontSize:11, fontWeight:700, color:'#C9972B',
               textTransform:'uppercase', letterSpacing:2, marginBottom:10 }}>What We Sell</div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
-              fontWeight:800, color:'#1A1A1A' }}>Our Products</h2>
+            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(22px,4vw,32px)',
+              fontWeight:800, color:'#1A1A1A', wordBreak:'break-word' }}>Our Products</h2>
           </div>
           <div className="about-products-grid">
             {[
@@ -191,13 +191,13 @@ export default function AboutPage() {
       </section>
 
       {/* ── VALUES ───────────────────────────────────────── */}
-      <section style={{ padding:'72px 0', background:'#fff' }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 48px' }}>
+      <section style={{ padding:'clamp(44px,8vw,72px) 0', background:'#fff' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,48px)' }}>
           <div style={{ textAlign:'center', marginBottom:48 }}>
             <div style={{ fontSize:11, fontWeight:700, color:'#C9972B',
               textTransform:'uppercase', letterSpacing:2, marginBottom:10 }}>How We Work</div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
-              fontWeight:800, color:'#1A1A1A' }}>Why People Trust Us</h2>
+            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(22px,4vw,32px)',
+              fontWeight:800, color:'#1A1A1A', wordBreak:'break-word' }}>Why People Trust Us</h2>
           </div>
           <div className="why-us-grid">
             {VALUES.map(v => (
@@ -217,9 +217,9 @@ export default function AboutPage() {
 
       {/* ── CTA ──────────────────────────────────────────── */}
       <section style={{ background:'linear-gradient(135deg,#1a0a00,#3d1a00)',
-        padding:'60px 48px', textAlign:'center' }}>
-        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:30,
-          fontWeight:800, color:'#fff', marginBottom:10 }}>Want to Order?</h2>
+        padding:'clamp(44px,8vw,72px) clamp(16px,4vw,48px)', textAlign:'center' }}>
+        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(20px,4vw,30px)',
+          fontWeight:800, color:'#fff', marginBottom:10, wordBreak:'break-word' }}>Want to Order?</h2>
         <p style={{ fontSize:15, color:'rgba(255,255,255,0.6)', marginBottom:28 }}>
           Fresh batch ready. Order online or call us directly.
         </p>
