@@ -947,25 +947,48 @@
   letter-spacing: 1.6px;
 }
 
-/* ── Mobile — center the brand in the header ───────────────── */
+/* ── Mobile — left logo, right icons (justify-between) ───────── */
 @media (max-width: 900px) {
   .ch-header {
-    /* Override to 3-col: hamburger | brand (centered) | actions */
-    grid-template-columns: 44px 1fr 44px !important;
-    justify-items: center;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 14px !important;
+    height: 58px !important;
+    gap: 0 !important;
   }
+  /* Brand stays left, no centering override */
   .ch-header__brand {
-    justify-self: center;
+    justify-self: unset !important;
+    flex-shrink: 0;
   }
+  /* Nav links hidden (hamburger menu takes over) */
+  .ch-nav {
+    display: none !important;
+  }
+  /* Actions stay right */
   .ch-header__actions {
-    justify-self: end;
-    gap: 6px !important;
+    justify-self: unset !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0;
   }
   .ch-header__brand-tag {
-    display: none;   /* too much text on small screens */
+    display: none !important;
   }
   .ch-header__brand-name {
-    font-size: 16px !important;
+    font-size: 15px !important;
+  }
+  .ch-header__logo-wrap,
+  .ch-header__logo {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  /* Ensure padding-top matches new header height */
+  .shop-layout {
+    padding-top: 58px !important;
   }
 }
 
