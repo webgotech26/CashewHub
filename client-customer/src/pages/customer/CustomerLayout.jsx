@@ -318,39 +318,64 @@ function Layout() {
 
       {/* -- MOBILE MENU DRAWER --------------------------- */}
       {mobileMenuOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 199, background: 'rgba(0,0,0,0.4)',
-        }} onClick={() => setMobileMenuOpen(false)}>
-          <div style={{
-            position: 'absolute', top: 0, left: 0, bottom: 0, width: '75%', maxWidth: 300,
-            background: '#fff', boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
-            display: 'flex', flexDirection: 'column',
-            animation: 'slideInLeft 0.25s ease',
-          }} onClick={e => e.stopPropagation()}>
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 1100,                    /* above header (1000) */
+            background: 'rgba(0,0,0,0.45)',
+            WebkitBackdropFilter: 'blur(2px)',
+            backdropFilter: 'blur(2px)',
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            style={{
+              position: 'absolute', top: 0, left: 0, bottom: 0,
+              width: '75%', maxWidth: 300,
+              background: '#fff', boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
+              display: 'flex', flexDirection: 'column',
+              animation: 'slideInLeft 0.25s ease',
+              overflowY: 'auto',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
             {/* Header */}
-            <div style={{ padding: '20px 20px', borderBottom: '1px solid #F0F0F0',
-              display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/assets/logoo.png" alt="" style={{ width:40, height:40, borderRadius:'50%', objectFit:'cover' }}
-                onError={e => e.target.style.display='none'} />
-              <div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:16, fontWeight:700, color:'#1A1A1A' }}>Petrichor Naturals</div>
-                <div style={{ fontSize:10, color:'#C9972B', fontWeight:600, textTransform:'uppercase', letterSpacing:1 }}>PREMIUM NATURAL PRODUCTS</div>
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #F0F0F0',
+              display: 'flex', alignItems: 'center', gap: 12,
+              flexShrink: 0,
+            }}>
+              <img
+                src="/assets/logoo.png" alt=""
+                style={{ width:38, height:38, borderRadius:'50%', objectFit:'cover', flexShrink:0 }}
+                onError={e => e.target.style.display='none'}
+              />
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:700, color:'#1A1A1A', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>Petrichor Naturals</div>
+                <div style={{ fontSize:9, color:'#C9972B', fontWeight:600, textTransform:'uppercase', letterSpacing:1 }}>PREMIUM NATURAL PRODUCTS</div>
               </div>
-              <button onClick={() => setMobileMenuOpen(false)} style={{
-                marginLeft:'auto', background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#9CA3AF',
-              }}>�</button>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:'#9CA3AF', padding:'4px 6px', lineHeight:1, flexShrink:0 }}
+                aria-label="Close menu"
+              >
+                ×
+              </button>
             </div>
 
             {/* Nav Links */}
-            <div style={{ flex:1, padding: '16px 0', overflowY:'auto' }}>
+            <div style={{ flex:1, padding: '8px 0', overflowY:'auto' }}>
               {NAV_LINKS.map(link => (
-                <button key={link.label} onClick={() => { navigate(link.path); setMobileMenuOpen(false); }}
+                <button
+                  key={link.label}
+                  onClick={() => { navigate(link.path); setMobileMenuOpen(false); }}
                   style={{
                     width:'100%', textAlign:'left', background:'none', border:'none',
                     padding:'14px 24px', fontSize:15, fontWeight:600, color:'#1A1A1A',
                     cursor:'pointer', borderBottom:'1px solid #F8F8F8',
                     display:'flex', alignItems:'center', gap:12,
+                    transition:'background 0.15s',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background='#FDF8F3'}
                   onMouseLeave={e => e.currentTarget.style.background='none'}
@@ -368,12 +393,12 @@ function Layout() {
                     <button onClick={() => { navigate('/home/orders'); setMobileMenuOpen(false); }}
                       style={{ width:'100%', textAlign:'left', background:'none', border:'none',
                         padding:'10px 0', fontSize:14, fontWeight:600, color:'#1A1A1A', cursor:'pointer' }}>
-                      ?? My Orders
+                      📦 My Orders
                     </button>
                     <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                       style={{ width:'100%', textAlign:'left', background:'none', border:'none',
                         padding:'10px 0', fontSize:14, fontWeight:600, color:'#DC2626', cursor:'pointer' }}>
-                      ?? Logout
+                      🚪 Logout
                     </button>
                   </>
                 ) : (
@@ -386,12 +411,11 @@ function Layout() {
               </div>
             </div>
 
-            {/* Contact */}
-            <div style={{ padding:'16px 24px', borderTop:'1px solid #F0F0F0',
-              background:'#FDF8F3' }}>
+            {/* Contact strip */}
+            <div style={{ padding:'14px 24px', borderTop:'1px solid #F0F0F0', background:'#FDF8F3', flexShrink:0 }}>
               <a href="tel:+916374139363" style={{ display:'flex', alignItems:'center', gap:8,
                 fontSize:13, color:'#1A1A1A', textDecoration:'none', fontWeight:600 }}>
-                ?? +91 63741 39363
+                📞 +91 63741 39363
               </a>
             </div>
           </div>
@@ -403,21 +427,17 @@ function Layout() {
           from { transform: translateX(-100%); }
           to   { transform: translateX(0); }
         }
+        /* Show hamburger, hide desktop nav/search/profile on mobile */
         @media (max-width: 900px) {
           .ch-hamburger { display: flex !important; }
-          .ch-nav { display: none !important; }
-          .ch-search { display: none !important; }
-          .ch-icon-btn { display: none !important; }
-          .ch-header {
-            grid-template-columns: auto 1fr auto !important;
-            padding: 0 16px !important;
-            height: 60px !important;
-          }
+          .ch-nav        { display: none !important; }
+          .ch-search     { display: none !important; }
+          .ch-icon-btn   { display: none !important; }
         }
         @media (max-width: 540px) {
-          .ch-header__brand-tag { display: none !important; }
-          .ch-header__brand-name { font-size: 16px !important; }
-          .ch-header__logo { width: 36px !important; height: 36px !important; }
+          .ch-header__brand-tag  { display: none !important; }
+          .ch-header__brand-name { font-size: 15px !important; }
+          .ch-header__logo       { width: 34px !important; height: 34px !important; }
         }
       `}</style>
 

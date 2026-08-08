@@ -711,15 +711,19 @@
 .shop-cart-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 300;
+  /* Above header (1000) and mobile menu (1100) */
+  z-index: 1200;
   backdrop-filter: blur(3px);
+  /* Only intercept clicks when it's actually rendered — component is
+     conditionally mounted so no pointer-events hack needed */
 }
 
 .shop-cart-drawer {
   position: fixed; top: 0; right: 0;
   width: 400px; max-width: 100vw; height: 100vh;
   background: var(--ch-white);
-  z-index: 301;
+  /* Drawer sits above its own overlay */
+  z-index: 1201;
   display: flex; flex-direction: column;
   box-shadow: -8px 0 40px rgba(0,0,0,0.12);
   animation: cart-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
