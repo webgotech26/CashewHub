@@ -15,7 +15,7 @@ export default function AboutPage() {
 
       {/* ── HERO ─────────────────────────────────────────── */}
       <section style={{
-        padding:'80px clamp(20px,5vw,80px) 72px',
+        padding:'clamp(32px,5vw,64px) clamp(16px,4vw,48px) clamp(24px,4vw,48px)',
         textAlign:'center',
         background:'#FDFBF7',
         borderBottom:'1px solid rgba(201,151,43,0.12)',
@@ -55,7 +55,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── WHO WE ARE ───────────────────────────────────── */}
-      <section className="about-who-section" style={{ padding:'72px 0' }}>
+      <section className="about-who-section" style={{ padding:'clamp(36px,6vw,72px) 0' }}>
         <div className="about-who-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,48px)' }}>
 
           {/* ── Left: text column ── */}

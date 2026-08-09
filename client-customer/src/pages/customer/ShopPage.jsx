@@ -295,7 +295,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'32px clamp(16px,4vw,48px)' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'20px clamp(16px,4vw,48px) 32px' }}>
 
         {/* ── Category pills + Sort — one unified toolbar ───── */}
         <div style={{

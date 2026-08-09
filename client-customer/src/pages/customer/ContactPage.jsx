@@ -26,7 +26,7 @@ export default function ContactPage() {
       {/* ══ HERO ══════════════════════════════════════════ */}
       <section style={{
         position: 'relative', overflow: 'hidden',
-        padding: '80px clamp(20px,5vw,80px) 72px',
+        padding: 'clamp(32px,5vw,64px) clamp(16px,4vw,48px) clamp(24px,4vw,48px)',
         textAlign: 'center',
         background: '#FDFBF7',
         borderBottom: '1px solid rgba(201,151,43,0.12)',
@@ -67,7 +67,7 @@ export default function ContactPage() {
       </section>
 
       {/* ══ INFO CARDS ════════════════════════════════════ */}
-      <section style={{ background:'#F8F4EF', padding:'52px clamp(16px,4vw,48px) 44px' }}>
+      <section style={{ background:'#F8F4EF', padding:'clamp(28px,5vw,52px) clamp(16px,4vw,48px) clamp(24px,4vw,44px)' }}>
         <div className="contact-cards-grid" style={{ maxWidth:1100, margin:'0 auto' }}>
           {[
             {
@@ -330,15 +330,15 @@ export default function ContactPage() {
 
       {/* ══ CTA ═══════════════════════════════════════════ */}
       <section style={{ background:'linear-gradient(135deg,#1a0a00,#3d1a00)',
-        padding:'60px 48px', textAlign:'center' }}>
-        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:32,
-          fontWeight:800, color:'#fff', marginBottom:12 }}>Ready to Order?</h2>
-        <p style={{ fontSize:15, color:'rgba(255,255,255,0.6)', marginBottom:28 }}>
+        padding:'clamp(36px,7vw,60px) clamp(16px,4vw,48px)', textAlign:'center' }}>
+        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(20px,4vw,32px)',
+          fontWeight:800, color:'#fff', marginBottom:12, wordBreak:'break-word' }}>Ready to Order?</h2>
+        <p style={{ fontSize:'clamp(13px,2vw,15px)', color:'rgba(255,255,255,0.6)', marginBottom:28, maxWidth:480, margin:'0 auto 28px' }}>
           Browse our natural products — cashews, oils &amp; brownies. Free delivery above ₹499.
         </p>
         <button onClick={() => navigate('/home/shop')} style={{
           background:'linear-gradient(135deg,#C9972B,#F5C842)', color:'#1a0a00',
-          border:'none', borderRadius:30, padding:'14px 36px',
+          border:'none', borderRadius:30, padding:'13px 32px',
           fontSize:14, fontWeight:800, cursor:'pointer',
           boxShadow:'0 4px 16px rgba(201,151,43,0.4)',
         }}>Shop Now →</button>
