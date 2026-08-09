@@ -144,7 +144,9 @@ export default function OrderDetailPage() {
         }}>← My Orders</button>
         <div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:24,
-            fontWeight:800, color:'#1A1A1A', lineHeight:1 }}>Order #{order.id}</h1>
+            fontWeight:800, color:'#1A1A1A', lineHeight:1 }}>
+            Order #{order.display_id || order.id}
+          </h1>
           <p style={{ fontSize:12, color:'#9CA3AF', marginTop:4 }}>
             Placed on {new Date(order.created_at).toLocaleDateString('en-IN',
               { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}
@@ -243,7 +245,7 @@ export default function OrderDetailPage() {
             boxShadow:'0 2px 8px rgba(0,0,0,0.05)', padding:'22px' }}>
             <h2 style={{ fontSize:15, fontWeight:700, color:'#1A1A1A', marginBottom:16 }}>📋 Order Info</h2>
             {[
-              ['Order ID',  `#${order.id}`],
+              ['Order ID',  `#${order.display_id || order.id}`],
               ['Date',      new Date(order.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})],
               ['Status',    STATUS_META[order.status]?.label || order.status],
               ['Customer',  order.customer_name || '—'],

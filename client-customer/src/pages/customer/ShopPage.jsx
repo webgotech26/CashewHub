@@ -215,7 +215,7 @@ export default function ShopPage() {
       {/* ── Shop Hero ──────────────────────────────────── */}
       <section style={{
         position:'relative', overflow:'hidden',
-        padding:'72px clamp(16px,4vw,56px) 64px',
+        padding:'clamp(32px,5vw,56px) clamp(16px,4vw,56px) clamp(24px,4vw,40px)',
         background:'#FDFBF7',
         borderBottom:'1px solid rgba(201,151,43,0.12)',
       }}>
@@ -234,15 +234,64 @@ export default function ShopPage() {
         }} />
         <div style={{ maxWidth:1200, margin:'0 auto', position:'relative', zIndex:1, width:'100%' }}>
           <div style={{ fontSize:11, fontWeight:700, color:'#C9972B', textTransform:'uppercase',
-            letterSpacing:2.5, marginBottom:14 }}>Our Collection</div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px, 5vw, 52px)', fontWeight:800,
-            color:'#1C1917', marginBottom:16, lineHeight:1.1 }}>
-            Premium<br />Natural Shop
+            letterSpacing:2.5, marginBottom:10 }}>Our Collection</div>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(24px, 5vw, 48px)', fontWeight:800,
+            color:'#1C1917', marginBottom:10, lineHeight:1.1 }}>
+            Premium Natural Shop
           </h1>
-          <p style={{ fontSize:'clamp(13px, 2vw, 16px)', color:'#78716C', marginBottom:36, maxWidth:460,
-            lineHeight:1.8 }}>
-            Cashews, wood-pressed oils, homemade brownies — all natural, freshly packed.
+          <p style={{ fontSize:'clamp(13px, 2vw, 15px)', color:'#78716C', marginBottom:20, maxWidth:460,
+            lineHeight:1.7 }}>
+            Cashews, oils & brownies — all natural, freshly packed.
           </p>
+
+          {/* Inline search bar — compact, lives in the hero */}
+          <div style={{
+            display:'flex', gap:8, maxWidth:480, alignItems:'center',
+          }}>
+            <div style={{ flex:1, position:'relative' }}>
+              <span style={{
+                position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
+                color:'#A8A29E', display:'flex', alignItems:'center', pointerEvents:'none',
+              }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+                </svg>
+              </span>
+              <input
+                type="text"
+                placeholder="Search cashews, oils, brownies..."
+                value={search}
+                onChange={e => handleSearchChange(e.target.value)}
+                style={{
+                  width:'100%', height:44,
+                  padding:'0 38px 0 40px',
+                  borderRadius:30, border:'1.5px solid #E7E2D9',
+                  fontSize:14, fontFamily:"'DM Sans',sans-serif",
+                  outline:'none', background:'#fff', color:'#1C1917',
+                  boxShadow:'0 2px 8px rgba(0,0,0,0.07)',
+                  transition:'border-color 0.2s, box-shadow 0.2s',
+                  boxSizing:'border-box',
+                }}
+                onFocus={e => { e.target.style.borderColor='#C9972B'; e.target.style.boxShadow='0 0 0 3px rgba(201,151,43,0.14)'; e.target.previousElementSibling.style.color='#C9972B'; }}
+                onBlur={e  => { e.target.style.borderColor='#E7E2D9'; e.target.style.boxShadow='0 2px 8px rgba(0,0,0,0.07)'; e.target.previousElementSibling.style.color='#A8A29E'; }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                  style={{
+                    position:'absolute', right:12, top:'50%', transform:'translateY(-50%)',
+                    background:'#EDE8E0', border:'none', borderRadius:'50%',
+                    width:20, height:20, cursor:'pointer', fontSize:12,
+                    color:'#78716C', display:'flex', alignItems:'center', justifyContent:'center',
+                    padding:0, lineHeight:1,
+                  }}
+                >×</button>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 

@@ -58,7 +58,7 @@ const FEATURES = [
   { icon: '🌿', title: 'From Our Farms',    desc: 'Grown in India — direct from us to you' },
   { icon: '✅', title: 'No Chemicals',       desc: 'No preservatives, no artificial colour or flavour' },
   { icon: '🚚', title: 'Quick Delivery',     desc: 'Usually delivered within 3–5 days across India' },
-  { icon: '💎', title: 'All Grades',         desc: 'W180, W240, W320, W450 — pick what suits you' },
+  { icon: '🛒', title: 'Pure Products',      desc: 'Cashews, wood-pressed oils & homemade brownies' },
 ];
 
 const WHY_US = [

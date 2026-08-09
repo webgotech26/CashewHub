@@ -151,6 +151,13 @@ const createOrder = async (req, res) => {
 
     const orderId = orderResult.insertId;
 
+    /* ── Generate a 6-digit client-facing order number ──────────
+       Uses the DB auto-increment ID as the seed so it is always
+       unique, but pads/offsets it to always be 6 digits.
+       IDs 1–99999 are offset to 100000+; IDs ≥100000 are used as-is.
+    ─────────────────────────────────────────────────────────────── */
+    const displayOrderId = orderId < 100000 ? orderId + 100000 : orderId;
+
     // ── STEP 3: INSERT delivery record ────────────────────────────
     await connection.query(
       'INSERT INTO deliveries (order_id, status) VALUES (?, ?)',
@@ -188,6 +195,7 @@ const createOrder = async (req, res) => {
 
     const orderData = {
       id:            orderId,
+      display_id:    displayOrderId,   // 6-digit client-facing order number
       customer_id,
       customer_name: customerName,
       items:         validatedItems,
@@ -205,7 +213,7 @@ const createOrder = async (req, res) => {
     }
 
     sendWhatsAppAlert(orderData).catch(err =>
-      console.error(`[WhatsApp] Admin alert failed for Order #${orderId}:`, err.message)
+      console.error(`[WhatsApp] Admin alert failed for Order #${displayOrderId}:`, err.message)
     );
 
     if (customerPhone) {
@@ -214,7 +222,7 @@ const createOrder = async (req, res) => {
         customerName,
         orderData,
       }).catch(err =>
-        console.error(`[WhatsApp] Customer notification failed for Order #${orderId}:`, err.message)
+        console.error(`[WhatsApp] Customer notification failed for Order #${displayOrderId}:`, err.message)
       );
     }
 

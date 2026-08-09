@@ -488,7 +488,7 @@ export default function Checkout() {
                 razorpay_payment_id: response.razorpay_payment_id,
               });
 
-              const orderId = orderRes.data.data?.id || orderRes.data.id || '—';
+              const orderId = orderRes.data.data?.display_id || orderRes.data.data?.id || orderRes.data.id || '—';
               clearCart();
               setSuccess({ orderId, paymentId: response.razorpay_payment_id });
               resolve('success');
