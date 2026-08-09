@@ -39,15 +39,15 @@ export default function AboutPage() {
           <div style={{ display:'inline-flex', alignItems:'center', gap:8,
             background:'rgba(201,151,43,0.1)', border:'1px solid rgba(201,151,43,0.3)',
             color:'#92400E', fontSize:11, fontWeight:700, textTransform:'uppercase',
-            letterSpacing:2, padding:'6px 16px', borderRadius:30, marginBottom:24 }}>
+            letterSpacing:2, padding:'6px 16px', borderRadius:30, marginBottom:16 }}>
             About Us
           </div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,5vw,46px)', fontWeight:800,
-            color:'#1C1917', lineHeight:1.15, marginBottom:18 }}>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(26px,5vw,46px)', fontWeight:800,
+            color:'#1C1917', lineHeight:1.15, marginBottom:12 }}>
             We Are Petrichor Naturals —<br />
             <span style={{ color:'#C9972B', fontStyle:'italic' }}>Premium Naturals</span>
           </h1>
-          <p style={{ fontSize:'clamp(14px,2vw,16px)', color:'#78716C', lineHeight:1.8 }}>
+          <p style={{ fontSize:'clamp(13px,2vw,15px)', color:'#78716C', lineHeight:1.75, maxWidth:560, margin:'0 auto' }}>
             We grow, process and sell premium natural products.
             Direct from us to you — simple as that.
           </p>

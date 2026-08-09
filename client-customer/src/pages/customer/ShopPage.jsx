@@ -215,7 +215,7 @@ export default function ShopPage() {
       {/* ── Shop Hero ──────────────────────────────────── */}
       <section style={{
         position:'relative', overflow:'hidden',
-        padding:'clamp(32px,5vw,56px) clamp(16px,4vw,56px) clamp(24px,4vw,40px)',
+        padding:'clamp(28px,4vw,48px) clamp(16px,4vw,56px) clamp(16px,3vw,28px)',
         background:'#FDFBF7',
         borderBottom:'1px solid rgba(201,151,43,0.12)',
       }}>
@@ -239,7 +239,7 @@ export default function ShopPage() {
             color:'#1C1917', marginBottom:10, lineHeight:1.1 }}>
             Premium Natural Shop
           </h1>
-          <p style={{ fontSize:'clamp(13px, 2vw, 15px)', color:'#78716C', marginBottom:20, maxWidth:460,
+          <p style={{ fontSize:'clamp(13px, 2vw, 15px)', color:'#78716C', marginBottom:14, maxWidth:460,
             lineHeight:1.7 }}>
             Cashews, oils & brownies — all natural, freshly packed.
           </p>
@@ -295,13 +295,13 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'20px clamp(16px,4vw,48px) 32px' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'12px clamp(16px,4vw,48px) 32px' }}>
 
         {/* ── Category pills + Sort — one unified toolbar ───── */}
         <div style={{
           display:'flex', alignItems:'center',
           justifyContent:'space-between',
-          gap:12, flexWrap:'wrap', marginBottom:24,
+          gap:10, flexWrap:'wrap', marginBottom:16,
         }}>
           {/* Left: category chips */}
           <div style={{
@@ -371,7 +371,7 @@ export default function ShopPage() {
         {/* ── Results count + active filter pills ─────── */}
         <div style={{
           display:'flex', justifyContent:'space-between', alignItems:'center',
-          marginBottom:20, flexWrap:'wrap', gap:8,
+          marginBottom:16, flexWrap:'wrap', gap:8,
         }}>
           <p style={{ fontSize:13, color:'#9CA3AF', margin:0 }}>
             {loading
