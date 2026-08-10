@@ -117,7 +117,7 @@ export default function OrderCard({ order, onView, onTrack, onReorder }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: DARK, letterSpacing: -0.2 }}>
-                Order #{order.id}
+                Order #{order.display_id || (order.id < 100000 ? order.id + 100000 : order.id)}
               </span>
               {isDelivered && (
                 <span
