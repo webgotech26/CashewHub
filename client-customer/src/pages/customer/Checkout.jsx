@@ -145,10 +145,10 @@ function AddressForm({ addr, onFieldChange, saved, onSave }) {
     <div>
       <div className="checkout-addr-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
 
-        <AddressField id="name"  label="Full Name *"                placeholder="e.g. Ramesh Kumar"        value={addr.name}    onChange={e => onFieldChange('name',  e.target.value)}              />
-        <AddressField id="phone" label="Phone Number *"             placeholder="10-digit mobile number"   value={addr.phone}   onChange={e => onFieldChange('phone', e.target.value)} type="tel"   />
-        <AddressField id="house" label="House / Flat / Block No *"  placeholder="e.g. 12B, 3rd Floor"      value={addr.house}   onChange={e => onFieldChange('house', e.target.value)}              />
-        <AddressField id="area"  label="Area / Street / Locality *" placeholder="e.g. Anna Nagar"          value={addr.area}    onChange={e => onFieldChange('area',  e.target.value)}              />
+        <AddressField id="name"  label="Full Name *"                placeholder="e.g. Ramesh Kumar"        value={addr.name}      onChange={e => onFieldChange('name',  e.target.value)}              />
+        <AddressField id="phone" label="Phone Number *"             placeholder="10-digit mobile number"   value={addr.phone}     onChange={e => onFieldChange('phone', e.target.value)} type="tel"   />
+        <AddressField id="house" label="House / Flat / Block No *"  placeholder="e.g. 12B, 3rd Floor"      value={addr.house}     onChange={e => onFieldChange('house', e.target.value)}              />
+        <AddressField id="area"  label="Area / Street / Locality *" placeholder="e.g. Anna Nagar"          value={addr.area}      onChange={e => onFieldChange('area',  e.target.value)}              />
 
         {/* Pincode — half width */}
         <div>
@@ -195,6 +195,26 @@ function AddressForm({ addr, onFieldChange, saved, onSave }) {
             <option value="">Select state…</option>
             {STATES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
+        </div>
+
+        {/* Alternate phone — full width, optional */}
+        <div style={{ gridColumn: 'span 2' }}>
+          <label htmlFor="alt_phone" style={labelStyle}>
+            Alternate Phone
+            <span style={{ fontWeight: 400, color: '#9CA3AF', marginLeft: 6, fontSize: 11 }}>
+              (optional — for delivery if primary is unreachable)
+            </span>
+          </label>
+          <input
+            id="alt_phone"
+            type="tel"
+            value={addr.alt_phone || ''}
+            placeholder="10-digit alternate number"
+            onChange={e => onFieldChange('alt_phone', e.target.value)}
+            style={inputStyle}
+            onFocus={e => { e.target.style.borderColor = '#C9972B'; }}
+            onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+          />
         </div>
 
       </div>
@@ -307,18 +327,48 @@ export default function Checkout() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   /* Saved addresses from Profile page (stored in localStorage) */
-  const [savedAddresses] = useState(() => {
+  const [savedAddresses, setSavedAddresses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('saved_addresses') || '[]'); }
     catch { return []; }
   });
   const [selectedSavedId, setSelectedSavedId] = useState(() => {
-    // Auto-select the default address if one exists
     try {
       const addrs = JSON.parse(localStorage.getItem('saved_addresses') || '[]');
       const def = addrs.find(a => a.isDefault);
       return def ? def.id : null;
     } catch { return null; }
   });
+  /* Which saved address is currently being edited (null = none) */
+  const [editingAddrId, setEditingAddrId] = useState(null);
+  const [editFields,    setEditFields]    = useState({});
+
+  /* ── Start editing a saved address — open pre-filled inline form ── */
+  const startEditAddress = (a) => {
+    setEditingAddrId(a.id);
+    setEditFields({ ...(a.fields || { area: a.text || '', name: '', phone: '', house: '', pincode: '', city: '', state: '', alt_phone: '' }) });
+  };
+
+  /* ── Save the edited address back to localStorage ── */
+  const saveEditedAddress = () => {
+    const { name, phone, house, area, pincode, city, state } = editFields;
+    if (!name?.trim() || !phone?.trim() || !house?.trim() || !area?.trim() || !pincode?.trim() || !city?.trim() || !state) return;
+
+    const text = `${name}, ${phone} | ${house}, ${area}, ${city} - ${pincode}, ${state}`;
+    const updated = savedAddresses.map(a =>
+      a.id === editingAddrId
+        ? { ...a, text, fields: { ...editFields } }
+        : a
+    );
+    localStorage.setItem('saved_addresses', JSON.stringify(updated));
+    setSavedAddresses(updated);
+
+    // If the edited address is currently selected, update the active addr state too
+    if (selectedSavedId === editingAddrId) {
+      setAddr({ ...editFields });
+    }
+    setEditingAddrId(null);
+    setEditFields({});
+  };
 
   /* Address state */
   const [addr, setAddr] = useState(() => {
@@ -330,7 +380,7 @@ export default function Checkout() {
     } catch {}
     return {
       name: user.name || '', phone: user.mobile || '',
-      house: '', area: '', pincode: '', city: '', state: '',
+      house: '', area: '', pincode: '', city: '', state: '', alt_phone: '',
     };
   });
   const [addrSaved, setAddrSaved] = useState(false);
@@ -352,10 +402,17 @@ export default function Checkout() {
     setAddr(prev => ({ ...prev, [field]: val }));
     setAddrSaved(false);
   };
-  const subtotal      = cartTotal;
-  const gst           = subtotal * 0.05;
-  const discount      = appliedCoupon ? appliedCoupon.discount_amount : 0;
-  const grandTotal    = subtotal + gst - discount;
+
+  /* ── Price calculation ────────────────────────────────────
+     Delivery is FREE when subtotal ≥ ₹2000, else ₹99.
+  ─────────────────────────────────────────────────────────── */
+  const DELIVERY_FEE       = 99;                                   // standard delivery fee
+  const FREE_DELIVERY_MIN  = 2000;                                 // threshold for free delivery
+  const subtotal           = cartTotal;
+  const gst                = subtotal * 0.05;
+  const deliveryCharge     = subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE;
+  const discount           = appliedCoupon ? appliedCoupon.discount_amount : 0;
+  const grandTotal         = subtotal + gst + deliveryCharge - discount;
 
   /* ── Apply coupon ─────────────────────────────────────────── */
   const applyCoupon = async () => {
@@ -366,7 +423,7 @@ export default function Checkout() {
     try {
       const res = await api.post('/api/coupons/validate', {
         code: couponCode.trim(),
-        order_total: subtotal + gst,
+        order_total: subtotal + gst + deliveryCharge,
       });
       setAppliedCoupon(res.data.data);
     } catch (err) {
@@ -384,12 +441,13 @@ export default function Checkout() {
 
   /* ── Validate address fields ─────────────────────────────── */
   const buildAddressString = () => {
-    const { name, phone, house, area, pincode, city, state } = addr;
+    const { name, phone, house, area, pincode, city, state, alt_phone } = addr;
     if (!name.trim() || !phone.trim() || !house.trim() ||
         !area.trim() || !pincode.trim() || !city.trim() || !state) {
       return null;
     }
-    return `${name}, ${phone} | ${house}, ${area}, ${city} - ${pincode}, ${state}`;
+    const altPart = alt_phone?.trim() ? ` | Alt: ${alt_phone.trim()}` : '';
+    return `${name}, ${phone}${altPart} | ${house}, ${area}, ${city} - ${pincode}, ${state}`;
   };
 
   /* ── Load Razorpay checkout script once ─────────────────── */
@@ -632,46 +690,188 @@ export default function Checkout() {
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {savedAddresses.map(a => (
-                    <label key={a.id} style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 12,
-                      padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
-                      border: `1.5px solid ${selectedSavedId === a.id ? '#C9972B' : '#E5E7EB'}`,
-                      background: selectedSavedId === a.id ? '#FDF8F0' : '#FAFAFA',
-                      transition: 'all 0.18s',
-                    }}>
-                      <input
-                        type="radio"
-                        name="saved_address"
-                        checked={selectedSavedId === a.id}
-                        onChange={() => {
-                          setSelectedSavedId(a.id);
-                          // If the saved address has structured fields, fill them in
-                          if (a.fields) {
-                            setAddr({ ...a.fields });
-                          } else {
-                            // Legacy: plain text address — put it in 'area' field
-                            setAddr(prev => ({ ...prev, area: a.text || '' }));
-                          }
-                          setAddrSaved(true);
-                        }}
-                        style={{ accentColor: '#C9972B', marginTop: 2, flexShrink: 0 }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, color: '#111', margin: 0, lineHeight: 1.6 }}>
-                          {a.fields
-                            ? `${a.fields.name} · ${a.fields.phone} | ${a.fields.house}, ${a.fields.area}, ${a.fields.city} - ${a.fields.pincode}, ${a.fields.state}`
-                            : a.text}
-                        </p>
-                        {a.isDefault && (
-                          <span style={{ fontSize: 10, fontWeight: 700, color: '#C9972B',
-                            background: 'rgba(201,151,43,0.1)', padding: '2px 8px',
-                            borderRadius: 20, marginTop: 4, display: 'inline-block',
-                            textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                            Default
-                          </span>
-                        )}
+                    <div key={a.id}>
+                      <div style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '12px 14px', borderRadius: 10,
+                        border: `1.5px solid ${selectedSavedId === a.id ? '#C9972B' : '#E5E7EB'}`,
+                        background: selectedSavedId === a.id ? '#FDF8F0' : '#FAFAFA',
+                        transition: 'all 0.18s',
+                      }}>
+                        {/* Radio select */}
+                        <input
+                          type="radio"
+                          name="saved_address"
+                          checked={selectedSavedId === a.id}
+                          onChange={() => {
+                            setSelectedSavedId(a.id);
+                            setEditingAddrId(null);
+                            if (a.fields) {
+                              setAddr({ ...a.fields });
+                            } else {
+                              setAddr(prev => ({ ...prev, area: a.text || '' }));
+                            }
+                            setAddrSaved(true);
+                          }}
+                          style={{ accentColor: '#C9972B', marginTop: 3, flexShrink: 0 }}
+                        />
+
+                        {/* Address text */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13, color: '#111', margin: 0, lineHeight: 1.6 }}>
+                            {a.fields
+                              ? `${a.fields.name} · ${a.fields.phone}${a.fields.alt_phone ? ` / ${a.fields.alt_phone}` : ''} | ${a.fields.house}, ${a.fields.area}, ${a.fields.city} - ${a.fields.pincode}, ${a.fields.state}`
+                              : a.text}
+                          </p>
+                          {a.isDefault && (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#C9972B',
+                              background: 'rgba(201,151,43,0.1)', padding: '2px 8px',
+                              borderRadius: 20, marginTop: 4, display: 'inline-block',
+                              textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              Default
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Edit button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editingAddrId === a.id) {
+                              setEditingAddrId(null); // toggle off
+                            } else {
+                              startEditAddress(a);
+                              setSelectedSavedId(a.id); // select this address when editing
+                            }
+                          }}
+                          title="Edit this address"
+                          style={{
+                            background: editingAddrId === a.id ? '#FEF3C7' : 'none',
+                            border: `1px solid ${editingAddrId === a.id ? '#F59E0B' : '#D1D5DB'}`,
+                            borderRadius: 7,
+                            padding: '5px 8px',
+                            cursor: 'pointer',
+                            color: editingAddrId === a.id ? '#92400E' : '#6B7280',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            flexShrink: 0,
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => { if (editingAddrId !== a.id) { e.currentTarget.style.borderColor = '#C9972B'; e.currentTarget.style.color = '#C9972B'; } }}
+                          onMouseLeave={e => { if (editingAddrId !== a.id) { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.color = '#6B7280'; } }}
+                        >
+                          {/* Pencil SVG */}
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                          {editingAddrId === a.id ? 'Cancel' : 'Edit'}
+                        </button>
                       </div>
-                    </label>
+
+                      {/* ── Inline edit form — only shown when this card is being edited ── */}
+                      {editingAddrId === a.id && (
+                        <div style={{
+                          marginTop: 2,
+                          padding: '16px 14px',
+                          background: '#FFFBF0',
+                          border: '1.5px solid #F59E0B',
+                          borderTop: 'none',
+                          borderRadius: '0 0 10px 10px',
+                        }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#92400E',
+                            textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>
+                            ✏️ Editing address
+                          </p>
+                          <div className="checkout-addr-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 14px' }}>
+                            {[
+                              { key: 'name',    label: 'Full Name *',           placeholder: 'e.g. Ramesh Kumar',       type: 'text' },
+                              { key: 'phone',   label: 'Phone Number *',         placeholder: '10-digit mobile',         type: 'tel'  },
+                              { key: 'house',   label: 'House / Flat *',          placeholder: 'e.g. 12B, 3rd Floor',     type: 'text' },
+                              { key: 'area',    label: 'Area / Street *',         placeholder: 'e.g. Anna Nagar',         type: 'text' },
+                              { key: 'pincode', label: 'Pincode *',               placeholder: '6-digit PIN',             type: 'text' },
+                              { key: 'city',    label: 'City *',                  placeholder: 'e.g. Chennai',            type: 'text' },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ ...labelStyle, fontSize: 11 }}>{f.label}</label>
+                                <input
+                                  type={f.type}
+                                  value={editFields[f.key] || ''}
+                                  placeholder={f.placeholder}
+                                  maxLength={f.key === 'pincode' ? 6 : undefined}
+                                  onChange={e => setEditFields(prev => ({
+                                    ...prev,
+                                    [f.key]: f.key === 'pincode' ? e.target.value.replace(/\D/g, '') : e.target.value
+                                  }))}
+                                  style={{ ...inputStyle, fontSize: 13 }}
+                                  onFocus={e => { e.target.style.borderColor = '#F59E0B'; }}
+                                  onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+                                />
+                              </div>
+                            ))}
+
+                            {/* State — full width */}
+                            <div style={{ gridColumn: 'span 2' }}>
+                              <label style={{ ...labelStyle, fontSize: 11 }}>State *</label>
+                              <select
+                                value={editFields.state || ''}
+                                onChange={e => setEditFields(prev => ({ ...prev, state: e.target.value }))}
+                                style={{ ...inputStyle, cursor: 'pointer', fontSize: 13 }}
+                                onFocus={e => { e.target.style.borderColor = '#F59E0B'; }}
+                                onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+                              >
+                                <option value="">Select state…</option>
+                                {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            </div>
+
+                            {/* Alternate phone — full width */}
+                            <div style={{ gridColumn: 'span 2' }}>
+                              <label style={{ ...labelStyle, fontSize: 11 }}>
+                                Alternate Phone
+                                <span style={{ fontWeight: 400, color: '#9CA3AF', marginLeft: 4, fontSize: 10 }}>(optional)</span>
+                              </label>
+                              <input
+                                type="tel"
+                                value={editFields.alt_phone || ''}
+                                placeholder="10-digit alternate number"
+                                onChange={e => setEditFields(prev => ({ ...prev, alt_phone: e.target.value }))}
+                                style={{ ...inputStyle, fontSize: 13 }}
+                                onFocus={e => { e.target.style.borderColor = '#F59E0B'; }}
+                                onBlur={e  => { e.target.style.borderColor = '#E5E7EB'; }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Save edit button */}
+                          <button
+                            type="button"
+                            onClick={saveEditedAddress}
+                            style={{
+                              marginTop: 14,
+                              padding: '9px 22px',
+                              borderRadius: 8,
+                              border: 'none',
+                              background: 'linear-gradient(135deg,#F59E0B,#FBBF24)',
+                              color: '#1a0a00',
+                              fontSize: 13,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              boxShadow: '0 3px 10px rgba(245,158,11,0.35)',
+                              transition: 'all 0.18s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                          >
+                            ✓ Save Changes
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ))}
 
                   {/* Option to fill in a new address manually */}
@@ -688,8 +888,9 @@ export default function Checkout() {
                       checked={selectedSavedId === 'new'}
                       onChange={() => {
                         setSelectedSavedId('new');
+                        setEditingAddrId(null);
                         setAddr({ name: user.name || '', phone: user.mobile || '',
-                          house: '', area: '', pincode: '', city: '', state: '' });
+                          house: '', area: '', pincode: '', city: '', state: '', alt_phone: '' });
                         setAddrSaved(false);
                       }}
                       style={{ accentColor: '#1A1A1A', flexShrink: 0 }}
@@ -700,7 +901,6 @@ export default function Checkout() {
                   </label>
                 </div>
 
-                {/* Divider before manual form */}
                 {(selectedSavedId === 'new' || !selectedSavedId) && (
                   <div style={{ borderTop: '1px dashed #E5E7EB', margin: '18px 0 0' }} />
                 )}
@@ -781,9 +981,13 @@ export default function Checkout() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'Subtotal',         value: `₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,     green: false, strike: false },
-                { label: 'GST (5%)',          value: `₹${gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,          green: false, strike: false },
-                { label: 'Delivery Charges', value: 'FREE',                                                                    green: true,  strike: false },
+                { label: 'Subtotal',         value: `₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,     green: false },
+                { label: 'GST (5%)',          value: `₹${gst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,          green: false },
+                {
+                  label: 'Delivery Charges',
+                  value: deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`,
+                  green: deliveryCharge === 0,
+                },
               ].map(({ label, value, green }) => (
                 <div key={label} style={{
                   display: 'flex', justifyContent: 'space-between',
@@ -795,6 +999,18 @@ export default function Checkout() {
                   </span>
                 </div>
               ))}
+
+              {/* Delivery threshold nudge — shown only when delivery is charged */}
+              {deliveryCharge > 0 && (
+                <div style={{
+                  fontSize: 11, color: '#6B7280',
+                  background: '#FFF7ED', border: '1px dashed #FCD34D',
+                  borderRadius: 8, padding: '7px 10px',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  🚚 Add ₹{(FREE_DELIVERY_MIN - subtotal).toLocaleString('en-IN')} more to get FREE delivery
+                </div>
+              )}
 
               {/* Coupon discount row — shown only when applied */}
               {appliedCoupon && (
@@ -840,7 +1056,7 @@ export default function Checkout() {
             )}
 
             <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>
-              Inclusive of all taxes
+              Inclusive of all taxes · Free delivery on orders ₹{FREE_DELIVERY_MIN.toLocaleString('en-IN')}+
             </p>
           </Card>
 

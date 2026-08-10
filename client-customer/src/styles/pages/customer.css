@@ -3451,3 +3451,102 @@ img, video, svg, canvas {
     padding-right: 14px !important;
   }
 }
+
+
+/* ================================================================
+   FEATURES BAR — single unified element, no duplication
+   Desktop: 4-column flex row with dividers
+   Mobile:  2×2 grid
+   ================================================================ */
+
+.features-bar {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;         /* belt-and-braces against horizontal bleed */
+}
+
+.features-bar__item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  min-width: 0;             /* allow items to shrink below content width */
+}
+
+.features-bar__item:last-child {
+  border-right: none;
+}
+
+.features-bar__icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.features-bar__text {
+  min-width: 0;
+}
+
+.features-bar__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.features-bar__desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.48);
+  line-height: 1.45;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Mobile: 2×2 grid ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .features-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);  /* gap colour = grid "border" */
+  }
+
+  .features-bar__item {
+    flex: unset;
+    border-right: none;    /* grid gap handles separation */
+    background: #1a0a00;   /* fill each cell over the gap colour */
+    padding: 14px 14px;
+    gap: 10px;
+  }
+
+  .features-bar__icon {
+    font-size: 20px;
+  }
+
+  .features-bar__title {
+    font-size: 12px;
+    white-space: normal;   /* allow wrapping in 2-col grid cells */
+  }
+
+  .features-bar__desc {
+    font-size: 10.5px;
+    white-space: normal;
+  }
+}
+
+/* ── Tiny phones ≤ 360px: stack to 1 column ──────────────────── */
+@media (max-width: 360px) {
+  .features-bar {
+    grid-template-columns: 1fr;
+  }
+}

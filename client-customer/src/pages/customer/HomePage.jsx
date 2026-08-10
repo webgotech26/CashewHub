@@ -235,76 +235,26 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════
-          FEATURES BAR
-          Desktop: continuous ticker scroll
-          Mobile:  2×2 static grid (no overflow)
+          FEATURES BAR — single element, CSS-responsive
+          Desktop: 4-column flex row
+          Mobile:  2×2 grid
          ══════════════════════════════════════ */}
-      <section style={{ background: '#1a0a00', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-
-        {/* ── DESKTOP ticker (hidden on mobile via CSS) ── */}
-        <div className="features-ticker-desktop" style={{ padding: '14px 0', overflow: 'hidden' }}>
-          <div style={{
-            display: 'flex', gap: 0,
-            animation: 'tickerScroll 18s linear infinite',
-            whiteSpace: 'nowrap',
-          }}>
-            {[...Array(3)].map((_, repeat) => (
-              <div key={repeat} style={{ display: 'flex', gap: 0, flexShrink: 0 }}>
-                {FEATURES.map((f, i) => (
-                  <div key={i} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 10,
-                    padding: '0 40px',
-                    borderRight: '1px solid rgba(255,255,255,0.15)',
-                  }}>
-                    <span style={{ fontSize: 18 }}>{f.icon}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: 0.3 }}>{f.title}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>— {f.desc}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── MOBILE 2×2 grid (hidden on desktop via CSS) ── */}
-        <div className="features-grid-mobile" style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '1px',
-          background: 'rgba(255,255,255,0.06)',
-        }}>
+      <section style={{
+        background: '#1a0a00',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '0',
+      }}>
+        <div className="features-bar">
           {FEATURES.map((f, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '14px 16px',
-              background: '#1a0a00',
-            }}>
-              <span style={{ fontSize: 20, flexShrink: 0 }}>{f.icon}</span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', letterSpacing: 0.2, lineHeight: 1.3 }}>
-                  {f.title}
-                </div>
-                <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4, marginTop: 2 }}>
-                  {f.desc}
-                </div>
+            <div key={i} className="features-bar__item">
+              <span className="features-bar__icon">{f.icon}</span>
+              <div className="features-bar__text">
+                <div className="features-bar__title">{f.title}</div>
+                <div className="features-bar__desc">{f.desc}</div>
               </div>
             </div>
           ))}
         </div>
-
-        <style>{`
-          @keyframes tickerScroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-33.333%); }
-          }
-          /* Show ticker on desktop, grid on mobile */
-          .features-ticker-desktop { display: block; }
-          .features-grid-mobile    { display: none; }
-          @media (max-width: 640px) {
-            .features-ticker-desktop { display: none; }
-            .features-grid-mobile    { display: grid; }
-          }
-        `}</style>
       </section>
 
       {/* ══════════════════════════════════════
