@@ -523,7 +523,7 @@ function TabOrders({ navigate }) {
                   style={{ borderBottom: i < orders.length - 1 ? '1px solid #F5F5F5' : 'none' }}>
                   <td style={{ padding: '14px 12px' }}>
                     <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700,
-                      color: DARK }}>#{o.id}</span>
+                      color: DARK }}>#{o.display_id || (o.id < 100000 ? o.id + 100000 : o.id)}</span>
                   </td>
                   <td style={{ padding: '14px 12px', maxWidth: 180 }}>
                     <span style={{ fontFamily: FONT, fontSize: 13, color: DARK,

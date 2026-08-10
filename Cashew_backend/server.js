@@ -44,6 +44,8 @@ const io = socket.init(server);
 const ALLOWED_ORIGINS = [
   process.env.CORS_CUSTOMER_ORIGIN || 'http://localhost:3000',  // storefront
   process.env.CORS_ADMIN_ORIGIN    || 'http://localhost:3001',  // admin ERP
+  'https://cashew-hub-r6ap.vercel.app',                         // Vercel admin deployment
+  'https://petrichor-naturals.vercel.app',                      // Vercel customer deployment (add if needed)
 ].filter(Boolean);
 
 app.use(cors({
