@@ -1,21 +1,27 @@
 import axios from 'axios';
 
 /**
- * Resolve the backend base URL.
- * Priority:
- *   1. VITE_API_URL env var (set in Vercel dashboard for production)
- *   2. Hard-coded Render production URL as fallback
+ * Resolve the backend origin (no trailing /api).
  *
- * The URL must always be absolute (start with https:// or http://) so that
- * Axios never resolves it relative to the current window.location origin.
+ * Handles all three env-var formats people commonly set:
+ *   https://cashew-hub.onrender.com          → keeps as-is
+ *   https://cashew-hub.onrender.com/         → strips trailing slash
+ *   https://cashew-hub.onrender.com/api      → strips /api suffix
+ *   https://cashew-hub.onrender.com/api/     → strips /api/ suffix
+ *
+ * Call sites always use full paths like  /api/auth/login
+ * so baseURL must be the bare origin only.
  */
-const RAW_URL = import.meta.env.VITE_API_URL || 'https://cashew-hub.onrender.com';
-
-/* Strip any accidental trailing slash so paths join cleanly */
-const BASE_URL = RAW_URL.replace(/\/+$/, '');
+function resolveBaseURL() {
+  const raw = (import.meta.env.VITE_API_URL || 'https://cashew-hub.onrender.com')
+    .trim()
+    .replace(/\/+$/, '')          // remove trailing slashes
+    .replace(/\/api$/, '');       // remove /api suffix if present
+  return raw;
+}
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: resolveBaseURL(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: false,
 });
