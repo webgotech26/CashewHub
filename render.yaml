@@ -1,0 +1,23 @@
+# render.yaml — Render deployment configuration
+# Place this file in the repository root.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: cashew-hub-backend
+    runtime: node
+    rootDir: Cashew_backend
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      # Set the following in Render Dashboard → Environment:
+      # DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
+      # JWT_SECRET
+      # RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
+      # CORS_CUSTOMER_ORIGIN   (e.g. https://your-app.vercel.app)
+      # CORS_ADMIN_ORIGIN      (e.g. https://cashew-hub-r6ap.vercel.app)

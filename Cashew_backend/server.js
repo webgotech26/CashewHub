@@ -52,12 +52,21 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow server-to-server calls (no Origin header) and same-origin
     if (!origin) return callback(null, true);
+
+    // Allow any vercel.app subdomain (covers preview deployments too)
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+
+    // Allow explicitly listed origins
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+
+    // Allow localhost on any port for development
+    if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,         // allow cookies/auth headers cross-origin
+  credentials: true,
 }));
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
