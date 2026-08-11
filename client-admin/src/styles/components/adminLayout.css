@@ -1,7 +1,8 @@
 /* ── Layout Shell ─────────────────────────────────────────────────── */
 .erp-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;             /* full viewport — critical for sticky to work */
+  overflow: hidden;          /* prevent body scroll; child scroll areas handle it */
   background: #f0f2f5;
 }
 
@@ -32,6 +33,18 @@
 .erp-sidebar__brand-text  { display: flex; flex-direction: column; }
 .erp-sidebar__name        { color: #fff; font-size: 16px; font-weight: 800; white-space: nowrap; letter-spacing: -0.3px; }
 .erp-sidebar__sub         { color: rgba(255,255,255,0.45); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+
+/* ── Logo image ───────────────────────────────────────────────────── */
+.erp-sidebar__logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  padding: 3px;
+  box-sizing: border-box;
+}
 
 /* ── Nav groups ───────────────────────────────────────────────────── */
 .erp-nav-group {
@@ -188,10 +201,14 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* NO overflow:hidden here — that breaks position:sticky on the topbar */
+  min-height: 0;           /* allows flex child to shrink below content height */
 }
 
 .erp-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;            /* above content, below sidebar (1200) and backdrop (1100) */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -221,7 +238,8 @@
 .erp-content {
   flex: 1;
   padding: 24px 28px;
-  overflow-y: auto;
+  overflow-y: auto;           /* scroll happens here, not on body */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Shared Module Styles (used across all ERP pages) ─────────────── */
@@ -699,3 +717,257 @@
 
 .erp-empty__icon  { font-size: 40px; margin-bottom: 12px; }
 .erp-empty__text  { font-size: 14px; }
+
+
+/* ================================================================
+   MOBILE RESPONSIVE — Admin Sidebar + Hamburger Menu
+   ================================================================ */
+
+/* ── Hamburger button — hidden on desktop ─────────────────────── */
+.erp-topbar__hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.erp-topbar__hamburger:hover {
+  background: #f0fdf4;
+  border-color: #2d6a4f;
+}
+
+.erp-hamburger-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #1a3c2e;
+  border-radius: 2px;
+  transition: all 0.22s ease;
+  transform-origin: center;
+}
+
+/* Animated X when open */
+.erp-hamburger-bar--open-1 { transform: translateY(7px) rotate(45deg);  }
+.erp-hamburger-bar--open-2 { opacity: 0; transform: scaleX(0);          }
+.erp-hamburger-bar--open-3 { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Mobile sidebar close button — hidden on desktop ─────────── */
+.erp-sidebar__mobile-close {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.erp-sidebar__mobile-close:hover {
+  color: #fff;
+}
+
+/* ── Mobile backdrop ──────────────────────────────────────────── */
+.erp-mobile-backdrop {
+  display: none;
+}
+
+/* ── Desktop collapse button — hide on mobile ────────────────── */
+
+/* ── MOBILE BREAKPOINT ≤ 900px ────────────────────────────────── */
+@media (max-width: 900px) {
+
+  /* Layout becomes stacked — sidebar is off-canvas */
+  .erp-layout {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* ── Sidebar: fixed off-canvas, slides in from left ── */
+  .erp-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px !important;   /* override collapsed width on mobile */
+    z-index: 1200;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.28s ease;
+    box-shadow: none;
+  }
+
+  /* Sidebar open state */
+  .erp-sidebar--mobile-open {
+    transform: translateX(0);
+    box-shadow: 6px 0 32px rgba(0,0,0,0.25);
+  }
+
+  /* Desktop collapse button hidden on mobile */
+  .erp-sidebar__collapse-btn {
+    display: none;
+  }
+
+  /* Show mobile close button */
+  .erp-sidebar__mobile-close {
+    display: block;
+  }
+
+  /* Nav items — always show labels on mobile (never collapsed) */
+  .erp-nav-item__label {
+    display: inline !important;
+  }
+
+  /* Brand text — always visible on mobile */
+  .erp-sidebar__brand-text {
+    display: flex !important;
+  }
+
+  /* User details — always visible on mobile */
+  .erp-sidebar__user-details {
+    display: flex !important;
+  }
+
+  /* ── Backdrop ── */
+  .erp-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1100;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: erp-fade-in 0.2s ease;
+  }
+
+  @keyframes erp-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Main area: full width, no sidebar offset ── */
+  .erp-main {
+    width: 100%;
+    min-height: 100vh;
+    /* No margin-left — sidebar is off-canvas */
+  }
+
+  /* ── Topbar: show hamburger ── */
+  .erp-topbar {
+    padding: 0 14px;
+    height: 56px;
+  }
+
+  .erp-topbar__hamburger {
+    display: flex;
+  }
+
+  .erp-topbar__title {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  /* Hide logout from topbar on mobile (it's in the sidebar) */
+  .erp-topbar__logout {
+    display: none;
+  }
+
+  /* User pill — compact on mobile */
+  .erp-topbar__user-pill {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  /* ── Content padding ── */
+  .erp-content {
+    padding: 16px 14px;
+  }
+
+  /* ── Stat cards: 2-col on tablet, keep readable ── */
+  .erp-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* ── Page title ── */
+  .erp-page-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+}
+
+/* ── Very small phones ≤ 480px ────────────────────────────────── */
+@media (max-width: 480px) {
+
+  .erp-topbar__title {
+    font-size: 13px;
+    max-width: 140px;
+  }
+
+  /* User pill — hide name, show only dot on tiny screens */
+  .erp-topbar__user-pill span:last-child {
+    display: none;
+  }
+
+  /* Stat cards: 1 column */
+  .erp-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .erp-content {
+    padding: 12px 10px;
+  }
+
+  /* Tables: ensure horizontal scroll */
+  .erp-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: calc(100vw - 20px);
+  }
+
+  /* Modal: full-screen on tiny phones */
+  .erp-modal {
+    max-width: calc(100vw - 24px);
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .erp-card {
+    padding: 16px 14px;
+  }
+}
+
+/* ── Prevent horizontal scroll globally ──────────────────────── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Touch targets — all interactive elements minimum 44×44px */
+@media (max-width: 900px) {
+  .erp-btn,
+  .erp-nav-item,
+  .erp-sidebar__logout-btn,
+  .erp-topbar__hamburger {
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

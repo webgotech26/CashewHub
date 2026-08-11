@@ -2,11 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>H²B³ Cashew Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Petrichor Naturals — Admin Panel</title>
+    <meta name="description" content="Petrichor Naturals admin dashboard — manage orders, products, customers and more." />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- PWA Theme -->
+    <meta name="theme-color" content="#1a3c2e" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a3c2e" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PN Admin" />
+
+    <!-- Favicon / icons -->
+    <link rel="icon" type="image/png" href="/assets/cashewlogo.png" />
+    <link rel="apple-touch-icon" href="/assets/cashewlogo.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Prevent iOS input zoom -->
+    <style>
+      html { background: #f0f2f5; }
+      body { margin: 0; -webkit-text-size-adjust: 100%; }
+      @media (max-width: 768px) {
+        input, select, textarea { font-size: 16px !important; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

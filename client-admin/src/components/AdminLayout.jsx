@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink, useNavigate, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import '../styles/components/adminLayout.css';
 
 /* ── Grouped nav config ──────────────────────────────────────────
@@ -31,8 +31,24 @@ const NAV_GROUPS = [
 
 export default function AdminLayout() {
   const navigate   = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
+  const location   = useLocation();
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  /* Close mobile sidebar on route change */
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  /* Close on outside click via Escape key */
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -41,20 +57,42 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className={`erp-layout ${collapsed ? 'erp-layout--collapsed' : ''}`}>
+    <div className={`erp-layout ${collapsed ? 'erp-layout--collapsed' : ''} ${mobileOpen ? 'erp-layout--mobile-open' : ''}`}>
+
+      {/* ── Mobile backdrop — closes sidebar when tapped ─────────── */}
+      {mobileOpen && (
+        <div
+          className="erp-mobile-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       {/* ── Sidebar ─────────────────────────────────────────────── */}
-      <aside className="erp-sidebar">
+      <aside className={`erp-sidebar ${mobileOpen ? 'erp-sidebar--mobile-open' : ''}`}>
 
         {/* Brand */}
         <div className="erp-sidebar__brand">
-          <span className="erp-sidebar__logo">🌰</span>
+          <img
+            src="/assets/logoo.png"
+            alt="Petrichor Naturals"
+            className="erp-sidebar__logo-img"
+            onError={e => { e.currentTarget.style.display = 'none'; }}
+          />
           {!collapsed && (
             <div className="erp-sidebar__brand-text">
-              <span className="erp-sidebar__name">H²B³ Cashew</span>
+              <span className="erp-sidebar__name">Petrichor Naturals</span>
               <span className="erp-sidebar__sub">Admin Panel</span>
             </div>
           )}
+          {/* Mobile close button inside sidebar */}
+          <button
+            className="erp-sidebar__mobile-close"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            ×
+          </button>
         </div>
 
         {/* Grouped Nav */}
@@ -107,7 +145,7 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — desktop only */}
         <button
           className="erp-sidebar__collapse-btn"
           onClick={() => setCollapsed((c) => !c)}
@@ -124,7 +162,18 @@ export default function AdminLayout() {
         {/* Top bar */}
         <header className="erp-topbar">
           <div className="erp-topbar__left">
-            <h2 className="erp-topbar__title">H²B³ Cashew — Admin</h2>
+            {/* Hamburger — mobile only */}
+            <button
+              className="erp-topbar__hamburger"
+              onClick={() => setMobileOpen(v => !v)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileOpen}
+            >
+              <span className={`erp-hamburger-bar ${mobileOpen ? 'erp-hamburger-bar--open-1' : ''}`} />
+              <span className={`erp-hamburger-bar ${mobileOpen ? 'erp-hamburger-bar--open-2' : ''}`} />
+              <span className={`erp-hamburger-bar ${mobileOpen ? 'erp-hamburger-bar--open-3' : ''}`} />
+            </button>
+            <h2 className="erp-topbar__title">Petrichor Naturals — Admin</h2>
           </div>
           <div className="erp-topbar__right">
             <div className="erp-topbar__user-pill">

@@ -60,12 +60,12 @@ export default function Login() {
                 fontFamily:"'Playfair Display',serif",
                 fontSize:20, fontWeight:800, color:'#fff',
                 textShadow:'0 1px 8px rgba(0,0,0,0.3)',
-              }}> H²B³ Cashew </div>
+              }}>Petrichor Naturals</div>
               <div style={{
                 fontSize:10, fontWeight:700, color:'rgba(245,200,66,0.9)',
                 textTransform:'uppercase', letterSpacing:1.8, marginTop:2,
               }}>
-                Fresh Picked. Finest Quality.
+                Admin Panel
               </div>
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function Login() {
 
           {/* Heading */}
           <h2 className="login-title">Welcome Back</h2>
-          <p className="login-subtitle">Sign in to your H²B³ Cashew account</p>
+          <p className="login-subtitle">Sign in to your Petrichor Naturals Admin account</p>
 
           {/* Error */}
           {error && (
