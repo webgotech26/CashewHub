@@ -69,6 +69,10 @@ app.use(cors({
   credentials: true,
 }));
 
+/* Handle all CORS preflight requests before they reach any route.
+   Without this, OPTIONS requests hit the 404 handler instead. */
+app.options('*', cors());
+
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
 
 app.use(express.json({ limit: '10mb' }));
