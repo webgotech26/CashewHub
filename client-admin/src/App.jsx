@@ -1,7 +1,7 @@
 /**
  * client-admin/src/App.jsx
  * Admin ERP — cleaned up routes.
- * Removed: Purchases, Suppliers, Returns, Reports, Audit Logs, Admin Users
+ * Removed: Purchases, Suppliers, Returns, Reports, Audit Logs, Admin Users, Delivery
  * Runs on port 3001.
  */
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -16,7 +16,6 @@ import Orders         from './pages/admin/Orders';
 import Products       from './pages/admin/Products';
 import Inventory      from './pages/admin/Inventory';
 import Customers      from './pages/admin/Customers';
-import Delivery       from './pages/admin/Delivery';
 
 // Marketing & Settings
 import Coupons        from './pages/admin/Coupons';
@@ -47,7 +46,6 @@ export default function App() {
         <Route path="products"   element={<Products />} />
         <Route path="inventory"  element={<Inventory />} />
         <Route path="customers"  element={<Customers />} />
-        <Route path="delivery"   element={<Delivery />} />
 
         {/* ── Marketing & Settings ──────────────────────── */}
         <Route path="coupons"    element={<Coupons />} />

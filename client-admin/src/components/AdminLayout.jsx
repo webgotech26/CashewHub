@@ -14,7 +14,6 @@ const NAV_GROUPS = [
       { label: 'Products',   path: '/admin/products',   icon: '🥜' },
       { label: 'Inventory',  path: '/admin/inventory',  icon: '📦' },
       { label: 'Customers',  path: '/admin/customers',  icon: '👥' },
-      { label: 'Delivery',   path: '/admin/delivery',   icon: '🚚' },
     ],
   },
   {
