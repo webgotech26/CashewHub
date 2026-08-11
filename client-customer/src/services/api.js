@@ -1,30 +1,39 @@
 import axios from 'axios';
 
+/**
+ * Resolve the backend base URL.
+ * Priority:
+ *   1. VITE_API_URL env var (set in Vercel dashboard for production)
+ *   2. Hard-coded Render production URL as fallback
+ *
+ * The URL must always be absolute (start with https:// or http://) so that
+ * Axios never resolves it relative to the current window.location origin.
+ */
+const RAW_URL = import.meta.env.VITE_API_URL || 'https://cashew-hub.onrender.com';
+
+/* Strip any accidental trailing slash so paths join cleanly */
+const BASE_URL = RAW_URL.replace(/\/+$/, '');
+
 const api = axios.create({
-  // Reads from .env (VITE_API_URL) — falls back to localhost for development
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: false,
 });
 
-// Attach JWT token to every request if available
+/* Attach JWT token to every outgoing request */
 api.interceptors.request.use(
-  (config) => {
+  config => {
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
-// Response interceptor — only redirect on 401 for NON-auth routes.
-// Auth routes (/api/auth/*) handle 401 themselves in the catch block.
+/* Auto-logout on 401 (except auth routes which handle it themselves) */
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     const isAuthRoute = error.config?.url?.includes('/api/auth/');
     if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('token');
