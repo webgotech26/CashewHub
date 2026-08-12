@@ -91,6 +91,8 @@ const login = async (req, res) => {
       [identifier.trim()]
     );
 
+    console.log(`[Auth] Admin lookup for '${identifier.trim()}': found ${adminRows.length} row(s)`);
+
     if (adminRows.length > 0) {
       user = adminRows[0];
       role = 'admin';
