@@ -64,8 +64,8 @@ const FEATURES = [
 const WHY_US = [
   {
     icon: '🌱',
-    title: 'We Grow It Here',
-    desc: 'Our nuts come from our farms. No middlemen — straight from us to your door.',
+    title: 'Direct from Our Farms',
+    desc: 'Harvested with care from our fertile local soil. 100% natural, farm-fresh, and delivered straight to your door without middlemen.',
   },
   {
     icon: '🔍',
@@ -80,7 +80,7 @@ const WHY_US = [
   {
     icon: '🚚',
     title: 'Delivered Anywhere',
-    desc: 'We deliver across India. Free shipping on orders above ₹499.',
+    desc: 'We deliver across India. Free shipping on orders above ₹2000.',
   },
 ];
 
@@ -419,7 +419,7 @@ export default function HomePage() {
           Ready to Order?
         </h2>
         <p style={{ fontSize: 'clamp(13px,2vw,15px)', color: 'rgba(26,10,0,0.65)', marginBottom: 32, maxWidth: 480, margin: '0 auto 32px' }}>
-          Fresh batch available now. Free delivery on orders above ₹499.
+          Fresh batch available now. Free delivery on orders above ₹2000.
         </p>
         <button onClick={() => navigate('/home/shop')} style={{
           background: '#1a0a00', color: '#F5C842', border: 'none',
