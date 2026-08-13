@@ -163,6 +163,37 @@ export default function Orders() {
   const [bulkStatus,    setBulkStatus]    = useState('shipped');
   const [bulkUpdating,  setBulkUpdating]  = useState(false);
 
+  /* ── Open manifest in new tab ──────────────────────────────── */
+  const openManifest = (dateMode, ids = []) => {
+    const token  = localStorage.getItem('token');
+    const base   = (import.meta.env.VITE_API_URL || 'https://cashew-hub.onrender.com')
+      .replace(/\/+$/, '').replace(/\/api$/, '');
+    const params = new URLSearchParams();
+    if (ids.length > 0) {
+      params.set('ids', ids.join(','));
+    } else {
+      params.set('date', dateMode === 'today' ? 'today' : 'today');
+    }
+    /* Open the manifest URL with auth token appended as query param.
+       The backend reads it via the Authorization header injected by
+       a fetch call, OR we open via the API service below. */
+    fetch(`${base}/api/orders/manifest?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => {
+        if (!r.ok) return r.json().then(e => Promise.reject(e));
+        return r.text();
+      })
+      .then(html => {
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+      })
+      .catch(err => {
+        alert(err.message || 'Failed to generate manifest. Make sure orders exist.');
+      });
+  };
+
   /* ── Fetch orders list ──────────────────────────────────────── */
   const fetchOrders = useCallback(() => {
     api.get('/api/orders', {
@@ -289,6 +320,13 @@ export default function Orders() {
           >
             📥 CSV
           </button>
+          <button
+            className="erp-btn erp-btn--primary erp-btn--sm"
+            onClick={() => openManifest('today')}
+            title="Open today's dispatch manifest as a printable page"
+          >
+            📋 Today's Manifest
+          </button>
         </div>
       </div>
 
@@ -330,6 +368,14 @@ export default function Orders() {
             onClick={() => setCheckedIds(new Set())}
           >
             Clear
+          </button>
+          <button
+            className="erp-btn erp-btn--sm"
+            style={{ background: '#f5c842', color: '#1a0a00', border: 'none', fontWeight: 800 }}
+            onClick={() => openManifest(null, Array.from(checkedIds))}
+            title="Open printable manifest for selected orders"
+          >
+            📋 Export Manifest
           </button>
         </div>
       )}

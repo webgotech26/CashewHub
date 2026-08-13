@@ -971,3 +971,94 @@ html, body {
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+
+/* ================================================================
+   MOBILE CARD VIEW — converts tables to stacked cards on mobile
+   Apply  class="erp-table erp-table--card-mobile"  to any table.
+   On ≤640px each <tr> becomes a card; <td> shows its header label
+   via the  data-label="..."  attribute on the cell.
+   ================================================================ */
+
+@media (max-width: 640px) {
+
+  /* Hide the table header row on mobile */
+  .erp-table--card-mobile thead {
+    display: none;
+  }
+
+  /* Each row becomes a card */
+  .erp-table--card-mobile tbody tr {
+    display: block;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .erp-table--card-mobile tbody tr:hover td {
+    background: transparent; /* remove hover row highlight */
+  }
+
+  /* Each cell becomes a labeled row */
+  .erp-table--card-mobile tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .erp-table--card-mobile tbody td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  /* Label from data-label attribute */
+  .erp-table--card-mobile tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* Hide checkbox column on mobile (bulk actions need desktop) */
+  .erp-table--card-mobile tbody td:first-child:has(input[type="checkbox"]),
+  .erp-table--card-mobile tbody td.erp-td-checkbox {
+    display: none;
+  }
+
+  /* Toolbar — stack search + filters vertically */
+  .erp-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .erp-toolbar > div,
+  .erp-toolbar__search {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+
+  /* Filter chips — horizontal scroll */
+  .erp-toolbar > div:first-child {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .erp-toolbar > div:first-child::-webkit-scrollbar {
+    display: none;
+  }
+}

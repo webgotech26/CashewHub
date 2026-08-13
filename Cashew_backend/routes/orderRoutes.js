@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
 const { createOrder, getOrders, getOrderById, updateOrderStatus } = require('../controllers/orderController');
+const { generateManifest } = require('../controllers/manifestController');
 
 // All order routes require authentication
 router.use(verifyToken);
@@ -18,6 +19,10 @@ router.post('/', createOrder);
 
 // GET    /api/orders        → List orders (admin: all, customer: own)
 router.get('/', getOrders);
+
+// GET    /api/orders/manifest → Admin: print-ready dispatch manifest
+// Query params: ?ids=1,2,3  (specific orders) OR ?date=today (today's orders)
+router.get('/manifest', adminOnly, generateManifest);
 
 // GET    /api/orders/:id    → Single order details
 router.get('/:id', getOrderById);
