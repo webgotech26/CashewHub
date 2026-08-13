@@ -172,12 +172,22 @@ export default function AdminLayout() {
               <span className={`erp-hamburger-bar ${mobileOpen ? 'erp-hamburger-bar--open-2' : ''}`} />
               <span className={`erp-hamburger-bar ${mobileOpen ? 'erp-hamburger-bar--open-3' : ''}`} />
             </button>
-            <h2 className="erp-topbar__title">Petrichor Naturals — Admin</h2>
+            <div className="erp-topbar__brand">
+              <img
+                src="/assets/logoo.png"
+                alt=""
+                className="erp-topbar__brand-logo"
+                onError={e => { e.currentTarget.style.display = 'none'; }}
+              />
+              <h2 className="erp-topbar__title">Petrichor Naturals</h2>
+            </div>
           </div>
           <div className="erp-topbar__right">
             <div className="erp-topbar__user-pill">
               <span className="erp-topbar__user-dot" />
-              <span>👤 {user.name || user.username || 'Admin'}</span>
+              <span className="erp-topbar__user-name">
+                {user.name || user.username || 'Admin'}
+              </span>
             </div>
             <button className="erp-topbar__logout" onClick={handleLogout}>
               Logout

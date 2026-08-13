@@ -36,7 +36,7 @@ export default function Invoices() {
 
       <div className="erp-card">
         <div className="erp-table-wrapper">
-          <table className="erp-table">
+          <table className="erp-table erp-table--card-mobile">
             <thead>
               <tr>
                 <th>Invoice #</th><th>Order</th><th>Customer</th>
@@ -50,14 +50,14 @@ export default function Invoices() {
                 </td></tr>
               ) : invoices.map(inv => (
                 <tr key={inv.id}>
-                  <td><strong>INV-{String(inv.id).padStart(5, '0')}</strong></td>
-                  <td>#{inv.order_id}</td>
-                  <td>{inv.customer_name || '—'}</td>
-                  <td>₹{Number(inv.subtotal || 0).toFixed(2)}</td>
-                  <td>₹{Number(inv.gst_amount || 0).toFixed(2)}</td>
-                  <td><strong>₹{Number(inv.total_amount || 0).toFixed(2)}</strong></td>
-                  <td>{new Date(inv.created_at).toLocaleDateString()}</td>
-                  <td>
+                  <td data-label="Invoice #"><strong>INV-{String(inv.id).padStart(5, '0')}</strong></td>
+                  <td data-label="Order">#{inv.order_id}</td>
+                  <td data-label="Customer">{inv.customer_name || '—'}</td>
+                  <td data-label="Amount">₹{Number(inv.subtotal || 0).toFixed(2)}</td>
+                  <td data-label="GST">₹{Number(inv.gst_amount || 0).toFixed(2)}</td>
+                  <td data-label="Total"><strong>₹{Number(inv.total_amount || 0).toFixed(2)}</strong></td>
+                  <td data-label="Date">{new Date(inv.created_at).toLocaleDateString()}</td>
+                  <td data-label="PDF">
                     <button className="erp-btn erp-btn--secondary erp-btn--sm" onClick={() => download(inv.id)}>
                       ⬇ PDF
                     </button>

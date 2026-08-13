@@ -20,6 +20,9 @@
     <link rel="icon" type="image/png" href="/assets/cashewlogo.png" />
     <link rel="apple-touch-icon" href="/assets/cashewlogo.png" />
 
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -37,5 +40,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      /* Register service worker for PWA install support */
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.warn('SW registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { groupProductVariants } from '../../utils/groupVariants';
 import ProductCard from '../../Components/ProductCard';
 import BannerSlider from '../../Components/BannerSlider';
 
@@ -105,7 +106,7 @@ export default function HomePage() {
 
   useEffect(() => {
     api.get('/api/products', { params: { limit: 8 } })
-      .then(r => setProducts(r.data.data || []))
+      .then(r => setProducts(groupProductVariants(r.data.data || [])))
       .catch(() => {});
   }, []);
 

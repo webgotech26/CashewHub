@@ -42,7 +42,7 @@ export default function Reviews() {
 
       <div className="erp-card">
         <div className="erp-table-wrapper">
-          <table className="erp-table">
+          <table className="erp-table erp-table--card-mobile">
             <thead>
               <tr>
                 <th>#</th><th>Customer</th><th>Product</th><th>Rating</th>
@@ -54,20 +54,20 @@ export default function Reviews() {
                 <tr><td colSpan={8} style={{ textAlign:'center', color:'#aaa', padding:30 }}>No reviews in this state.</td></tr>
               ) : reviews.map(r => (
                 <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.customer_name || '—'}</td>
-                  <td>{r.product_name  || '—'}</td>
-                  <td style={{ color:'#f59e0b', letterSpacing:1 }}>{stars(r.rating)}</td>
-                  <td style={{ maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  <td data-label="#">{r.id}</td>
+                  <td data-label="Customer">{r.customer_name || '—'}</td>
+                  <td data-label="Product">{r.product_name  || '—'}</td>
+                  <td data-label="Rating" style={{ color:'#f59e0b', letterSpacing:1 }}>{stars(r.rating)}</td>
+                  <td data-label="Review" style={{ maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                     {r.comment || '—'}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span className={`erp-badge erp-badge--${r.status === 'approved' ? 'green' : r.status === 'rejected' ? 'red' : 'yellow'}`}>
                       {r.status}
                     </span>
                   </td>
-                  <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                  <td style={{ display:'flex', gap:6 }}>
+                  <td data-label="Date">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td data-label="Actions" style={{ display:'flex', gap:6 }}>
                     {r.status !== 'approved'  && <button className="erp-btn erp-btn--primary erp-btn--sm" onClick={() => moderate(r.id, 'approved')}>Approve</button>}
                     {r.status !== 'rejected'  && <button className="erp-btn erp-btn--danger erp-btn--sm"  onClick={() => moderate(r.id, 'rejected')}>Reject</button>}
                   </td>

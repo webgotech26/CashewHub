@@ -250,6 +250,8 @@ const getOrders = async (req, res) => {
     const page   = parseInt(req.query.page,  10) || 1;
     const limit  = parseInt(req.query.limit, 10) || 20;
     const offset = (page - 1) * limit;
+    const status = req.query.status ? req.query.status.trim() : '';
+    const search = req.query.search ? req.query.search.trim()  : '';
 
     let query = `
       SELECT
@@ -279,12 +281,32 @@ const getOrders = async (req, res) => {
       LEFT JOIN products    p  ON p.id        = oi.product_id
     `;
 
-    const params = [];
+    const params  = [];
+    const filters = [];
 
     if (req.user.role === 'customer') {
-      query += ' WHERE o.customer_id = ?';
+      filters.push('o.customer_id = ?');
       params.push(req.user.id);
     }
+
+    if (status) {
+      filters.push('o.status = ?');
+      params.push(status);
+    }
+
+    if (search) {
+      filters.push('(c.name LIKE ? OR CAST(o.id AS CHAR) LIKE ?)');
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (filters.length > 0) {
+      query += ' WHERE ' + filters.join(' AND ');
+    }
+
+    // Count total matching rows (for pagination)
+    const countQuery = `SELECT COUNT(DISTINCT o.id) AS total FROM orders o LEFT JOIN customers c ON c.id = o.customer_id ${filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : ''}`;
+    const [countRows] = await pool.query(countQuery, params);
+    const total = countRows[0]?.total || 0;
 
     query += `
       GROUP BY o.id, o.customer_id, o.total_amount, o.status, o.created_at, o.address, o.notes, c.name
@@ -294,11 +316,15 @@ const getOrders = async (req, res) => {
     params.push(limit, offset);
 
     const [rows] = await pool.query(query, params);
+    const data   = rows.map(r => ({
+      ...r,
+      display_id: r.id < 100000 ? r.id + 100000 : r.id,
+    }));
 
     return res.status(200).json({
       success: true,
-      data: rows,
-      pagination: { page, limit },
+      data,
+      pagination: { page, limit, total },
     });
   } catch (error) {
     console.error('getOrders error:', error.message);

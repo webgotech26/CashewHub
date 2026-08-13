@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { getProductVisual } from '../../utils/productVisual';
+import { groupProductVariants } from '../../utils/groupVariants';
 import ProductCard from '../../Components/ProductCard';
 
 /* ── Quick View Modal ─────────────────────────────────────────── */
@@ -155,7 +156,10 @@ export default function ShopPage() {
       api.get('/api/categories'),
     ])
       .then(([pRes, cRes]) => {
-        setProducts(pRes.data.data || []);
+        const rawProducts = pRes.data.data || [];
+        /* Group weight variants (e.g. "Roasted Cashew (1/2kg)" + "(1kg)")
+           into single cards with a variant selector */
+        setProducts(groupProductVariants(rawProducts));
         const cats = (cRes.data.data || []).filter(c => c.id && c.name);
         setCategories(cats);
 

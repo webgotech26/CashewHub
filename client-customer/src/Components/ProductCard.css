@@ -163,3 +163,54 @@
   background: #FFF1F2;
   transform: scale(1.15);
 }
+
+/* ── Variant selector buttons ──────────────────────────────── */
+.pc-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+
+.pc-variant-btn {
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1.5px solid #E5E7EB;
+  background: #FAFAFA;
+  color: #4A4A4A;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pc-variant-btn:hover:not(:disabled) {
+  border-color: #C9972B;
+  background: rgba(201,151,43,0.06);
+  color: #C9972B;
+}
+
+/* Selected variant */
+.pc-variant-btn--active {
+  border-color: #1A1A1A;
+  background: #1A1A1A;
+  color: #FFFFFF;
+}
+
+.pc-variant-btn--active:hover:not(:disabled) {
+  background: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+/* Out-of-stock variant */
+.pc-variant-btn--oos {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

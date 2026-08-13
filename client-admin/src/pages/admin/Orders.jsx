@@ -3,22 +3,28 @@ import api from '../../services/api';
 
 /* ── CSV export ─────────────────────────────────────────────── */
 function downloadOrdersCSV(orders, filename) {
-  const headers = ['ID', 'Customer', 'Items', 'Qty', 'Total', 'Status', 'Date'];
-  const lines = [
-    headers.join(','),
+  // UTF-8 BOM so Excel auto-detects encoding and renders columns correctly
+  const BOM = '\uFEFF';
+  const headers = ['Order ID', 'Customer Name', 'Items', 'Qty', 'Total (₹)', 'Status', 'Date'];
+  const escape  = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+  const lines   = [
+    headers.map(escape).join(','),
     ...orders.map(o => [
-      o.id,
-      `"${(o.customer_name || '').replace(/"/g, '""')}"`,
-      `"${(o.product_names || '').replace(/"/g, '""')}"`,
-      o.total_qty ?? '',
-      Number(o.total_amount).toFixed(2),
-      o.status,
-      new Date(o.created_at).toLocaleDateString('en-IN'),
+      escape(o.display_id || (o.id < 100000 ? o.id + 100000 : o.id)),
+      escape(o.customer_name || `Customer #${o.customer_id}`),
+      escape(o.product_names || ''),
+      escape(o.total_qty ?? ''),
+      escape(Number(o.total_amount).toFixed(2)),
+      escape(o.status),
+      escape(new Date(o.created_at).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      })),
     ].join(',')),
   ];
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([BOM + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -196,9 +202,10 @@ export default function Orders() {
 
   /* ── Fetch orders list ──────────────────────────────────────── */
   const fetchOrders = useCallback(() => {
-    api.get('/api/orders', {
-      params: { status: filter !== 'all' ? filter : '', search, page, limit: 15 },
-    })
+    const params = { page, limit: 15 };
+    if (filter !== 'all') params.status = filter;
+    if (search.trim())    params.search  = search.trim();
+    api.get('/api/orders', { params })
       .then(r => {
         setOrders(r.data.data || []);
         setTotal(r.data.pagination?.total || 0);
@@ -383,7 +390,7 @@ export default function Orders() {
       {/* ── Orders table ───────────────────────────────────────── */}
       <div className="erp-card">
         <div className="erp-table-wrapper">
-          <table className="erp-table">
+          <table className="erp-table erp-table--card-mobile">
             <thead>
               <tr>
                 <th style={{ width: 36 }}>
@@ -409,15 +416,15 @@ export default function Orders() {
                 </tr>
               ) : orders.map(o => (
                 <tr key={o.id} style={{ background: checkedIds.has(o.id) ? '#f0fdf4' : undefined }}>
-                  <td>
+                  <td data-label="Select">
                     <input type="checkbox"
                       checked={checkedIds.has(o.id)}
                       onChange={() => toggleOne(o.id)}
                       style={{ width: 16, height: 16, cursor: 'pointer' }} />
                   </td>
-                  <td style={{ fontWeight: 700 }}>#{o.id}</td>
-                  <td>{o.customer_name || `Customer #${o.customer_id}`}</td>
-                  <td>
+                  <td data-label="Order #" style={{ fontWeight: 700 }}>#{o.display_id || (o.id < 100000 ? o.id + 100000 : o.id)}</td>
+                  <td data-label="Customer">{o.customer_name || `Customer #${o.customer_id}`}</td>
+                  <td data-label="Items">
                     <button
                       onClick={() => openDetail(o.id, 'view')}
                       style={{
@@ -430,14 +437,14 @@ export default function Orders() {
                       View details →
                     </button>
                   </td>
-                  <td style={{ fontWeight: 700 }}>₹{Number(o.total_amount).toFixed(2)}</td>
-                  <td><StatusBadge status={o.status} /></td>
-                  <td style={{ color: '#9ca3af', fontSize: 12 }}>
+                  <td data-label="Total" style={{ fontWeight: 700 }}>₹{Number(o.total_amount).toFixed(2)}</td>
+                  <td data-label="Status"><StatusBadge status={o.status} /></td>
+                  <td data-label="Date" style={{ color: '#9ca3af', fontSize: 12 }}>
                     {new Date(o.created_at).toLocaleDateString('en-IN', {
                       day: '2-digit', month: 'short', year: 'numeric',
                     })}
                   </td>
-                  <td>
+                  <td data-label="Actions">
                     <button
                       className="erp-btn erp-btn--secondary erp-btn--sm"
                       onClick={() => openDetail(o.id, 'manage')}
@@ -456,7 +463,7 @@ export default function Orders() {
           <span>{total} total</span>
           <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
           <span>Page {page}</span>
-          <button disabled={orders.length < 15} onClick={() => setPage(p => p + 1)}>Next →</button>
+          <button disabled={orders.length < 15 && page * 15 >= total} onClick={() => setPage(p => p + 1)}>Next →</button>
         </div>
       </div>
 

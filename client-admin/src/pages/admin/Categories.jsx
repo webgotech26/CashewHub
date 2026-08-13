@@ -46,7 +46,7 @@ export default function Categories() {
 
       <div className="erp-card">
         <div className="erp-table-wrapper">
-          <table className="erp-table">
+          <table className="erp-table erp-table--card-mobile">
             <thead>
               <tr><th>#</th><th>Name</th><th>Description</th><th>Actions</th></tr>
             </thead>
@@ -55,10 +55,10 @@ export default function Categories() {
                 <tr><td colSpan={4} style={{ textAlign:'center', color:'#aaa', padding:30 }}>No categories yet.</td></tr>
               ) : cats.map(c => (
                 <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td><strong>{c.name}</strong></td>
-                  <td>{c.description || '—'}</td>
-                  <td style={{ display:'flex', gap:6 }}>
+                  <td data-label="#">{c.id}</td>
+                  <td data-label="Name"><strong>{c.name}</strong></td>
+                  <td data-label="Description">{c.description || '—'}</td>
+                  <td data-label="Actions" style={{ display:'flex', gap:6 }}>
                     <button className="erp-btn erp-btn--secondary erp-btn--sm" onClick={() => openEdit(c)}>Edit</button>
                     <button className="erp-btn erp-btn--danger erp-btn--sm" onClick={() => del(c.id)}>Delete</button>
                   </td>
