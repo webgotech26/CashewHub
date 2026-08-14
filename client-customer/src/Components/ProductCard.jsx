@@ -14,6 +14,7 @@ import { Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { getProductVisual } from '../utils/productVisual';
+import { resolveImageUrl } from '../utils/resolveImageUrl';
 import {
   addToWishlist,
   removeFromWishlist,
@@ -53,6 +54,9 @@ export default function ProductCard({ product, onView }) {
   const inCart     = cartItems.find(i => i.id === active.id);
   const outOfStock = Number(active?.stock_quantity ?? 0) <= 0;
   const lowStock   = !outOfStock && Number(active?.stock_quantity ?? 0) <= 10;
+
+  /* Resolve image URL: handles relative /uploads paths, Cloudinary URLs, and null */
+  const resolvedImg = resolveImageUrl(active.image_url || product.image_url);
 
   /* ── Add the SELECTED variant to cart ─────────────────────── */
   const handleAdd = (e) => {
@@ -126,13 +130,14 @@ export default function ProductCard({ product, onView }) {
           onClick={onView ? () => onView({ ...active, name: product.name }) : goToDetail}
           style={{ cursor: 'pointer' }}
         >
-          {(active.image_url || product.image_url) ? (
+          {resolvedImg ? (
             <img
-              src={active.image_url || product.image_url}
+              src={resolvedImg}
               alt={product.name ?? 'Product'}
               className="pc-img"
               onError={e => {
                 e.currentTarget.onerror = null;
+                /* Fall back to local asset image derived from product name */
                 e.currentTarget.src = visual.localImage;
               }}
             />

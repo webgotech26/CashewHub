@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../../services/api';
 import { getProductVisual } from '../../utils/productVisual';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import '../../styles/pages/inventory.css';
 
 /* ════════════════════════════════════════════════════════════════
@@ -154,8 +155,8 @@ function InventoryCard({ product, onStockSaved }) {
   const stock        = Number(product.stock_quantity);
   const visual       = getProductVisual(product.name ?? '', product.category_name ?? '');
 
-  /* Priority: local asset (name-based) → DB image_url → gradient placeholder */
-  const imgSrc = visual.localImage || product.image_url || null;
+  /* Priority: resolved DB image_url (handles relative /uploads paths) → local name-based asset → gradient placeholder */
+  const imgSrc = resolveImageUrl(product.image_url) || visual.localImage || null;
 
   const stockBadge = () => {
     if (stock <= 0)  return { cls: 'inv-card__stock-badge--out',  label: 'Out of Stock' };

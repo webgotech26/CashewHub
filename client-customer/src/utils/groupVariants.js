@@ -31,6 +31,50 @@ export function groupProductVariants(products) {
     return { base: m[1].trim(), label: m[2].trim() };
   };
 
+  /**
+   * cleanLabel — converts raw parenthesised text into a concise weight tag.
+   *
+   * Examples:
+   *   "1/2kg Normal"  → "500g"
+   *   "1/2 kg"        → "500g"
+   *   "1kg Normal"    → "1 kg"
+   *   "1 kg Normal"   → "1 kg"
+   *   "250g"          → "250g"
+   *   "2kg"           → "2 kg"
+   *   "500ml"         → "500ml"
+   *   "Box of 6"      → "Box of 6"   (non-weight text kept as-is)
+   */
+  const cleanLabel = (raw = '') => {
+    if (!raw) return raw;
+    const s = raw.trim();
+
+    // ── "1/2 kg" or "1/2kg" variants ────────────────────────
+    if (/^1\/2\s*kg\b/i.test(s)) return '500g';
+    if (/^0\.5\s*kg\b/i.test(s)) return '500g';
+    if (/^500\s*g\b/i.test(s))   return '500g';
+
+    // ── "<N> kg" — strip trailing words like "Normal" ────────
+    const kgMatch = s.match(/^(\d+(?:\.\d+)?)\s*kg\b/i);
+    if (kgMatch) return `${kgMatch[1]} kg`;
+
+    // ── "<N> g" — keep as is ─────────────────────────────────
+    const gMatch = s.match(/^(\d+)\s*g\b/i);
+    if (gMatch) return `${gMatch[1]}g`;
+
+    // ── "<N> ml / L" — keep as is ────────────────────────────
+    const mlMatch = s.match(/^(\d+)\s*(ml|l)\b/i);
+    if (mlMatch) return `${mlMatch[1]}${mlMatch[2].toLowerCase()}`;
+
+    // ── "<N> pcs / pieces" ───────────────────────────────────
+    const pcsMatch = s.match(/^(\d+)\s*(?:pcs?|pieces?)\b/i);
+    if (pcsMatch) return `${pcsMatch[1]} pcs`;
+
+    // ── Fallback: strip words after first known unit word ─────
+    // e.g. "1kg Normal" → caught above; anything else kept short
+    const trimmed = s.replace(/\s+(normal|premium|standard|economy|special|pack)\s*$/i, '').trim();
+    return trimmed || s;
+  };
+
   /* Group by "base name + category_id" */
   const map = new Map();
 
@@ -69,7 +113,8 @@ export function groupProductVariants(products) {
           stock_quantity: v.stock_quantity,
           unit:           v.unit,
           image_url:      v.image_url,
-          weight_label:   v._weightLabel || v.unit || String(v.price),
+          /* Clean the raw label: "1/2kg Normal" → "500g", "1kg Normal" → "1 kg" */
+          weight_label:   cleanLabel(v._weightLabel) || v.unit || String(v.price),
         })),
       });
     }

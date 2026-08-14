@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import api from '../../services/api';
 import { getProductVisual } from '../../utils/productVisual';
 import { groupProductVariants } from '../../utils/groupVariants';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import ProductCard from '../../Components/ProductCard';
 
 /* ── Star Rating Display ─────────────────────────────────────── */
@@ -413,7 +414,7 @@ export default function ProductDetailPage() {
   const gradeInfo  = product ? getGradeInfo(product.name) : null;
 
   /* ── Image resolution: DB image > variant image > visual fallback ── */
-  const resolvedImage = active?.image_url || product?.image_url || null;
+  const resolvedImage = resolveImageUrl(active?.image_url || product?.image_url);
 
   const handleAdd = () => {
     if (!active || outOfStock) return;
