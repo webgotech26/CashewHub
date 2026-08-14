@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { getImageUrl } = require('../middleware/uploadMiddleware');
 
 /**
  * GET /api/products
@@ -146,12 +147,34 @@ const getProductById = async (req, res) => {
 };
 
 /**
+ * POST /api/products/upload-image
+ * Admin-only — upload an image and return its URL without creating a product.
+ * Useful for the "preview before submit" flow in the admin form.
+ */
+const uploadProductImage = async (req, res) => {
+  try {
+    const url = getImageUrl(req);
+    if (!url) {
+      return res.status(400).json({ success: false, message: 'No image file provided.' });
+    }
+    return res.status(200).json({ success: true, url });
+  } catch (error) {
+    console.error('uploadProductImage error:', error.message);
+    return res.status(500).json({ success: false, message: 'Image upload failed.' });
+  }
+};
+
+/**
  * POST /api/products/add  (also accepts POST /api/products)
  * Creates a new product. Admin-only in production.
+ * Accepts multipart/form-data (with image file) OR application/json.
  */
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, stock_quantity, category_id, image_url, unit } = req.body;
+    const { name, description, price, stock_quantity, category_id, unit } = req.body;
+
+    /* image_url: uploaded file takes priority, then JSON body field */
+    const image_url = getImageUrl(req) || req.body.image_url || null;
 
     /* ── Validation ── */
     if (!name || !String(name).trim()) {
@@ -178,12 +201,12 @@ const createProduct = async (req, res) => {
       sql = `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url, unit)
              VALUES (?, ?, ?, ?, ?, ?, ?)`;
       sqlParams = [category_id || null, String(name).trim(), description || null,
-                   priceNum, stockNum, image_url || null, unit || 'kg'];
+                   priceNum, stockNum, image_url, unit || 'kg'];
     } else {
       sql = `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url)
              VALUES (?, ?, ?, ?, ?, ?)`;
       sqlParams = [category_id || null, String(name).trim(), description || null,
-                   priceNum, stockNum, image_url || null];
+                   priceNum, stockNum, image_url];
     }
 
     const [result] = await pool.query(sql, sqlParams);
@@ -202,11 +225,17 @@ const createProduct = async (req, res) => {
 /**
  * PUT /api/products/:id
  * Updates an existing product. Admin-only.
+ * Accepts multipart/form-data (with optional new image file) OR application/json.
  */
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock_quantity, category_id, image_url, unit } = req.body;
+    const { name, description, price, stock_quantity, category_id, unit } = req.body;
+
+    /* Uploaded file takes priority; fall back to JSON body; fall back to null (keep existing) */
+    const uploadedUrl = getImageUrl(req);
+    /* If no new file was uploaded, check if client sent image_url as text in the form */
+    const image_url = uploadedUrl || req.body.image_url || null;
 
     /* ── Validation ── */
     if (!name || !String(name).trim()) {
@@ -230,19 +259,20 @@ const updateProduct = async (req, res) => {
 
     let sql, sqlParams;
     if (hasUnit) {
-      sql = `UPDATE products
-             SET category_id = ?, name = ?, description = ?,
-                 price = ?, stock_quantity = ?, image_url = ?, unit = ?
-             WHERE id = ?`;
-      sqlParams = [category_id || null, String(name).trim(), description || null,
-                   priceNum, stockNum, image_url || null, unit || 'kg', id];
+      /* If no new image was provided, preserve the existing one */
+      sql = image_url
+        ? `UPDATE products SET category_id=?, name=?, description=?, price=?, stock_quantity=?, image_url=?, unit=? WHERE id=?`
+        : `UPDATE products SET category_id=?, name=?, description=?, price=?, stock_quantity=?, unit=? WHERE id=?`;
+      sqlParams = image_url
+        ? [category_id || null, String(name).trim(), description || null, priceNum, stockNum, image_url, unit || 'kg', id]
+        : [category_id || null, String(name).trim(), description || null, priceNum, stockNum, unit || 'kg', id];
     } else {
-      sql = `UPDATE products
-             SET category_id = ?, name = ?, description = ?,
-                 price = ?, stock_quantity = ?, image_url = ?
-             WHERE id = ?`;
-      sqlParams = [category_id || null, String(name).trim(), description || null,
-                   priceNum, stockNum, image_url || null, id];
+      sql = image_url
+        ? `UPDATE products SET category_id=?, name=?, description=?, price=?, stock_quantity=?, image_url=? WHERE id=?`
+        : `UPDATE products SET category_id=?, name=?, description=?, price=?, stock_quantity=? WHERE id=?`;
+      sqlParams = image_url
+        ? [category_id || null, String(name).trim(), description || null, priceNum, stockNum, image_url, id]
+        : [category_id || null, String(name).trim(), description || null, priceNum, stockNum, id];
     }
 
     const [result] = await pool.query(sql, sqlParams);
@@ -279,4 +309,4 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };
+module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, uploadProductImage };

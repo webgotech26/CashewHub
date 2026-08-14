@@ -79,6 +79,11 @@ app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+/* Serve locally-uploaded product images (development only).
+   In production Cloudinary is used — this path is never hit. */
+const path = require('path');
+app.use('/uploads', require('express').static(path.join(__dirname, 'uploads')));
+
 // ─── ROUTES ──────────────────────────────────────────────────────────────────
 
 // Health check
@@ -174,6 +179,14 @@ app.use((req, res) => {
 // ─── GLOBAL ERROR HANDLER ────────────────────────────────────────────────────
 
 app.use((err, req, res, next) => {
+  /* Multer errors (file type rejected, size exceeded) */
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ success: false, message: 'Image file too large. Maximum size is 5 MB.' });
+  }
+  if (err.message && err.message.includes('Only image files')) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+
   console.error('🔥 Error:', err);
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
