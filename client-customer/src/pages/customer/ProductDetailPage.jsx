@@ -4,6 +4,8 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import api from '../../services/api';
 import { getProductVisual } from '../../utils/productVisual';
+import { groupProductVariants } from '../../utils/groupVariants';
+import ProductCard from '../../Components/ProductCard';
 
 /* ── Star Rating Display ─────────────────────────────────────── */
 function StarRow({ rating, size = 16, interactive = false, onRate }) {
@@ -332,36 +334,108 @@ export default function ProductDetailPage() {
   const { addToCart, cartItems } = useCart();
   const { showToast } = useToast();
 
-  const [product,  setProduct]  = useState(null);
-  const [related,  setRelated]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
-  const [qty,      setQty]      = useState(1);
-  const [added,    setAdded]    = useState(false);
-  const [zoomed,   setZoomed]   = useState(false);
+  const [product,      setProduct]      = useState(null);
+  const [related,      setRelated]      = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+  const [qty,          setQty]          = useState(1);
+  const [added,        setAdded]        = useState(false);
+  const [zoomed,       setZoomed]       = useState(false);
+
+  /* Variant state — populated when sibling variants are found */
+  const [variants,     setVariants]     = useState([]);   // [{id, name, price, stock_quantity, unit, weight_label, image_url}]
+  const [variantIdx,   setVariantIdx]   = useState(0);
+
+  /* "active" is either the selected variant overlay or the base product */
+  const active = variants.length > 1 ? { ...product, ...variants[variantIdx] } : product;
 
   useEffect(() => {
     setLoading(true); setError(null);
+    setVariants([]); setVariantIdx(0); setQty(1);
+
     api.get(`/api/products/${id}`)
       .then(r => {
-        setProduct(r.data.data);
-        api.get('/api/products', { params:{ limit:5 } })
-          .then(pr => setRelated((pr.data.data||[]).filter(p => p.id !== Number(id)).slice(0,4)))
+        const prod = r.data.data;
+        setProduct(prod);
+
+        /* ── Fetch all products to find sibling variants ─────── */
+        api.get('/api/products', { params: { limit: 200 } })
+          .then(pr => {
+            const allProducts = pr.data.data || [];
+
+            /* Use groupVariants to find if this product belongs to a group */
+            const grouped = groupProductVariants(allProducts);
+            const myGroup = grouped.find(g =>
+              g.variants
+                ? g.variants.some(v => v.id === Number(id))
+                : g.id === Number(id)
+            );
+
+            if (myGroup?.variants && myGroup.variants.length > 1) {
+              /* Sort by price ascending (smallest weight first) */
+              const sorted = [...myGroup.variants].sort((a, b) => Number(a.price) - Number(b.price));
+              setVariants(sorted);
+              /* Pre-select the variant matching the current URL id */
+              const currentIdx = sorted.findIndex(v => v.id === Number(id));
+              setVariantIdx(currentIdx >= 0 ? currentIdx : 0);
+              /* Set base product name to the group base name */
+              setProduct(p => ({ ...p, name: myGroup.name }));
+            }
+
+            /* Related: other grouped products, excluding current group */
+            const relatedGrouped = grouped
+              .filter(g => {
+                const gId = g.variants ? g.variants[0].id : g.id;
+                const myId = myGroup?.variants ? myGroup.variants[0].id : Number(id);
+                return gId !== myId;
+              })
+              .slice(0, 4);
+            setRelated(relatedGrouped);
+          })
           .catch(() => {});
       })
       .catch(err => setError(err.response?.data?.message || 'Product not found.'))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const inCart     = cartItems.find(i => i.id === product?.id);
-  const outOfStock = product ? Number(product.stock_quantity) <= 0 : false;
-  const visual     = product ? getProductVisual(product.name) : null;
+  /* Switch variant and update URL without full reload */
+  const selectVariant = (idx) => {
+    setVariantIdx(idx);
+    setQty(1);
+    setAdded(false);
+    /* Update URL to the chosen variant's id so sharing/refresh works */
+    navigate(`/home/product/${variants[idx].id}`, { replace: true });
+  };
+
+  const inCart     = active ? cartItems.find(i => i.id === active.id) : null;
+  const outOfStock = active ? Number(active.stock_quantity) <= 0 : false;
+  const visual     = active ? getProductVisual(active.name ?? product?.name ?? '', active.category_name ?? product?.category_name ?? '') : null;
   const gradeInfo  = product ? getGradeInfo(product.name) : null;
 
+  /* ── Image resolution: DB image > variant image > visual fallback ── */
+  const resolvedImage = active?.image_url || product?.image_url || null;
+
   const handleAdd = () => {
-    if (!product || outOfStock) return;
-    for (let i = 0; i < qty; i++) addToCart(product);
-    showToast(`"${product.name}" × ${qty} added to cart 🛒`, 'success');
+    if (!active || outOfStock) return;
+    const cartItem = variants.length > 1
+      ? {
+          id:             active.id,
+          name:           product.name,            /* base name e.g. "Roasted Cashew" */
+          price:          active.price,
+          image_url:      resolvedImage,
+          unit:           active.unit || product?.unit,
+          stock_quantity: active.stock_quantity,
+          category_id:    product?.category_id,
+          category_name:  product?.category_name,
+          variant_label:  variants[variantIdx].weight_label,
+        }
+      : { ...product, image_url: resolvedImage };
+
+    for (let i = 0; i < qty; i++) addToCart(cartItem);
+    const label = variants.length > 1
+      ? `"${product.name} · ${variants[variantIdx].weight_label}"`
+      : `"${product?.name}"`;
+    showToast(`${label} × ${qty} added to cart 🛒`, 'success');
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -420,25 +494,40 @@ export default function ProductDetailPage() {
 
           {/* LEFT — Image */}
           <div>
-            <div className="product-detail-image-wrap" onClick={() => product.image_url && setZoomed(true)} style={{
+            <div className="product-detail-image-wrap" onClick={() => resolvedImage && setZoomed(true)} style={{
               borderRadius:24, overflow:'hidden',
-              background: product.image_url ? '#F7F4EF' : visual.bg,
+              background: resolvedImage ? '#F7F4EF' : visual.bg,
               height:420, display:'flex', alignItems:'center', justifyContent:'center',
-              cursor: product.image_url ? 'zoom-in' : 'default',
+              cursor: resolvedImage ? 'zoom-in' : 'default',
               border:'1px solid #EBEBEB', boxShadow:'0 4px 24px rgba(0,0,0,0.08)',
               position:'relative',
             }}>
-              {product.image_url ? (
+              {resolvedImage ? (
                 <>
-                  <img src={product.image_url} alt={product.name}
+                  <img
+                    src={resolvedImage}
+                    alt={product.name}
                     style={{ width:'100%', height:'100%', objectFit:'contain',
-                      objectPosition:'center', padding:24 }} />
+                      objectPosition:'center', padding:24 }}
+                    onError={e => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = visual.localImage;
+                    }}
+                  />
                   <div style={{ position:'absolute', bottom:14, right:14,
                     background:'rgba(0,0,0,0.4)', color:'#fff',
                     fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:20 }}>
                     🔍 Click to zoom
                   </div>
                 </>
+              ) : visual.localImage ? (
+                <img
+                  src={visual.localImage}
+                  alt={product.name}
+                  style={{ width:'100%', height:'100%', objectFit:'contain',
+                    objectPosition:'center', padding:24 }}
+                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.style.display='none'; }}
+                />
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
                   <span style={{ fontSize:96, filter:'drop-shadow(0 8px 20px rgba(0,0,0,0.25))' }}>{visual.emoji}</span>
@@ -492,31 +581,73 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Stock */}
+            {/* ── Variant selector ─────────────────────────────── */}
+            {variants.length > 1 && (
+              <div style={{ marginBottom:20 }}>
+                <label style={{ fontSize:12, fontWeight:700, color:'#4A4A4A',
+                  textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:10 }}>
+                  Select Weight
+                </label>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  {variants.map((v, idx) => {
+                    const vOos = Number(v.stock_quantity ?? 0) <= 0;
+                    const isActive = idx === variantIdx;
+                    return (
+                      <button
+                        key={v.id}
+                        disabled={vOos}
+                        onClick={() => selectVariant(idx)}
+                        style={{
+                          padding:'8px 20px',
+                          borderRadius:30,
+                          border: isActive ? '2px solid #1A1A1A' : '2px solid #E5E7EB',
+                          background: isActive ? '#1A1A1A' : '#FAFAFA',
+                          color: isActive ? '#fff' : vOos ? '#C0C0C0' : '#4A4A4A',
+                          fontSize:13, fontWeight:700,
+                          cursor: vOos ? 'not-allowed' : 'pointer',
+                          transition:'all 0.15s',
+                          opacity: vOos ? 0.4 : 1,
+                          textDecoration: vOos ? 'line-through' : 'none',
+                          fontFamily:"'DM Sans',sans-serif",
+                        }}
+                        title={vOos ? `${v.weight_label} — Out of Stock` : v.weight_label}
+                      >
+                        {v.weight_label}
+                        {vOos && <span style={{ marginLeft:4, fontSize:10 }}>✗</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Stock — uses active (selected variant) */}
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
               <div style={{ width:8, height:8, borderRadius:'50%',
                 background: outOfStock ? '#EF4444' : '#22C55E',
                 boxShadow:`0 0 0 3px ${outOfStock ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)'}` }} />
               <span style={{ fontSize:13, fontWeight:600, color: outOfStock ? '#EF4444' : '#15803D' }}>
-                {outOfStock ? 'Out of Stock' : `In Stock — ${product.stock_quantity} ${product.unit||'kg'} available`}
+                {outOfStock
+                  ? 'Out of Stock'
+                  : `In Stock — ${active.stock_quantity} ${active.unit || product.unit || 'kg'} available`}
               </span>
             </div>
 
-            {/* Price */}
+            {/* Price — uses active (selected variant) */}
             <div style={{ background:'linear-gradient(135deg,#FDF8F3,#FAF0E0)',
               borderRadius:16, padding:'20px 22px', border:'1px solid #F0E8D0', marginBottom:24 }}>
               <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
                 <span style={{ fontFamily:"'Playfair Display',serif",
                   fontSize:40, fontWeight:800, color:'#1A1A1A' }}>
-                  ₹{Number(product.price).toFixed(0)}
+                  ₹{Number(active.price).toFixed(0)}
                 </span>
                 <span style={{ fontSize:14, color:'#9CA3AF', fontWeight:500 }}>
-                  per {product.unit || 'kg'}
+                  per {active.unit || product.unit || 'kg'}
                 </span>
               </div>
-              {Number(product.stock_quantity) > 0 && Number(product.stock_quantity) <= 10 && (
+              {!outOfStock && Number(active.stock_quantity) <= 10 && (
                 <p style={{ fontSize:12, color:'#F59E0B', fontWeight:700, marginTop:8 }}>
-                  ⚠ Only {product.stock_quantity} {product.unit||'kg'} left — order soon!
+                  ⚠ Only {active.stock_quantity} {active.unit || product.unit || 'kg'} left — order soon!
                 </p>
               )}
             </div>
@@ -537,7 +668,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Qty + Add to Cart */}
+            {/* Qty + Add to Cart — uses active price/stock */}
             {!outOfStock && (
               <div style={{ marginBottom:16 }}>
                 <label style={{ fontSize:12, fontWeight:700, color:'#4A4A4A',
@@ -555,15 +686,15 @@ export default function ProductDetailPage() {
                     <span style={{ width:44, textAlign:'center', fontSize:16, fontWeight:700, color:'#1A1A1A' }}>
                       {qty}
                     </span>
-                    <button onClick={() => setQty(q => Math.min(Number(product.stock_quantity), q+1))}
+                    <button onClick={() => setQty(q => Math.min(Number(active.stock_quantity), q+1))}
                       style={{ width:40, height:44, background:'#F9FAFB', border:'none',
                         fontSize:18, cursor:'pointer', color:'#1A1A1A', transition:'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background='#F0F0F0'}
                       onMouseLeave={e => e.currentTarget.style.background='#F9FAFB'}>+</button>
                   </div>
                   <span style={{ fontSize:13, color:'#9CA3AF' }}>
-                    × ₹{Number(product.price).toFixed(0)} = {' '}
-                    <strong style={{ color:'#1A1A1A' }}>₹{(qty * Number(product.price)).toFixed(0)}</strong>
+                    × ₹{Number(active.price).toFixed(0)} = {' '}
+                    <strong style={{ color:'#1A1A1A' }}>₹{(qty * Number(active.price)).toFixed(0)}</strong>
                   </span>
                 </div>
               </div>
@@ -601,9 +732,9 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Reviews section ──────────────────────────────── */}
-        <ReviewSection productId={product.id} />
+        <ReviewSection productId={active?.id || product.id} />
 
-        {/* Related products */}
+        {/* Related products — use ProductCard for consistent image + variant handling */}
         {related.length > 0 && (
           <div style={{ marginTop:64 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
@@ -615,44 +746,18 @@ export default function ProductDetailPage() {
                 borderRadius:20, padding:'8px 18px', fontSize:13, fontWeight:700, cursor:'pointer',
               }}>View All →</button>
             </div>
-            <div className="related-products-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
-              {related.map(p => {
-                const v = getProductVisual(p.name);
-                return (
-                  <div key={p.id} onClick={() => navigate(`/home/product/${p.id}`)}
-                    style={{ background:'#fff', borderRadius:16, overflow:'hidden',
-                      border:'1px solid #F0F0F0', cursor:'pointer', transition:'all 0.2s',
-                      boxShadow:'0 2px 8px rgba(0,0,0,0.05)' }}
-                    onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 12px 28px rgba(0,0,0,0.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'; }}>
-                    <div style={{ height:140, background: p.image_url ? '#F7F4EF' : v.bg,
-                      display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-                      {p.image_url
-                        ? <img src={p.image_url} alt={p.name}
-                            style={{ width:'100%', height:'100%', objectFit:'contain', padding:12 }} />
-                        : <span style={{ fontSize:48 }}>{v.emoji}</span>}
-                    </div>
-                    <div style={{ padding:'12px 14px' }}>
-                      <p style={{ fontFamily:"'Playfair Display',serif", fontSize:13, fontWeight:700,
-                        color:'#1A1A1A', lineHeight:1.3,
-                        display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
-                        {p.name}
-                      </p>
-                      <p style={{ fontSize:14, fontWeight:800, color:'#C9972B', marginTop:6 }}>
-                        ₹{Number(p.price).toFixed(0)}
-                        <span style={{ fontSize:11, color:'#9CA3AF', fontWeight:400 }}> /{p.unit||'kg'}</span>
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Use the shared ProductCard so image fallback, variants and cart all work */}
+            <div className="pc-grid">
+              {related.map(p => (
+                <ProductCard key={p.id} product={p} onView={null} />
+              ))}
             </div>
           </div>
         )}
       </div>
 
-      {zoomed && product.image_url && (
-        <ImageZoom src={product.image_url} alt={product.name} onClose={() => setZoomed(false)} />
+      {zoomed && resolvedImage && (
+        <ImageZoom src={resolvedImage} alt={product.name} onClose={() => setZoomed(false)} />
       )}
     </div>
   );

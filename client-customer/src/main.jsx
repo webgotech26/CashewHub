@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from './App';
 import SplashScreen from './Components/SplashScreen';
+import { pingBackend } from './services/api';
 import './index.css';
 import './styles/global-responsive.css';
 
@@ -15,6 +16,14 @@ const isCapacitor = typeof window !== 'undefined' &&
   (window.location.protocol === 'file:' || window.Capacitor !== undefined);
 
 const Router = isCapacitor ? HashRouter : BrowserRouter;
+
+/* ── Wake up Render backend immediately on first page load ────
+   Render free tier spins down after 15 min of inactivity.
+   Firing a /api/health ping the moment the JS bundle loads
+   gives the server ~10–15 s to wake up before the user
+   navigates to the shop and triggers real API calls.
+   ─────────────────────────────────────────────────────────── */
+pingBackend();
 
 /* ── PWA: Register service worker ─────────────────────────────
    Only runs in production on HTTPS (browser ignores it otherwise).

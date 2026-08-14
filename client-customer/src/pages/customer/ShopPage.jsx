@@ -105,6 +105,13 @@ export default function ShopPage() {
   const [sortBy, setSortBy]             = useState('default');
   const [viewProduct, setViewProduct]   = useState(null);
 
+  /* Retry countdown state — shows "Retrying in Xs…" after a network error */
+  const [retryCount,    setRetryCount]    = useState(0);
+  const [retryCountdown, setRetryCountdown] = useState(0); // seconds left
+  const retryTimerRef   = useRef(null);
+  const countdownRef    = useRef(null);
+  const MAX_AUTO_RETRY  = 2; // auto-retry up to 2 times, then show manual button
+
   /* Live search — always reflects what the user is typing, instantly */
   const [search, setSearch] = useState(() => searchParams.get('search') || '');
 
@@ -117,14 +124,8 @@ export default function ShopPage() {
     setSearch(urlSearch);
   }, [searchParams]);
 
-  /* ── Handler: instant filter + debounced URL update ──────────
-     The filter runs immediately on every keystroke via `filtered`
-     below. The URL update is debounced 400ms so browser history
-     doesn't get a new entry for every character typed.
-  ─────────────────────────────────────────────────────────────── */
   const handleSearchChange = (val) => {
-    setSearch(val); // instant — triggers re-render and re-filter
-
+    setSearch(val);
     clearTimeout(urlSyncTimer.current);
     urlSyncTimer.current = setTimeout(() => {
       setSearchParams(prev => {
@@ -146,24 +147,30 @@ export default function ShopPage() {
     }, { replace: true });
   };
 
-  /* Cleanup timer on unmount */
-  useEffect(() => () => clearTimeout(urlSyncTimer.current), []);
+  /* Cleanup timers on unmount */
+  useEffect(() => () => {
+    clearTimeout(urlSyncTimer.current);
+    clearTimeout(retryTimerRef.current);
+    clearInterval(countdownRef.current);
+  }, []);
 
-  const fetchData = useCallback(() => {
-    setLoading(true); setError(null);
+  const fetchData = useCallback((attempt = 0) => {
+    setLoading(true);
+    setError(null);
+    setRetryCountdown(0);
+    clearInterval(countdownRef.current);
+
     Promise.all([
-      api.get('/api/products', { params:{ limit:100 } }),
+      api.get('/api/products', { params: { limit: 100 } }),
       api.get('/api/categories'),
     ])
       .then(([pRes, cRes]) => {
         const rawProducts = pRes.data.data || [];
-        /* Group weight variants (e.g. "Roasted Cashew (1/2kg)" + "(1kg)")
-           into single cards with a variant selector */
         setProducts(groupProductVariants(rawProducts));
         const cats = (cRes.data.data || []).filter(c => c.id && c.name);
         setCategories(cats);
+        setRetryCount(0); // reset on success
 
-        // Pre-select category from ?category= URL param
         const catParam = (searchParams.get('category') || '').toLowerCase().trim();
         if (catParam) {
           const matched = cats.find(c =>
@@ -174,13 +181,36 @@ export default function ShopPage() {
         }
       })
       .catch(err => {
-        if (!err.response) setError('Cannot reach the server. Please check if backend is running.');
-        else setError(`Error: ${err.response?.data?.message || 'Something went wrong'}`);
+        const isNetworkError = !err.response;
+        const msg = isNetworkError
+          ? 'Server is starting up — this can take up to 30 seconds on first load.'
+          : `Error: ${err.response?.data?.message || 'Something went wrong'}`;
+        setError(msg);
+
+        /* Auto-retry for network errors (server cold-start), up to MAX_AUTO_RETRY */
+        if (isNetworkError && attempt < MAX_AUTO_RETRY) {
+          const waitSecs = 8 + attempt * 4; // 8s → 12s
+          setRetryCountdown(waitSecs);
+          setRetryCount(attempt + 1);
+
+          /* Live countdown display */
+          countdownRef.current = setInterval(() => {
+            setRetryCountdown(s => {
+              if (s <= 1) { clearInterval(countdownRef.current); return 0; }
+              return s - 1;
+            });
+          }, 1000);
+
+          retryTimerRef.current = setTimeout(() => {
+            clearInterval(countdownRef.current);
+            fetchData(attempt + 1);
+          }, waitSecs * 1000);
+        }
       })
       .finally(() => setLoading(false));
   }, [searchParams]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(0); }, [fetchData]);
 
   /* ── Live filter — runs on every render, zero delay ─────────
      Matches against: product name, category name, description.
@@ -407,15 +437,61 @@ export default function ShopPage() {
           )}
         </div>
 
-        {/* ── Error ──────────────────────────────────── */}
+        {/* ── Error / Server waking up ──────────────────── */}
         {error && (
-          <div style={{ background:'#FEF2F2', color:'#B91C1C', border:'1px solid #FECACA',
-            borderRadius:12, padding:'16px 20px', marginBottom:24,
-            display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <span>❌ {error}</span>
-            <button onClick={fetchData} style={{ background:'#B91C1C', color:'#fff',
-              border:'none', borderRadius:8, padding:'8px 16px', cursor:'pointer',
-              fontSize:13, fontWeight:700 }}>Retry</button>
+          <div style={{
+            background: retryCount > 0 ? '#FFFBEB' : '#FEF2F2',
+            color:      retryCount > 0 ? '#92400E' : '#B91C1C',
+            border:     `1px solid ${retryCount > 0 ? '#FDE68A' : '#FECACA'}`,
+            borderRadius: 12, padding: '18px 22px', marginBottom: 24,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>
+                {retryCount > 0 ? '⏳' : '❌'}
+              </span>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: 14 }}>
+                  {retryCount > 0
+                    ? `Starting up the server… (attempt ${retryCount} of ${MAX_AUTO_RETRY})`
+                    : 'Connection failed'}
+                </p>
+                <p style={{ margin: '0 0 10px', fontSize: 13, opacity: 0.85 }}>
+                  {error}
+                </p>
+                {retryCountdown > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* Progress bar */}
+                    <div style={{
+                      flex: 1, height: 4, background: 'rgba(0,0,0,0.1)',
+                      borderRadius: 4, overflow: 'hidden', maxWidth: 200,
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${(retryCountdown / (8 + (retryCount - 1) * 4)) * 100}%`,
+                        background: '#F59E0B',
+                        borderRadius: 4,
+                        transition: 'width 1s linear',
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      Retrying in {retryCountdown}s…
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fetchData(0)}
+                    style={{
+                      background: retryCount > 0 ? '#D97706' : '#B91C1C',
+                      color: '#fff', border: 'none', borderRadius: 8,
+                      padding: '8px 18px', cursor: 'pointer',
+                      fontSize: 13, fontWeight: 700,
+                    }}
+                  >
+                    🔄 Try Again
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

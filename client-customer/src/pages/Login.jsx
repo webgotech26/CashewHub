@@ -34,7 +34,11 @@ export default function Login() {
         navigate(redirectTo);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      if (!err.response) {
+        setError('Server is starting up — please wait a moment and try again. (Render cold start can take ~15 s)');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

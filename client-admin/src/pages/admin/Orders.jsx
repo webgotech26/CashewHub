@@ -172,7 +172,7 @@ export default function Orders() {
   /* ── Open manifest in new tab ──────────────────────────────── */
   const openManifest = (dateMode, ids = []) => {
     const token  = localStorage.getItem('token');
-    const base   = (import.meta.env.VITE_API_URL || 'https://cashew-hub.onrender.com')
+    const base   = (import.meta.env.VITE_API_URL || 'https://cashewhub.onrender.com')
       .replace(/\/+$/, '').replace(/\/api$/, '');
     const params = new URLSearchParams();
     if (ids.length > 0) {

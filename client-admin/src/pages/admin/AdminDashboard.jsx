@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import api from '../../services/api';
 
+/* ── Socket server URL — same origin as the REST API ──────────────
+   Reads VITE_API_URL (set in Vercel env vars) with the same
+   normalisation used by services/api.js so it always points at
+   the live Render backend in production and localhost:5000 locally.
+   ─────────────────────────────────────────────────────────────── */
+function resolveSocketURL() {
+  return (import.meta.env.VITE_API_URL || 'https://cashewhub.onrender.com')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
+}
+
 // ── Stat card definitions ────────────────────────────────────────────
 const STATS = [
   { key: 'totalOrders',    label: 'Total Orders',    icon: '🛒', accent: '#2d6a4f' },
@@ -61,8 +73,12 @@ export default function AdminDashboard() {
       .catch(() => {})
       .finally(() => setOrdersLoading(false));
 
-    // Socket.io for live orders
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    // Socket.io for live orders — connects to the same Render backend
+    const socket = io(resolveSocketURL(), {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      timeout: 20000,
+    });
 
     socket.on('new-order', (order) => {
       setRecentOrders(prev => [order, ...prev.slice(0, 7)]);

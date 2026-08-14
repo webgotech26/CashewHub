@@ -26,7 +26,11 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate(res.data.user.role === 'admin' ? '/admin/dashboard' : '/home');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      if (!err.response) {
+        setError('Server is starting up — please wait a moment and try again. (Render cold start can take ~15 s)');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
