@@ -303,7 +303,7 @@ const GRADE_INFO = {
 };
 
 function getGradeInfo(name = '') {
-  const n = name.toLowerCase();
+  const n = (name ?? '').toLowerCase();
   for (const [key, info] of Object.entries(GRADE_INFO)) {
     if (n.includes(key)) return info;
   }

@@ -174,8 +174,8 @@ export default function ShopPage() {
         const catParam = (searchParams.get('category') || '').toLowerCase().trim();
         if (catParam) {
           const matched = cats.find(c =>
-            c.name.toLowerCase().includes(catParam) ||
-            catParam.includes(c.name.toLowerCase())
+            (c.name ?? '').toLowerCase().includes(catParam) ||
+            catParam.includes((c.name ?? '').toLowerCase())
           );
           if (matched) setActiveCategory(String(matched.id));
         }

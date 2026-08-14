@@ -12,6 +12,21 @@ const getProducts = async (req, res) => {
     const offset = (page - 1) * limit;
     const search = req.query.search || '';
 
+    /* ── Detect which optional columns exist on the products table ──
+       is_active and unit may not exist on all deployments (Railway vs local).
+       We only filter by is_active if the column actually exists.
+    ──────────────────────────────────────────────────────────────── */
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME   = 'products'
+         AND COLUMN_NAME  IN ('is_active', 'unit')`
+    );
+    const existingCols = new Set(colRows.map(r => r.COLUMN_NAME));
+    const hasIsActive  = existingCols.has('is_active');
+    const hasUnit      = existingCols.has('unit');
+
     let query = `
       SELECT
         p.id,
@@ -20,27 +35,38 @@ const getProducts = async (req, res) => {
         p.description,
         p.price,
         p.stock_quantity,
-        p.is_active,
         p.image_url,
+        ${hasIsActive ? 'p.is_active,' : '1 AS is_active,'}
+        ${hasUnit     ? 'p.unit,'      : "'kg' AS unit,"}
         c.name AS category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.is_active IS NULL OR p.is_active = 1
     `;
-    const params = [];
+
+    const params  = [];
+    const filters = [];
+
+    /* Only filter by is_active if the column exists — avoids empty results
+       on schemas where is_active was never added */
+    if (hasIsActive) {
+      filters.push('(p.is_active IS NULL OR p.is_active = 1)');
+    }
 
     if (search) {
-      query += ' AND p.name LIKE ?';
+      filters.push('p.name LIKE ?');
       params.push(`%${search}%`);
     }
 
-    // Count total for pagination metadata
-    const countQuery = query.replace(
-      /SELECT[\s\S]+?FROM products p/,
-      'SELECT COUNT(*) AS total FROM products p'
-    );
-    const [countResult] = await pool.query(countQuery, params);
+    if (filters.length > 0) {
+      query += ' WHERE ' + filters.join(' AND ');
+    }
+
+    // Count total for pagination metadata (use same filters)
+    const countBase = `SELECT COUNT(*) AS total FROM products p${filters.length > 0 ? ' WHERE ' + filters.join(' AND ') : ''}`;
+    const [countResult] = await pool.query(countBase, params);
     const total = countResult[0].total;
+
+    console.log(`[getProducts] total matching rows: ${total}, page: ${page}, limit: ${limit}`);
 
     query += ` ORDER BY
       CASE
@@ -80,6 +106,17 @@ const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    /* Check which optional columns exist */
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME   = 'products'
+         AND COLUMN_NAME  IN ('is_active', 'unit')`
+    );
+    const existingCols = new Set(colRows.map(r => r.COLUMN_NAME));
+    const hasUnit = existingCols.has('unit');
+
     const [rows] = await pool.query(
       `SELECT
          p.id,
@@ -88,8 +125,8 @@ const getProductById = async (req, res) => {
          p.description,
          p.price,
          p.stock_quantity,
-         p.is_active,
          p.image_url,
+         ${hasUnit ? 'p.unit,' : "'kg' AS unit,"}
          c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id

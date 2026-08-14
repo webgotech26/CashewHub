@@ -131,14 +131,14 @@ export default function ProductCatalog() {
   // Filtered + sorted for main grid
   const filtered = products
     .filter(p => {
-      const ms = p.name.toLowerCase().includes(search.toLowerCase());
+      const ms = (p.name ?? '').toLowerCase().includes((search ?? '').toLowerCase());
       const mc = activeCategory === 'all' || String(p.category_id) === String(activeCategory);
       return ms && mc;
     })
     .sort((a, b) => {
       if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
       if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
-      if (sortBy === 'name-asc')   return a.name.localeCompare(b.name);
+      if (sortBy === 'name-asc')   return (a.name ?? '').localeCompare(b.name ?? '');
       return 0;
     });
 

@@ -261,8 +261,8 @@ export default function Inventory() {
 
   // Client-side search
   const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.category_name || '').toLowerCase().includes(search.toLowerCase())
+    (p.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.category_name ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   // Stats
