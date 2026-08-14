@@ -18,21 +18,36 @@ export default function Categories() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    /* Client-side validation */
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
+      setAlert({ type: 'error', msg: 'Category name is required.' });
+      return;
+    }
+
     try {
-      if (editing) await api.put(`/api/categories/${editing}`, form);
-      else         await api.post('/api/categories', form);
-      setAlert({ type:'success', msg: 'Saved.' });
-      fetch();
-      setTimeout(close, 800);
+      if (editing) await api.put(`/api/categories/${editing}`, { ...form, name: trimmedName });
+      else         await api.post('/api/categories', { ...form, name: trimmedName });
+      setAlert({ type: 'success', msg: 'Saved.' });
+      /* Close first, then re-fetch so list updates immediately */
+      setTimeout(() => {
+        close();
+        fetch();
+      }, 700);
     } catch (err) {
-      setAlert({ type:'error', msg: err.response?.data?.message || 'Error.' });
+      setAlert({ type: 'error', msg: err.response?.data?.message || 'Error.' });
     }
   };
 
   const del = async (id) => {
     if (!confirm('Delete category?')) return;
-    await api.delete(`/api/categories/${id}`).catch(() => {});
-    fetch();
+    try {
+      await api.delete(`/api/categories/${id}`);
+      fetch();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete category.');
+    }
   };
 
   return (

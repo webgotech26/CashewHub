@@ -34,8 +34,9 @@ export default function Products() {
     setEditData(null);
   };
 
-  // Called by AddProductForm on success
+  // Called by AddProductForm on success — re-fetch immediately then close
   const handleFormSuccess = () => {
+    closeModal();
     fetchProducts();
     setAlert({ type: 'success', msg: editData ? 'Product updated.' : 'Product added.' });
     setTimeout(() => setAlert(null), 3000);

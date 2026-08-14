@@ -90,6 +90,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ── DB diagnostic — returns product count so you can verify DB connectivity
+// without needing to open a DB console. Safe to call from the browser.
+// Remove this route once production is confirmed working.
+app.get('/api/debug/products', async (req, res) => {
+  try {
+    const pool = require('./config/db');
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM products');
+    const [[{ active }]] = await pool.query(
+      "SELECT COUNT(*) AS active FROM products WHERE is_active IS NULL OR is_active = 1"
+    );
+    const [sample] = await pool.query('SELECT id, name, price, is_active FROM products LIMIT 5');
+    res.json({ success: true, total_products: total, active_products: active, sample });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Auth routes (register + login for admins and customers)
 app.use('/api/auth',       authRoutes);
 

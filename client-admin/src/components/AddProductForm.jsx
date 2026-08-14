@@ -57,15 +57,33 @@ export default function AddProductForm({ onSuccess, onClose, editData = null }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setAlert(null);
+
+    /* ── Client-side validation ────────────────────────────── */
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
+      setAlert({ type: 'error', msg: 'Product name is required.' });
+      return;
+    }
+    const priceNum = Number(form.price);
+    if (!form.price || isNaN(priceNum) || priceNum <= 0) {
+      setAlert({ type: 'error', msg: 'Price must be a number greater than 0.' });
+      return;
+    }
+    const stockNum = Number(form.stock_quantity);
+    if (form.stock_quantity === '' || isNaN(stockNum) || stockNum < 0) {
+      setAlert({ type: 'error', msg: 'Stock quantity must be 0 or more.' });
+      return;
+    }
+
     setLoading(true);
 
     const payload = {
-      name:           form.name.trim(),
+      name:           trimmedName,
       description:    form.description.trim(),
-      price:          Number(form.price),
-      stock_quantity: Number(form.stock_quantity),
+      price:          priceNum,
+      stock_quantity: stockNum,
       category_id:    form.category_id || null,
-      unit:           form.unit.trim(),
+      unit:           form.unit.trim() || 'kg',
     };
 
     try {
@@ -77,8 +95,15 @@ export default function AddProductForm({ onSuccess, onClose, editData = null }) 
       }
 
       setAlert({ type: 'success', msg: editData ? 'Product updated successfully!' : 'Product added successfully!' });
+
+      /* Notify parent immediately so it can re-fetch — don't wait for close */
       if (onSuccess) onSuccess(res.data?.data || payload);
-      setTimeout(() => { setAlert(null); if (onClose) onClose(); }, 1400);
+
+      /* Close modal after a short flash so the user sees the ✅ */
+      setTimeout(() => {
+        setAlert(null);
+        if (onClose) onClose();
+      }, 900);
     } catch (err) {
       setAlert({ type: 'error', msg: err.response?.data?.message || 'Something went wrong.' });
     } finally {

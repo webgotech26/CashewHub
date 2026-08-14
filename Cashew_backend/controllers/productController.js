@@ -151,32 +151,47 @@ const getProductById = async (req, res) => {
  */
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, stock_quantity, category_id, image_url } = req.body;
+    const { name, description, price, stock_quantity, category_id, image_url, unit } = req.body;
 
-    if (!name || price === undefined || stock_quantity === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: 'name, price, and stock_quantity are required.',
-      });
+    /* ── Validation ── */
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ success: false, message: 'Product name is required.' });
+    }
+    const priceNum = Number(price);
+    if (price === undefined || price === null || price === '' || isNaN(priceNum) || priceNum <= 0) {
+      return res.status(400).json({ success: false, message: 'Price must be a number greater than 0.' });
+    }
+    const stockNum = Number(stock_quantity);
+    if (stock_quantity === undefined || stock_quantity === null || stock_quantity === '' || isNaN(stockNum) || stockNum < 0) {
+      return res.status(400).json({ success: false, message: 'stock_quantity must be 0 or more.' });
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        category_id   || null,
-        name,
-        description   || null,
-        price,
-        stock_quantity,
-        image_url     || null,
-      ]
+    /* Detect optional unit column */
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'unit'`
     );
+    const hasUnit = colRows.length > 0;
+
+    let sql, sqlParams;
+    if (hasUnit) {
+      sql = `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url, unit)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      sqlParams = [category_id || null, String(name).trim(), description || null,
+                   priceNum, stockNum, image_url || null, unit || 'kg'];
+    } else {
+      sql = `INSERT INTO products (category_id, name, description, price, stock_quantity, image_url)
+             VALUES (?, ?, ?, ?, ?, ?)`;
+      sqlParams = [category_id || null, String(name).trim(), description || null,
+                   priceNum, stockNum, image_url || null];
+    }
+
+    const [result] = await pool.query(sql, sqlParams);
 
     return res.status(201).json({
       success: true,
       message: 'Product created successfully.',
-      data: { id: result.insertId, name, price, stock_quantity, image_url },
+      data: { id: result.insertId, name: String(name).trim(), price: priceNum, stock_quantity: stockNum, image_url },
     });
   } catch (error) {
     console.error('createProduct error:', error.message);
@@ -191,23 +206,46 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock_quantity, category_id, image_url } = req.body;
+    const { name, description, price, stock_quantity, category_id, image_url, unit } = req.body;
 
-    const [result] = await pool.query(
-      `UPDATE products
-       SET category_id = ?, name = ?, description = ?,
-           price = ?, stock_quantity = ?, image_url = ?
-       WHERE id = ?`,
-      [
-        category_id   || null,
-        name,
-        description   || null,
-        price,
-        stock_quantity,
-        image_url     || null,
-        id,
-      ]
+    /* ── Validation ── */
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ success: false, message: 'Product name is required.' });
+    }
+    const priceNum = Number(price);
+    if (price === undefined || price === null || price === '' || isNaN(priceNum) || priceNum <= 0) {
+      return res.status(400).json({ success: false, message: 'Price must be a number greater than 0.' });
+    }
+    const stockNum = Number(stock_quantity);
+    if (stock_quantity === undefined || stock_quantity === null || stock_quantity === '' || isNaN(stockNum) || stockNum < 0) {
+      return res.status(400).json({ success: false, message: 'stock_quantity must be 0 or more.' });
+    }
+
+    /* Detect optional unit column */
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'unit'`
     );
+    const hasUnit = colRows.length > 0;
+
+    let sql, sqlParams;
+    if (hasUnit) {
+      sql = `UPDATE products
+             SET category_id = ?, name = ?, description = ?,
+                 price = ?, stock_quantity = ?, image_url = ?, unit = ?
+             WHERE id = ?`;
+      sqlParams = [category_id || null, String(name).trim(), description || null,
+                   priceNum, stockNum, image_url || null, unit || 'kg', id];
+    } else {
+      sql = `UPDATE products
+             SET category_id = ?, name = ?, description = ?,
+                 price = ?, stock_quantity = ?, image_url = ?
+             WHERE id = ?`;
+      sqlParams = [category_id || null, String(name).trim(), description || null,
+                   priceNum, stockNum, image_url || null, id];
+    }
+
+    const [result] = await pool.query(sql, sqlParams);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
