@@ -7,6 +7,33 @@ const cors = require('cors');
 // Database connection (triggers pool creation + verification)
 require('./config/db');
 
+/* ── Auto-migrate: ensure image_url / unit / categories.description exist ──
+   Runs silently on every startup; no-ops if columns already present.
+   This means deploying to Render always self-heals schema gaps.           */
+(async () => {
+  try {
+    const pool = require('./config/db');
+    const migrations = [
+      { table: 'products',   column: 'image_url',   ddl: 'ALTER TABLE products ADD COLUMN image_url VARCHAR(500) DEFAULT NULL' },
+      { table: 'products',   column: 'unit',        ddl: "ALTER TABLE products ADD COLUMN unit VARCHAR(20) NOT NULL DEFAULT 'kg'" },
+      { table: 'categories', column: 'description', ddl: 'ALTER TABLE categories ADD COLUMN description TEXT DEFAULT NULL' },
+    ];
+    for (const m of migrations) {
+      const [rows] = await pool.query(
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+        [m.table, m.column]
+      );
+      if (rows.length === 0) {
+        await pool.query(m.ddl);
+        console.log(`[migrate] Added ${m.table}.${m.column}`);
+      }
+    }
+  } catch (e) {
+    console.warn('[migrate] Schema check failed (non-fatal):', e.message);
+  }
+})();
+
 // Socket.io utility
 const socket = require('./utils/socket');
 

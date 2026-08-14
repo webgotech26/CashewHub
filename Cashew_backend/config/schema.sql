@@ -29,10 +29,11 @@ CREATE TABLE IF NOT EXISTS customers (
 
 -- ─── 3. CATEGORIES ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS categories (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  name       VARCHAR(100) NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT         DEFAULT NULL,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- ─── 4. PRODUCTS ──────────────────────────────────────────────────────────
@@ -44,6 +45,8 @@ CREATE TABLE IF NOT EXISTS products (
   price          DECIMAL(10,2) NOT NULL,
   stock_quantity DECIMAL(10,2) NOT NULL DEFAULT 0,
   is_active      TINYINT(1) NOT NULL DEFAULT 1,
+  image_url      VARCHAR(500)   DEFAULT NULL,   -- Cloudinary URL or local /uploads path
+  unit           VARCHAR(20)    DEFAULT 'kg',   -- kg / g / pcs / box / packet
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
