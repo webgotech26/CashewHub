@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { getProductVisual } from '../../utils/productVisual';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import api from '../../services/api';
 
 /* ─── Payment options ───────────────────────────────────────── */
@@ -246,21 +247,11 @@ function AddressForm({ addr, onFieldChange, saved, onSave }) {
   );
 }
 
-/* ─── Helper: parse image_url (may be JSON array string) ─────── */
-function parseImageUrl(raw) {
-  if (!raw || typeof raw !== 'string') return null;
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
-  } catch {
-    return raw.startsWith('http') || raw.startsWith('/') ? raw : null;
-  }
-}
-
 /* ─── Order review item row ─────────────────────────────────── */
 function OrderItem({ item, effectivePrice }) {
   const visual    = getProductVisual(item.name ?? '');
-  const imgSrc    = parseImageUrl(item.image_url) || visual.localImage || null;
+  /* resolveImageUrl handles: null → null, /uploads/… → full Render URL, https://… → as-is */
+  const imgSrc    = resolveImageUrl(item.image_url) || visual.localImage || null;
   const unitPrice = effectivePrice(item);
   const lineTotal = unitPrice * item.qty;
 
@@ -284,8 +275,11 @@ function OrderItem({ item, effectivePrice }) {
             alt={item.name}
             style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
             onError={e => {
+              e.currentTarget.onerror = null;
               e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling.style.display = 'flex';
+              /* Show emoji fallback */
+              const fb = e.currentTarget.nextElementSibling;
+              if (fb) fb.style.display = 'flex';
             }}
           />
         ) : null}
@@ -306,6 +300,11 @@ function OrderItem({ item, effectivePrice }) {
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {item.name}
+          {item.variant_label && (
+            <span style={{ fontWeight: 500, color: '#9CA3AF', fontSize: 12, marginLeft: 6 }}>
+              · {item.variant_label}
+            </span>
+          )}
         </p>
         <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 3 }}>
           ₹{unitPrice.toLocaleString('en-IN')} × {item.qty} {item.unit || 'kg'}

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { resolveImageUrl } from '../utils/resolveImageUrl';
 
 export default function CartDrawer({ onClose }) {
   const navigate = useNavigate();
@@ -42,12 +43,29 @@ export default function CartDrawer({ onClose }) {
               const price = effectivePrice ? effectivePrice(item) : Number(item.price);
               return (
                 <div key={item.id} className="shop-cart-item">
-                  {/* Thumbnail */}
-                  {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="shop-cart-item__img" />
-                  ) : (
-                    <div className="shop-cart-item__img">🌰</div>
-                  )}
+                  {/* Thumbnail — resolveImageUrl handles relative /uploads paths */}
+                  {(() => {
+                    const src = resolveImageUrl(item.image_url);
+                    return src ? (
+                      <img
+                        src={src}
+                        alt={item.name}
+                        className="shop-cart-item__img"
+                        onError={e => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null;
+                  })()}
+                  <div
+                    className="shop-cart-item__img"
+                    style={{ display: resolveImageUrl(item.image_url) ? 'none' : 'flex',
+                      alignItems: 'center', justifyContent: 'center', fontSize: 22 }}
+                  >
+                    🌰
+                  </div>
 
                   {/* Info */}
                   <div className="shop-cart-item__info">
