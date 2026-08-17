@@ -163,10 +163,6 @@ export default function ProductCard({ product, onView }) {
               <span className="pc-overlay__label">Out of Stock</span>
             </div>
           )}
-
-          {inCart && !outOfStock && (
-            <span className="pc-badge pc-badge--cart">✓ In Cart ({inCart.qty})</span>
-          )}
         </div>
       </div>
 
@@ -175,7 +171,18 @@ export default function ProductCard({ product, onView }) {
         {product.category_name && (
           <span className="pc-category">{product.category_name}</span>
         )}
-        <h3 className="pc-name" title={product.name}>{product.name}</h3>
+
+        {/* Name row — cart badge sits inline next to the name */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, margin: '2px 0 4px' }}>
+          <h3 className="pc-name" title={product.name} style={{ margin: 0, flex: 1 }}>
+            {product.name}
+          </h3>
+          {inCart && !outOfStock && (
+            <span className="pc-badge-incart" aria-label={`${inCart.qty} in cart`}>
+              ✓ {inCart.qty}
+            </span>
+          )}
+        </div>
         {product.description && (
           <p className="pc-desc">{product.description}</p>
         )}

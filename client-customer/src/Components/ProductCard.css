@@ -59,7 +59,26 @@
 .pc-overlay__label { background: rgba(0,0,0,0.7); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 18px; border-radius: 20px; }
 
 .pc-badge { position: absolute; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-.pc-badge--cart { top: 10px; left: 10px; background: #16a34a; color: #fff; }
+
+/* ── In-cart badge — inline next to product name ──────────── */
+.pc-badge-incart {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 3px;           /* align with first line of name text */
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
 
 
 

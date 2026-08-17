@@ -331,36 +331,48 @@ export default function ShopPage() {
 
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'12px clamp(16px,4vw,48px) 32px' }}>
 
-        {/* ── Category pills + Sort — one unified toolbar ───── */}
+        {/* ── Category dropdown + Sort — one unified toolbar ───── */}
         <div style={{
           display:'flex', alignItems:'center',
           justifyContent:'space-between',
           gap:10, flexWrap:'wrap', marginBottom:16,
         }}>
-          {/* Left: category chips */}
-          <div style={{
-            display:'flex', gap:8, flexWrap:'wrap', alignItems:'center', flex:1,
-          }}>
-            <button onClick={() => setActiveCategory('all')} style={{
-              padding:'8px 18px', borderRadius:30, fontSize:13, fontWeight:700,
-              border: activeCategory === 'all' ? '2px solid #1A1A1A' : '2px solid #EBEBEB',
-              background: activeCategory === 'all' ? '#1A1A1A' : '#fff',
-              color: activeCategory === 'all' ? '#fff' : '#4A4A4A',
-              cursor:'pointer', transition:'all 0.18s', whiteSpace:'nowrap',
+          {/* Left: category dropdown — same style as Sort */}
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <span style={{
+              position:'absolute', right:14, top:'50%', transform:'translateY(-50%)',
+              color:'#78716C', pointerEvents:'none',
+              display:'flex', alignItems:'center',
             }}>
-              All ({products.length})
-            </button>
-            {categories.map(cat => (
-              <button key={cat.id} onClick={() => setActiveCategory(String(cat.id))} style={{
-                padding:'8px 18px', borderRadius:30, fontSize:13, fontWeight:700,
-                border: activeCategory === String(cat.id) ? '2px solid #C9972B' : '2px solid #EBEBEB',
-                background: activeCategory === String(cat.id) ? '#C9972B' : '#fff',
-                color: activeCategory === String(cat.id) ? '#fff' : '#4A4A4A',
-                cursor:'pointer', transition:'all 0.18s', whiteSpace:'nowrap',
-              }}>
-                {cat.name}
-              </button>
-            ))}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+            <select
+              value={activeCategory}
+              onChange={e => { setActiveCategory(e.target.value); }}
+              style={{
+                height:40, padding:'0 36px 0 16px',
+                borderRadius:30, border:'1.5px solid #E7E2D9',
+                fontSize:13, fontWeight:600,
+                fontFamily:"'DM Sans', sans-serif",
+                background:'#fff', color:'#44403C',
+                cursor:'pointer', outline:'none',
+                appearance:'none', WebkitAppearance:'none',
+                boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+                transition:'border-color 0.2s, box-shadow 0.2s',
+                whiteSpace:'nowrap', boxSizing:'border-box',
+              }}
+              onFocus={e => { e.target.style.borderColor='#C9972B'; e.target.style.boxShadow='0 0 0 3px rgba(201,151,43,0.12)'; }}
+              onBlur={e  => { e.target.style.borderColor='#E7E2D9'; e.target.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'; }}
+              aria-label="Filter by category"
+            >
+              <option value="all">All ({products.length})</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Right: sort dropdown */}

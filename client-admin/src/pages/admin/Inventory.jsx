@@ -56,27 +56,43 @@ function SkeletonCard() {
 }
 
 /* ── Stock Stepper with Debounced Auto-Save ──────────────────── */
-function StockControl({ productId, initialQty, onSaved }) {
-  const [qty, setQty]       = useState(Number(initialQty) || 0);
+function StockControl({ product, onSaved }) {
+  const [qty, setQty]       = useState(Number(product.stock_quantity) || 0);
   const [status, setStatus] = useState('idle'); // idle | saving | saved | error
   const debounceRef         = useRef(null);
 
-  // Debounced save — fires 1 second after last change
+  // Debounced save — fires 1 second after last change.
+  // PUT /api/products/:id requires ALL mandatory fields (name, price, stock_quantity).
+  // Sending only stock_quantity causes a 400 "Product name is required" error.
   const scheduleSave = useCallback((newQty) => {
     clearTimeout(debounceRef.current);
     setStatus('saving');
     debounceRef.current = setTimeout(async () => {
+      // Build the full payload the backend expects
+      const payload = {
+        name:           product.name,
+        price:          Number(product.price),
+        stock_quantity: newQty,
+        description:    product.description  || '',
+        category_id:    product.category_id  || null,
+        unit:           product.unit         || 'kg',
+        image_url:      product.image_url    || null,
+      };
+
+      console.log(`[StockControl] Saving stock for "${product.name}" (id=${product.id}):`, payload);
+
       try {
-        await api.put(`/api/products/${productId}`, { stock_quantity: newQty });
+        await api.put(`/api/products/${product.id}`, payload);
         setStatus('saved');
-        if (onSaved) onSaved(productId, newQty);
+        if (onSaved) onSaved(product.id, newQty);
         setTimeout(() => setStatus('idle'), 2000);
-      } catch {
+      } catch (err) {
+        console.error('[StockControl] Save failed:', err.response?.data || err.message);
         setStatus('error');
         setTimeout(() => setStatus('idle'), 3000);
       }
     }, 1000);
-  }, [productId, onSaved]);
+  }, [product, onSaved]);
 
   // Cleanup debounce on unmount
   useEffect(() => () => clearTimeout(debounceRef.current), []);
@@ -223,8 +239,7 @@ function InventoryCard({ product, onStockSaved }) {
       {/* Stock stepper */}
       <footer className="inv-card__footer">
         <StockControl
-          productId={product.id}
-          initialQty={product.stock_quantity}
+          product={product}
           onSaved={onStockSaved}
         />
       </footer>
