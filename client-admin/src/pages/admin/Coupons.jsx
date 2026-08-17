@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
 
-const EMPTY = { code:'', discount_type:'percentage', discount_value:'', min_order:'', max_uses:'', expiry_date:'', active:true };
+/* Always use this shape for the form — maps to DB column names */
+const EMPTY = {
+  code:             '',
+  discount_type:    'percentage',
+  discount_value:   '',
+  min_order_amount: '',   /* DB column name */
+  max_uses:         '',
+  expiry_date:      '',
+};
 
 export default function Coupons() {
   const [coupons, setCoupons]   = useState([]);
@@ -13,14 +21,40 @@ export default function Coupons() {
   const fetch = () => api.get('/api/coupons').then(r => setCoupons(r.data.data || [])).catch(() => {});
   useEffect(() => { fetch(); }, []);
 
-  const openEdit = (c) => { setForm({...c}); setEditing(c.id); setModal(true); };
-  const close    = () => { setModal(false); setAlert(null); setForm(EMPTY); setEditing(null); };
+  const openEdit = (c) => {
+    /* Map DB row → form shape. Accept both min_order_amount and legacy min_order. */
+    setForm({
+      code:             c.code             || '',
+      discount_type:    c.discount_type    || 'percentage',
+      discount_value:   c.discount_value   ?? '',
+      min_order_amount: c.min_order_amount ?? c.min_order ?? '',
+      max_uses:         c.max_uses         ?? '',
+      expiry_date:      c.expiry_date
+        ? new Date(c.expiry_date).toISOString().split('T')[0]
+        : '',
+    });
+    setEditing(c.id);
+    setModal(true);
+  };
+
+  const close = () => { setModal(false); setAlert(null); setForm(EMPTY); setEditing(null); };
 
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      if (editing) await api.put(`/api/coupons/${editing}`, form);
-      else         await api.post('/api/coupons', form);
+      /* Send only the fields the backend expects — no extra DB columns */
+      const payload = {
+        code:             form.code.trim().toUpperCase(),
+        discount_type:    form.discount_type,
+        discount_value:   Number(form.discount_value),
+        min_order_amount: form.min_order_amount !== '' ? Number(form.min_order_amount) : null,
+        max_uses:         form.max_uses !== ''         ? Number(form.max_uses)         : null,
+        expiry_date:      form.expiry_date             || null,
+      };
+
+      if (editing) await api.put(`/api/coupons/${editing}`, payload);
+      else         await api.post('/api/coupons', payload);
+
       setAlert({ type:'success', msg:'Coupon saved.' });
       fetch();
       setTimeout(close, 800);
@@ -30,7 +64,9 @@ export default function Coupons() {
   };
 
   const toggle = async (c) => {
-    await api.patch(`/api/coupons/${c.id}`, { active: !c.active }).catch(() => {});
+    /* Use is_active (DB column) mapped from what getCoupons returns */
+    const currentActive = c.is_active ?? c.active ?? false;
+    await api.patch(`/api/coupons/${c.id}`, { active: !currentActive }).catch(() => {});
     fetch();
   };
 
@@ -57,29 +93,33 @@ export default function Coupons() {
             <tbody>
               {coupons.length === 0 ? (
                 <tr><td colSpan={9} style={{ textAlign:'center', color:'#aaa', padding:30 }}>No coupons yet.</td></tr>
-              ) : coupons.map(c => (
-                <tr key={c.id}>
-                  <td><strong>{c.code}</strong></td>
-                  <td>{c.discount_type}</td>
-                  <td>{c.discount_type === 'percentage' ? `${c.discount_value}%` : `₹${c.discount_value}`}</td>
-                  <td>{c.min_order ? `₹${c.min_order}` : '—'}</td>
-                  <td>{c.max_uses || '∞'}</td>
-                  <td>{c.used_count || 0}</td>
-                  <td>{c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : '—'}</td>
-                  <td>
-                    <span className={`erp-badge erp-badge--${c.active ? 'green' : 'gray'}`}>
-                      {c.active ? 'Active' : 'Off'}
-                    </span>
-                  </td>
-                  <td style={{ display:'flex', gap:6 }}>
-                    <button className="erp-btn erp-btn--secondary erp-btn--sm" onClick={() => openEdit(c)}>Edit</button>
-                    <button className="erp-btn erp-btn--sm" style={{ background: c.active ? '#6b7280' : '#2d6a4f', color:'#fff' }}
-                      onClick={() => toggle(c)}>
-                      {c.active ? 'Disable' : 'Enable'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              ) : coupons.map(c => {
+                const isActive = c.is_active ?? c.active ?? false;
+                return (
+                  <tr key={c.id}>
+                    <td><strong>{c.code}</strong></td>
+                    <td>{c.discount_type}</td>
+                    <td>{c.discount_type === 'percentage' ? `${c.discount_value}%` : `₹${c.discount_value}`}</td>
+                    <td>{(c.min_order_amount || c.min_order) ? `₹${c.min_order_amount ?? c.min_order}` : '—'}</td>
+                    <td>{c.max_uses || '∞'}</td>
+                    <td>{c.used_count || 0}</td>
+                    <td>{c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : '—'}</td>
+                    <td>
+                      <span className={`erp-badge erp-badge--${isActive ? 'green' : 'gray'}`}>
+                        {isActive ? 'Active' : 'Off'}
+                      </span>
+                    </td>
+                    <td style={{ display:'flex', gap:6 }}>
+                      <button className="erp-btn erp-btn--secondary erp-btn--sm" onClick={() => openEdit(c)}>Edit</button>
+                      <button className="erp-btn erp-btn--sm"
+                        style={{ background: isActive ? '#6b7280' : '#2d6a4f', color:'#fff' }}
+                        onClick={() => toggle(c)}>
+                        {isActive ? 'Disable' : 'Enable'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -96,26 +136,34 @@ export default function Coupons() {
             <form onSubmit={handleSave} className="erp-form-grid">
               <div className="erp-form-group">
                 <label>Code</label>
-                <input value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} required />
+                <input
+                  value={form.code}
+                  onChange={e => setForm({...form, code: e.target.value.toUpperCase()})}
+                  required
+                />
               </div>
               <div className="erp-form-group">
                 <label>Discount Type</label>
-                <select value={form.discount_type} onChange={e => setForm({...form, discount_type:e.target.value})}>
+                <select value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value})}>
                   <option value="percentage">Percentage (%)</option>
                   <option value="flat">Flat (₹)</option>
                 </select>
               </div>
               {[
-                { key:'discount_value', label:'Discount Value',    type:'number' },
-                { key:'min_order',      label:'Min Order Amt (₹)', type:'number' },
-                { key:'max_uses',       label:'Max Uses',          type:'number' },
-                { key:'expiry_date',    label:'Expiry Date',       type:'date'   },
+                { key:'discount_value',   label:'Discount Value',    type:'number', required: true  },
+                { key:'min_order_amount', label:'Min Order Amt (₹)', type:'number', required: false },
+                { key:'max_uses',         label:'Max Uses',          type:'number', required: false },
+                { key:'expiry_date',      label:'Expiry Date',       type:'date',   required: false },
               ].map(f => (
                 <div key={f.key} className="erp-form-group">
                   <label>{f.label}</label>
-                  <input type={f.type} value={form[f.key]}
+                  <input
+                    type={f.type}
+                    value={form[f.key]}
                     onChange={e => setForm({...form, [f.key]: e.target.value})}
-                    required={f.key === 'discount_value'} />
+                    required={f.required}
+                    min={f.type === 'number' ? 0 : undefined}
+                  />
                 </div>
               ))}
               <div style={{ gridColumn:'1/-1', display:'flex', gap:10, justifyContent:'flex-end' }}>
