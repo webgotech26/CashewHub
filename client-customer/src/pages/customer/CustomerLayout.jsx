@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, Link } from 'react-router-dom';
 import { FiSearch, FiHeart, FiShoppingBag, FiUser, FiChevronDown } from 'react-icons/fi';
 import { CartProvider, useCart } from '../../context/CartContext';
@@ -8,6 +8,9 @@ import WhatsAppButton from '../../Components/WhatsAppButton';
 import BackToTop from '../../Components/BackToTop';
 import InstallAppButton from '../../Components/InstallAppButton';
 import { getWishlist } from '../customer/WishlistPage';
+import api from '../../services/api';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
+import { getProductVisual } from '../../utils/productVisual';
 import '../../styles/pages/customer.css';
 
 /* -- React-icons aliases (keeps all existing JSX references working) -- */
@@ -116,6 +119,86 @@ function Layout() {
   const { cartCount }                       = useCart();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  /* ── Search autocomplete state ─────────────────────────────── */
+  const [suggestions,     setSuggestions]     = useState([]);
+  const [suggestLoading,  setSuggestLoading]  = useState(false);
+  const [suggestOpen,     setSuggestOpen]     = useState(false);
+  const [activeSuggest,   setActiveSuggest]   = useState(-1);
+  const searchRef     = useRef(null);
+  const suggestTimer  = useRef(null);
+
+  /* Fetch suggestions with 250ms debounce */
+  const fetchSuggestions = useCallback((q) => {
+    clearTimeout(suggestTimer.current);
+    if (!q.trim() || q.trim().length < 2) {
+      setSuggestions([]); setSuggestOpen(false); return;
+    }
+    setSuggestLoading(true);
+    suggestTimer.current = setTimeout(() => {
+      api.get('/api/products', { params: { search: q.trim(), limit: 6 } })
+        .then(r => {
+          setSuggestions(r.data.data || []);
+          setSuggestOpen(true);
+          setActiveSuggest(-1);
+        })
+        .catch(() => setSuggestions([]))
+        .finally(() => setSuggestLoading(false));
+    }, 250);
+  }, []);
+
+  /* Cleanup */
+  useEffect(() => () => clearTimeout(suggestTimer.current), []);
+
+  /* Close dropdown on outside click */
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSuggestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleSearchChange = (val) => {
+    setSearch(val);
+    fetchSuggestions(val);
+  };
+
+  const commitSearch = (val) => {
+    if (!val.trim()) return;
+    setSuggestOpen(false);
+    setSearch('');
+    navigate(`/home/shop?search=${encodeURIComponent(val.trim())}`);
+  };
+
+  const selectSuggestion = (product) => {
+    setSuggestOpen(false);
+    setSearch('');
+    navigate(`/home/product/${product.id}`);
+  };
+
+  /* Keyboard nav for suggestions */
+  const handleSearchKeyDown = (e) => {
+    if (!suggestOpen || suggestions.length === 0) {
+      if (e.key === 'Enter' && search.trim()) { commitSearch(search); }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggest(i => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggest(i => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggest >= 0) selectSuggestion(suggestions[activeSuggest]);
+      else commitSearch(search);
+    } else if (e.key === 'Escape') {
+      setSuggestOpen(false);
+    }
+  };
+
   /* Wishlist count � stays in sync across all tabs via storage event */
   const [wishlistCount, setWishlistCount] = useState(() => getWishlist().length);
   useEffect(() => {
@@ -148,11 +231,14 @@ function Layout() {
     setProfileOpen(v => !v);
   };
 
-  /* Close on outside click (touch devices) */
+  /* Close profile dropdown AND search suggestions on outside click */
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSuggestOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -213,34 +299,135 @@ function Layout() {
         {/* -- RIGHT: Actions  (order: Search ? Wishlist ? Cart ? Profile ? Hamburger) -- */}
         <div className="ch-header__actions">
 
-          {/* 1. Search pill */}
-          <div className="ch-search">
+          {/* 1. Search pill with autocomplete */}
+          <div className="ch-search" ref={searchRef} style={{ position: 'relative' }}>
             <span className="ch-search__icon"><IconSearch /></span>
             <input
               type="text"
               className="ch-search__input"
               placeholder="Search products…"
               value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && search.trim()) {
-                  e.preventDefault();
-                  navigate(`/home/shop?search=${encodeURIComponent(search.trim())}`);
-                  setSearch('');
-                }
-              }}
+              onChange={e => handleSearchChange(e.target.value)}
+              onFocus={() => { if (suggestions.length > 0) setSuggestOpen(true); }}
+              onKeyDown={handleSearchKeyDown}
               aria-label="Search products"
+              aria-autocomplete="list"
+              aria-expanded={suggestOpen}
+              autoComplete="off"
             />
-            {/* Clear button — only visible when there is typed text */}
+            {/* Clear button */}
             {search && (
               <button
                 className="ch-search__clear"
                 type="button"
-                onClick={() => setSearch('')}
+                onClick={() => { setSearch(''); setSuggestions([]); setSuggestOpen(false); }}
                 aria-label="Clear search"
               >
-                ×
+                {suggestLoading ? (
+                  <span style={{ display:'inline-block', width:10, height:10,
+                    border:'2px solid #C9972B', borderTopColor:'transparent',
+                    borderRadius:'50%', animation:'ch-spin 0.6s linear infinite' }} />
+                ) : '×'}
               </button>
+            )}
+
+            {/* ── Autocomplete dropdown ── */}
+            {suggestOpen && suggestions.length > 0 && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+                background: '#fff',
+                borderRadius: 14,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)',
+                border: '1px solid #F0EBE0',
+                overflow: 'hidden',
+                zIndex: 9999,
+                minWidth: 280,
+              }}
+                role="listbox"
+                aria-label="Product suggestions"
+              >
+                {suggestions.map((p, idx) => {
+                  const visual  = getProductVisual(p.name ?? '', p.category_name ?? '');
+                  const imgSrc  = resolveImageUrl(p.image_url) || visual.localImage;
+                  const isActive = idx === activeSuggest;
+
+                  return (
+                    <div
+                      key={p.id}
+                      role="option"
+                      aria-selected={isActive}
+                      onMouseDown={(e) => { e.preventDefault(); selectSuggestion(p); }}
+                      onMouseEnter={() => setActiveSuggest(idx)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '9px 14px',
+                        cursor: 'pointer',
+                        background: isActive ? '#FDF8F3' : '#fff',
+                        borderBottom: idx < suggestions.length - 1 ? '1px solid #F5F0E8' : 'none',
+                        transition: 'background 0.12s',
+                      }}
+                    >
+                      {/* Thumbnail */}
+                      <div style={{
+                        width: 38, height: 38, borderRadius: 8, flexShrink: 0,
+                        background: imgSrc ? '#F7F4EF' : visual.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        overflow: 'hidden', border: '1px solid #EDE8DE',
+                      }}>
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={p.name}
+                            style={{ width:'100%', height:'100%', objectFit:'contain', padding:4 }}
+                            onError={e => { e.currentTarget.style.display='none'; }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 18 }}>{visual.emoji}</span>
+                        )}
+                      </div>
+
+                      {/* Name + price */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: 13, fontWeight: 600, color: '#1A1A1A',
+                          margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {p.name}
+                        </p>
+                        {p.category_name && (
+                          <p style={{ fontSize: 10, color: '#C9972B', fontWeight: 700,
+                            textTransform: 'uppercase', letterSpacing: 0.8, margin: '1px 0 0' }}>
+                            {p.category_name}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Price */}
+                      <span style={{
+                        fontSize: 13, fontWeight: 700, color: '#1A1A1A',
+                        flexShrink: 0,
+                      }}>
+                        ₹{Number(p.price).toFixed(0)}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* "See all results" footer */}
+                <div
+                  onMouseDown={(e) => { e.preventDefault(); commitSearch(search); }}
+                  style={{
+                    padding: '9px 14px', cursor: 'pointer',
+                    background: '#FDF8F3',
+                    borderTop: '1px solid #F0EBE0',
+                    fontSize: 12, fontWeight: 700,
+                    color: '#C9972B', textAlign: 'center',
+                    transition: 'background 0.12s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background='#FAF0E0'}
+                  onMouseLeave={e => e.currentTarget.style.background='#FDF8F3'}
+                >
+                  🔍 See all results for "{search}"
+                </div>
+              </div>
             )}
           </div>
 
@@ -426,6 +613,9 @@ function Layout() {
         @keyframes slideInLeft {
           from { transform: translateX(-100%); }
           to   { transform: translateX(0); }
+        }
+        @keyframes ch-spin {
+          to { transform: rotate(360deg); }
         }
         /* Show hamburger, hide desktop nav/search/profile on mobile */
         @media (max-width: 900px) {

@@ -36,56 +36,101 @@ function OrderTracker({ status }) {
   );
 
   const currentIdx = STATUS_STEPS.indexOf(status);
-  const STEP_DESC = {
-    pending:'Order received, awaiting confirmation.',
-    confirmed:'Order confirmed and being prepared.',
-    processing:'Cashews are being packed for you.',
-    shipped:'Package is on its way.',
-    delivered:'Delivered successfully. Enjoy!',
-  };
+  const STEP_META = [
+    { step:'pending',    icon:'🕐', label:'Order Placed',  desc:'We received your order.' },
+    { step:'confirmed',  icon:'✅', label:'Confirmed',      desc:'Order confirmed and being prepared.' },
+    { step:'processing', icon:'📦', label:'Packing',        desc:'Cashews are being freshly packed.' },
+    { step:'shipped',    icon:'🚚', label:'Shipped',        desc:'Package is on its way to you.' },
+    { step:'delivered',  icon:'🎉', label:'Delivered',      desc:'Delivered! Enjoy your order.' },
+  ];
 
   return (
     <div>
-      <div style={{ display:'flex', alignItems:'flex-start', marginBottom:12 }}>
-        {STATUS_STEPS.map((step, i) => {
-          const m = STATUS_META[step];
-          const done = i <= currentIdx;
+      {/* ── Vertical step list — works on all screen sizes ── */}
+      <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+        {STEP_META.map(({ step, icon, label, desc }, i) => {
+          const done    = i <= currentIdx;
           const current = i === currentIdx;
+          const isLast  = i === STEP_META.length - 1;
+
           return (
-            <div key={step} style={{ display:'flex', alignItems:'center',
-              flex: i < STATUS_STEPS.length - 1 ? 1 : 'none' }}>
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+            <div key={step} style={{ display:'flex', gap:16, alignItems:'flex-start' }}>
+              {/* Left: circle + connector line */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0 }}>
                 <div style={{
-                  width:40, height:40, borderRadius:'50%', flexShrink:0,
-                  background: done ? 'linear-gradient(135deg,#C9972B,#F5C842)' : '#F0F0F0',
-                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:16,
-                  border: current ? '3px solid #C9972B' : '3px solid transparent',
+                  width:42, height:42, borderRadius:'50%', flexShrink:0,
+                  background: done
+                    ? current
+                      ? 'linear-gradient(135deg,#C9972B,#F5C842)'
+                      : 'linear-gradient(135deg,#86EFAC,#22C55E)'
+                    : '#F3F4F6',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize: done ? 18 : 14,
+                  color: done ? '#fff' : '#9CA3AF',
+                  fontWeight: 700,
+                  border: current ? '3px solid #F5C842' : '3px solid transparent',
                   boxShadow: current ? '0 0 0 4px rgba(201,151,43,0.2)' : 'none',
-                  transition:'all 0.3s',
+                  transition: 'all 0.3s ease',
                 }}>
-                  {done ? m.icon : <span style={{ fontSize:12, color:'#9CA3AF', fontWeight:700 }}>{i+1}</span>}
+                  {done ? icon : <span style={{ fontSize:12, fontWeight:700, color:'#D1D5DB' }}>{i+1}</span>}
                 </div>
-                <span style={{ fontSize:10, fontWeight:700,
-                  color: done ? '#C9972B' : '#9CA3AF',
-                  textTransform:'uppercase', letterSpacing:0.5, whiteSpace:'nowrap' }}>
-                  {m.label}
-                </span>
+                {!isLast && (
+                  <div style={{
+                    width: 3, flex: 1, minHeight: 28,
+                    background: i < currentIdx
+                      ? 'linear-gradient(180deg,#22C55E,#86EFAC)'
+                      : '#F3F4F6',
+                    borderRadius: 2,
+                    margin: '3px 0',
+                    transition: 'background 0.4s ease',
+                  }} />
+                )}
               </div>
-              {i < STATUS_STEPS.length - 1 && (
-                <div style={{ flex:1, height:3, borderRadius:2, marginBottom:24, marginLeft:2, marginRight:2,
-                  background: i < currentIdx ? 'linear-gradient(90deg,#C9972B,#F5C842)' : '#F0F0F0',
-                  transition:'background 0.4s' }} />
-              )}
+
+              {/* Right: label + description */}
+              <div style={{ paddingBottom: isLast ? 0 : 20, paddingTop: 8 }}>
+                <p style={{
+                  fontSize: 14, fontWeight: current ? 800 : done ? 600 : 500,
+                  color: current ? '#1A1A1A' : done ? '#374151' : '#9CA3AF',
+                  margin: 0, lineHeight: 1.3,
+                }}>
+                  {label}
+                  {current && (
+                    <span style={{
+                      marginLeft: 8, fontSize: 10, fontWeight: 700,
+                      background: 'linear-gradient(135deg,#FEF3C7,#FDE68A)',
+                      color: '#92400E', border: '1px solid #FCD34D',
+                      padding: '2px 8px', borderRadius: 20,
+                      verticalAlign: 'middle',
+                      textTransform: 'uppercase', letterSpacing: 0.5,
+                    }}>
+                      Current
+                    </span>
+                  )}
+                </p>
+                {(done || current) && (
+                  <p style={{
+                    fontSize: 12, color: current ? '#6B4A1A' : '#9CA3AF',
+                    margin: '3px 0 0', lineHeight: 1.5,
+                  }}>
+                    {desc}
+                  </p>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
-      {STEP_DESC[status] && (
-        <div style={{ background:'#FDF8F3', border:'1px solid #F0E8D0', borderRadius:10,
-          padding:'12px 16px', fontSize:13, color:'#6B4A1A', fontWeight:500,
-          display:'flex', alignItems:'center', gap:8 }}>
-          <span style={{ fontSize:16 }}>{STATUS_META[status]?.icon}</span>
-          {STEP_DESC[status]}
+
+      {/* ── Estimated delivery note ── */}
+      {status !== 'delivered' && status !== 'cancelled' && (
+        <div style={{
+          marginTop: 20, background: '#F0FDF4', border: '1px solid #86EFAC',
+          borderRadius: 10, padding: '12px 16px',
+          fontSize: 13, color: '#15803D', fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          🚀 Estimated delivery: 3–5 business days from order date
         </div>
       )}
     </div>

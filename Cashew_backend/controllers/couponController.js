@@ -1,5 +1,11 @@
 const pool = require('../config/db');
 
+/**
+ * GET /api/coupons  — admin list
+ * Actual DB columns (confirmed from MySQL Workbench):
+ *   id, code, discount_percentage, is_active, created_at,
+ *   discount_type, discount_value, min_order_amount, max_uses, expiry_date
+ */
 const getCoupons = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
@@ -13,7 +19,6 @@ const getCoupons = async (req, res) => {
 /**
  * POST /api/coupons/validate  — customer-facing, no admin gate
  * Body: { code, order_total }
- * Returns: { discount_type, discount_value, discount_amount, final_total }
  */
 const validateCoupon = async (req, res) => {
   try {
@@ -23,7 +28,7 @@ const validateCoupon = async (req, res) => {
     const [rows] = await pool.query(
       `SELECT * FROM coupons
        WHERE UPPER(code) = UPPER(?)
-         AND active = 1
+         AND is_active = 1
          AND (expiry_date IS NULL OR expiry_date >= CURDATE())
          AND (max_uses IS NULL OR used_count < max_uses)`,
       [code.trim()]
@@ -36,10 +41,11 @@ const validateCoupon = async (req, res) => {
     const coupon = rows[0];
     const total  = Number(order_total) || 0;
 
-    if (coupon.min_order && total < Number(coupon.min_order)) {
+    /* min_order_amount check */
+    if (coupon.min_order_amount && total < Number(coupon.min_order_amount)) {
       return res.status(400).json({
         success: false,
-        message: `Minimum order of ₹${coupon.min_order} required to use this coupon.`,
+        message: `Minimum order of ₹${coupon.min_order_amount} required to use this coupon.`,
       });
     }
 
@@ -63,32 +69,105 @@ const validateCoupon = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/coupons  — admin create
+ * Accepts both field names for backward compatibility:
+ *   min_order_amount  (DB column name — preferred)
+ *   min_order         (legacy frontend name — accepted as alias)
+ */
 const createCoupon = async (req, res) => {
   try {
-    const { code, discount_type, discount_value, min_order, max_uses, expiry_date } = req.body;
-    if (!code || !discount_value) return res.status(400).json({ success: false, message: 'code and discount_value are required.' });
+    const {
+      code,
+      discount_type,
+      discount_value,
+      min_order_amount,   // correct DB name
+      min_order,          // legacy alias — frontend may still send this
+      max_uses,
+      expiry_date,
+    } = req.body;
+
+    if (!code || !discount_value) {
+      return res.status(400).json({
+        success: false,
+        message: 'code and discount_value are required.',
+      });
+    }
+
+    /* Accept either field name for the minimum order */
+    const minAmt = min_order_amount ?? min_order ?? null;
+
+    console.log('[createCoupon] Inserting:', {
+      code: code.toUpperCase(),
+      discount_type: discount_type || 'percentage',
+      discount_value,
+      min_order_amount: minAmt,
+      max_uses: max_uses || null,
+      expiry_date: expiry_date || null,
+    });
+
     const [result] = await pool.query(
-      `INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expiry_date, active)
+      `INSERT INTO coupons
+         (code, discount_type, discount_value, min_order_amount, max_uses, expiry_date, is_active)
        VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [code.toUpperCase(), discount_type || 'percentage', discount_value,
-       min_order || null, max_uses || null, expiry_date || null]
+      [
+        code.toUpperCase(),
+        discount_type || 'percentage',
+        discount_value,
+        minAmt,
+        max_uses   || null,
+        expiry_date || null,
+      ]
     );
-    return res.status(201).json({ success: true, message: 'Coupon created.', data: { id: result.insertId, code } });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Coupon created.',
+      data: { id: result.insertId, code: code.toUpperCase() },
+    });
   } catch (err) {
     console.error('createCoupon error:', err.message);
-    return res.status(500).json({ success: false, message: 'Internal server error.' });
+    return res.status(500).json({ success: false, message: err.message || 'Internal server error.' });
   }
 };
 
+/**
+ * PUT /api/coupons/:id  — admin update
+ */
 const updateCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, discount_type, discount_value, min_order, max_uses, expiry_date } = req.body;
+    const {
+      code,
+      discount_type,
+      discount_value,
+      min_order_amount,
+      min_order,          // legacy alias
+      max_uses,
+      expiry_date,
+    } = req.body;
+
+    const minAmt = min_order_amount ?? min_order ?? null;
+
     const [result] = await pool.query(
-      `UPDATE coupons SET code=?, discount_type=?, discount_value=?, min_order=?, max_uses=?, expiry_date=? WHERE id=?`,
-      [code, discount_type, discount_value, min_order || null, max_uses || null, expiry_date || null, id]
+      `UPDATE coupons
+       SET code=?, discount_type=?, discount_value=?,
+           min_order_amount=?, max_uses=?, expiry_date=?
+       WHERE id=?`,
+      [
+        code,
+        discount_type,
+        discount_value,
+        minAmt,
+        max_uses    || null,
+        expiry_date || null,
+        id,
+      ]
     );
-    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Coupon not found.' });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Coupon not found.' });
+    }
     return res.status(200).json({ success: true, message: 'Coupon updated.' });
   } catch (err) {
     console.error('updateCoupon error:', err.message);
@@ -96,11 +175,14 @@ const updateCoupon = async (req, res) => {
   }
 };
 
+/**
+ * PATCH /api/coupons/:id  — toggle is_active
+ */
 const patchCoupon = async (req, res) => {
   try {
     const { id } = req.params;
     const { active } = req.body;
-    await pool.query('UPDATE coupons SET active=? WHERE id=?', [active ? 1 : 0, id]);
+    await pool.query('UPDATE coupons SET is_active=? WHERE id=?', [active ? 1 : 0, id]);
     return res.status(200).json({ success: true, message: `Coupon ${active ? 'enabled' : 'disabled'}.` });
   } catch (err) {
     console.error('patchCoupon error:', err.message);
@@ -108,4 +190,21 @@ const patchCoupon = async (req, res) => {
   }
 };
 
-module.exports = { getCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon };
+/**
+ * DELETE /api/coupons/:id  — admin delete
+ */
+const deleteCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await pool.query('DELETE FROM coupons WHERE id=?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Coupon not found.' });
+    }
+    return res.status(200).json({ success: true, message: 'Coupon deleted.' });
+  } catch (err) {
+    console.error('deleteCoupon error:', err.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = { getCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon, deleteCoupon };
