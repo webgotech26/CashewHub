@@ -136,27 +136,26 @@ export default function ProductCard({ product, onView }) {
               alt={product.name ?? 'Product'}
               className="pc-img"
               onError={e => {
-                e.currentTarget.onerror = null;
-                /* Fall back to local asset image derived from product name */
-                e.currentTarget.src = visual.localImage;
-              }}
-            />
-          ) : visual.localImage ? (
-            <img
-              src={visual.localImage}
-              alt={product.name ?? 'Product'}
-              className="pc-img"
-              onError={e => {
+                /* DB image failed to load — hide it and show the gradient placeholder */
                 e.currentTarget.onerror = null;
                 e.currentTarget.style.display = 'none';
+                const placeholder = e.currentTarget.nextElementSibling;
+                if (placeholder) placeholder.style.display = 'flex';
               }}
             />
-          ) : (
-            <div className="pc-img-fallback" style={{ background: visual.bg }}>
-              <span className="pc-img-fallback__emoji">{visual.emoji}</span>
-              <span className="pc-img-fallback__tag">{visual.tag}</span>
-            </div>
-          )}
+          ) : null}
+
+          {/* Gradient + emoji placeholder — shown when no DB image or image fails */}
+          <div
+            className="pc-img-fallback"
+            style={{
+              background: visual.bg,
+              display: resolvedImg ? 'none' : 'flex',
+            }}
+          >
+            <span className="pc-img-fallback__emoji">{visual.emoji}</span>
+            <span className="pc-img-fallback__tag">{visual.tag}</span>
+          </div>
 
           {outOfStock && (
             <div className="pc-overlay">

@@ -511,8 +511,16 @@ export default function ProductDetailPage() {
                     style={{ width:'100%', height:'100%', objectFit:'contain',
                       objectPosition:'center', padding:24 }}
                     onError={e => {
+                      /* DB image failed — hide it and show gradient placeholder */
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = visual.localImage;
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.closest('.product-detail-image-wrap');
+                      if (parent) {
+                        parent.style.background = visual.bg;
+                        parent.style.cursor = 'default';
+                      }
+                      const ph = document.getElementById('pdp-img-placeholder');
+                      if (ph) ph.style.display = 'flex';
                     }}
                   />
                   <div style={{ position:'absolute', bottom:14, right:14,
@@ -521,24 +529,25 @@ export default function ProductDetailPage() {
                     🔍 Click to zoom
                   </div>
                 </>
-              ) : visual.localImage ? (
-                <img
-                  src={visual.localImage}
-                  alt={product.name}
-                  style={{ width:'100%', height:'100%', objectFit:'contain',
-                    objectPosition:'center', padding:24 }}
-                  onError={e => { e.currentTarget.onerror = null; e.currentTarget.style.display='none'; }}
-                />
-              ) : (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
-                  <span style={{ fontSize:96, filter:'drop-shadow(0 8px 20px rgba(0,0,0,0.25))' }}>{visual.emoji}</span>
-                  <span style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.85)',
-                    textTransform:'uppercase', letterSpacing:2,
-                    background:'rgba(0,0,0,0.2)', padding:'4px 16px', borderRadius:20 }}>
-                    {visual.tag}
-                  </span>
-                </div>
-              )}
+              ) : null}
+
+              {/* Gradient + emoji placeholder — shown when no DB image or load fails */}
+              <div
+                id="pdp-img-placeholder"
+                style={{
+                  display: resolvedImage ? 'none' : 'flex',
+                  flexDirection:'column', alignItems:'center', gap:12,
+                }}
+              >
+                <span style={{ fontSize:96, filter:'drop-shadow(0 8px 20px rgba(0,0,0,0.25))' }}>
+                  {visual.emoji}
+                </span>
+                <span style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.85)',
+                  textTransform:'uppercase', letterSpacing:2,
+                  background:'rgba(0,0,0,0.2)', padding:'4px 16px', borderRadius:20 }}>
+                  {visual.tag}
+                </span>
+              </div>
               {outOfStock && (
                 <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.45)',
                   display:'flex', alignItems:'center', justifyContent:'center', borderRadius:24 }}>

@@ -171,8 +171,8 @@ function InventoryCard({ product, onStockSaved }) {
   const stock        = Number(product.stock_quantity);
   const visual       = getProductVisual(product.name ?? '', product.category_name ?? '');
 
-  /* Priority: resolved DB image_url (handles relative /uploads paths) → local name-based asset → gradient placeholder */
-  const imgSrc = resolveImageUrl(product.image_url) || visual.localImage || null;
+  /* DB image URL takes priority; if absent or broken, show gradient placeholder */
+  const imgSrc = resolveImageUrl(product.image_url) || null;
 
   const stockBadge = () => {
     if (stock <= 0)  return { cls: 'inv-card__stock-badge--out',  label: 'Out of Stock' };
