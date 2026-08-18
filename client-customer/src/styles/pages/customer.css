@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    CASHEW HUB — Premium White Minimalist Design System
    Brand: white base, warm gold accents, Playfair serif
    ═══════════════════════════════════════════════════ */
@@ -3548,35 +3548,5 @@ img, video, svg, canvas {
 @media (max-width: 360px) {
   .features-bar {
     grid-template-columns: 1fr;
-  }
-}
-
-/* ── Shop hero responsive ────────────────────────────────────────
-   Desktop: full hero with title + subtitle + search
-   Mobile:  compact — title/subtitle hidden, just search + padding
-   ─────────────────────────────────────────────────────────────── */
-.shop-hero-section {
-  position: relative;
-  overflow: hidden;
-  background: #FDFBF7;
-  border-bottom: 1px solid rgba(201,151,43,0.12);
-  /* Desktop: generous padding with title text */
-  padding: clamp(28px,4vw,48px) clamp(16px,4vw,56px) clamp(16px,3vw,28px);
-}
-
-/* Title + subtitle block — hidden on mobile to eliminate the gap */
-.shop-hero-text {
-  display: block;
-}
-
-@media (max-width: 640px) {
-  /* Collapse hero to just the search bar on mobile */
-  .shop-hero-section {
-    padding: 12px 14px 12px;
-  }
-
-  /* Hide the eyebrow / title / subtitle — saves ~120px of empty space */
-  .shop-hero-text {
-    display: none;
   }
 }

@@ -247,7 +247,12 @@ export default function ShopPage() {
     <div style={{ background:'#FAFAFA', minHeight:'100vh' }}>
 
       {/* ── Shop Hero ──────────────────────────────────── */}
-      <section className="shop-hero-section">
+      <section style={{
+        position:'relative', overflow:'hidden',
+        padding:'clamp(28px,4vw,48px) clamp(16px,4vw,56px) clamp(16px,3vw,28px)',
+        background:'#FDFBF7',
+        borderBottom:'1px solid rgba(201,151,43,0.12)',
+      }}>
         {/* Radial amber glow — top centre */}
         <div style={{
           position:'absolute', top:'-80px', left:'50%', transform:'translateX(-50%)',
@@ -262,21 +267,18 @@ export default function ShopPage() {
           pointerEvents:'none',
         }} />
         <div style={{ maxWidth:1200, margin:'0 auto', position:'relative', zIndex:1, width:'100%' }}>
-          {/* ── Desktop-only: eyebrow + title + subtitle ── */}
-          <div className="shop-hero-text">
-            <div style={{ fontSize:11, fontWeight:700, color:'#C9972B', textTransform:'uppercase',
-              letterSpacing:2.5, marginBottom:10 }}>Our Collection</div>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(24px, 5vw, 48px)', fontWeight:800,
-              color:'#1C1917', marginBottom:10, lineHeight:1.1 }}>
-              Premium Natural Shop
-            </h1>
-            <p style={{ fontSize:'clamp(13px, 2vw, 15px)', color:'#78716C', marginBottom:14, maxWidth:460,
-              lineHeight:1.7 }}>
-              Cashews, oils & brownies — all natural, freshly packed.
-            </p>
-          </div>
+          <div style={{ fontSize:11, fontWeight:700, color:'#C9972B', textTransform:'uppercase',
+            letterSpacing:2.5, marginBottom:10 }}>Our Collection</div>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(24px, 5vw, 48px)', fontWeight:800,
+            color:'#1C1917', marginBottom:10, lineHeight:1.1 }}>
+            Premium Natural Shop
+          </h1>
+          <p style={{ fontSize:'clamp(13px, 2vw, 15px)', color:'#78716C', marginBottom:14, maxWidth:460,
+            lineHeight:1.7 }}>
+            Cashews, oils & brownies — all natural, freshly packed.
+          </p>
 
-          {/* Inline search bar — always visible */}
+          {/* Inline search bar — compact, lives in the hero */}
           <div style={{
             display:'flex', gap:8, maxWidth:480, alignItems:'center',
           }}>
@@ -327,7 +329,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'10px clamp(12px,4vw,48px) 32px' }}>
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'12px clamp(16px,4vw,48px) 32px' }}>
 
         {/* ── Category dropdown + Sort — one unified toolbar ───── */}
         <div style={{
