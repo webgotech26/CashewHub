@@ -291,10 +291,27 @@ const updateProduct = async (req, res) => {
 /**
  * DELETE /api/products/:id
  * Deletes a product. Admin-only.
+ * If the product has existing order_items (FK constraint), returns 409
+ * with a clear message guiding the admin to deactivate instead.
  */
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+
+    /* Check if any order_items reference this product before attempting delete */
+    const [refRows] = await pool.query(
+      'SELECT COUNT(*) AS cnt FROM order_items WHERE product_id = ?', [id]
+    );
+    const orderCount = Number(refRows[0]?.cnt ?? 0);
+
+    if (orderCount > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `This product has ${orderCount} order record${orderCount !== 1 ? 's' : ''} and cannot be deleted. Set stock to 0 or deactivate it instead.`,
+        has_orders: true,
+        order_count: orderCount,
+      });
+    }
 
     const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
 
@@ -304,9 +321,101 @@ const deleteProduct = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'Product deleted successfully.' });
   } catch (error) {
+    /* Catch any remaining FK violations as a safety net */
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        message: 'This product has linked orders and cannot be deleted. Set stock to 0 or deactivate it instead.',
+        has_orders: true,
+      });
+    }
     console.error('deleteProduct error:', error.message);
     return res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 };
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, uploadProductImage };
+/**
+ * PATCH /api/products/:id/deactivate
+ * Admin-only — sets stock_quantity = 0 and is_active = 0.
+ * Safe alternative to deleting when a product has existing orders.
+ */
+const deactivateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    /* Detect if is_active column exists */
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'is_active'`
+    );
+    const hasIsActive = colRows.length > 0;
+
+    const sql = hasIsActive
+      ? 'UPDATE products SET stock_quantity = 0, is_active = 0 WHERE id = ?'
+      : 'UPDATE products SET stock_quantity = 0 WHERE id = ?';
+
+    const [result] = await pool.query(sql, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Product deactivated — stock set to 0 and hidden from shop.',
+    });
+  } catch (error) {
+    console.error('deactivateProduct error:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+/**
+ * PATCH /api/products/:id/reactivate
+ * Admin-only — sets is_active = 1 so the product appears in the shop again.
+ */
+const reactivateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stock_quantity } = req.body;   // optional — admin can set new stock
+
+    const [colRows] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'is_active'`
+    );
+    const hasIsActive = colRows.length > 0;
+
+    let sql, params;
+    if (hasIsActive && stock_quantity !== undefined) {
+      sql = 'UPDATE products SET is_active = 1, stock_quantity = ? WHERE id = ?';
+      params = [Math.max(0, Number(stock_quantity) || 0), id];
+    } else if (hasIsActive) {
+      sql = 'UPDATE products SET is_active = 1 WHERE id = ?';
+      params = [id];
+    } else {
+      /* No is_active column — just update stock if provided */
+      if (stock_quantity !== undefined) {
+        sql = 'UPDATE products SET stock_quantity = ? WHERE id = ?';
+        params = [Math.max(0, Number(stock_quantity) || 0), id];
+      } else {
+        return res.status(200).json({ success: true, message: 'No change needed.' });
+      }
+    }
+
+    const [result] = await pool.query(sql, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Product reactivated.' });
+  } catch (error) {
+    console.error('reactivateProduct error:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = {
+  getProducts, getProductById, createProduct, updateProduct,
+  deleteProduct, deactivateProduct, reactivateProduct, uploadProductImage,
+};

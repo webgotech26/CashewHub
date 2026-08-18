@@ -1,6 +1,31 @@
 const pool = require('../config/db');
 
 /**
+ * formatDate — safely converts any date value to YYYY-MM-DD or null.
+ *
+ * Handles:
+ *   ''                          → null  (empty string from form)
+ *   null / undefined            → null
+ *   '2026-08-24'                → '2026-08-24'  (already correct)
+ *   '2026-08-24T00:00:00.000Z'  → '2026-08-24'  (ISO string from frontend)
+ *   new Date()                  → 'YYYY-MM-DD'   (Date object)
+ *
+ * Never throws — returns null on any invalid input.
+ */
+function formatDate(value) {
+  if (!value && value !== 0) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+  try {
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  } catch {
+    return null;
+  }
+}
+
+/**
  * GET /api/coupons  — admin list
  * Actual DB columns (confirmed from MySQL Workbench):
  *   id, code, discount_percentage, is_active, created_at,
@@ -116,7 +141,7 @@ const createCoupon = async (req, res) => {
         discount_value,
         minAmt,
         max_uses   || null,
-        expiry_date || null,
+        formatDate(expiry_date),   /* normalises ISO strings → YYYY-MM-DD */
       ]
     );
 
@@ -160,7 +185,7 @@ const updateCoupon = async (req, res) => {
         discount_value,
         minAmt,
         max_uses    || null,
-        expiry_date || null,
+        formatDate(expiry_date),   /* normalises ISO strings → YYYY-MM-DD */
         id,
       ]
     );
