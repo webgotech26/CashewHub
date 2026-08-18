@@ -47,11 +47,22 @@ const getProducts = async (req, res) => {
     const params  = [];
     const filters = [];
 
-    /* Only filter by is_active if the column exists — avoids empty results
-       on schemas where is_active was never added */
-    if (hasIsActive) {
+    /* ── is_active filter ─────────────────────────────────────────
+       Customer shop: only show active products (is_active = 1 or NULL)
+       Admin panel:   show ALL products including deactivated ones
+
+       Detection: admin requests send ?admin=true OR req.user.role === 'admin'
+       (verifyToken sets req.user when a valid JWT is present)
+    ─────────────────────────────────────────────────────────────── */
+    const isAdminRequest =
+      req.query.admin === 'true' ||
+      (req.user && (req.user.role === 'admin' || req.user.role === 'manager' || req.user.role === 'staff'));
+
+    if (hasIsActive && !isAdminRequest) {
+      /* Customer-facing: hide inactive products */
       filters.push('(p.is_active IS NULL OR p.is_active = 1)');
     }
+    /* Admin: no is_active filter — all products visible */
 
     if (search) {
       filters.push('p.name LIKE ?');

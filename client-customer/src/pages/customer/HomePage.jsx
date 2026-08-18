@@ -105,7 +105,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    api.get('/api/products', { params: { limit: 8 } })
+    /* Fetch enough products so groupProductVariants has all sibling variants.
+       The display is sliced to 8 cards below, but we need all variants in memory
+       for the weight selector buttons to appear correctly. */
+    api.get('/api/products', { params: { limit: 100 } })
       .then(r => setProducts(groupProductVariants(r.data.data || [])))
       .catch(() => {});
   }, []);

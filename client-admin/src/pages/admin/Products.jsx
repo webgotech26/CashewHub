@@ -12,7 +12,7 @@ export default function Products() {
   const [confirmModal, setConfirmModal] = useState(null); // { product, type }
 
   const fetchProducts = () =>
-    api.get(`/api/products?search=${search}&page=${page}&limit=15`)
+    api.get(`/api/products?admin=true&search=${search}&page=${page}&limit=15`)
       .then(r => setProducts(r.data.data || []))
       .catch(() => {});
 

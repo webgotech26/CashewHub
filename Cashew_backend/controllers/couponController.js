@@ -133,15 +133,18 @@ const createCoupon = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO coupons
-         (code, discount_type, discount_value, min_order_amount, max_uses, expiry_date, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+         (code, discount_type, discount_value, discount_percentage,
+          min_order_amount, max_uses, expiry_date, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
       [
         code.toUpperCase(),
         discount_type || 'percentage',
         discount_value,
+        /* Keep discount_percentage in sync — set it when type is percentage, else null */
+        (discount_type === 'percentage' || !discount_type) ? discount_value : null,
         minAmt,
         max_uses   || null,
-        formatDate(expiry_date),   /* normalises ISO strings → YYYY-MM-DD */
+        formatDate(expiry_date),
       ]
     );
 
@@ -176,16 +179,18 @@ const updateCoupon = async (req, res) => {
 
     const [result] = await pool.query(
       `UPDATE coupons
-       SET code=?, discount_type=?, discount_value=?,
+       SET code=?, discount_type=?, discount_value=?, discount_percentage=?,
            min_order_amount=?, max_uses=?, expiry_date=?
        WHERE id=?`,
       [
         code,
         discount_type,
         discount_value,
+        /* Keep discount_percentage in sync */
+        discount_type === 'percentage' ? discount_value : null,
         minAmt,
         max_uses    || null,
-        formatDate(expiry_date),   /* normalises ISO strings → YYYY-MM-DD */
+        formatDate(expiry_date),
         id,
       ]
     );
