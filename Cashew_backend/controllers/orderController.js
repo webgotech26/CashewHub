@@ -231,16 +231,17 @@ const createOrder = async (req, res) => {
     connection.release();
 
     const orderData = {
-      id:            orderId,
-      display_id:    displayOrderId,   // 6-digit client-facing order number
+      id:             orderId,
+      display_id:     displayOrderId,
       customer_id,
-      customer_name: customerName,
-      items:         validatedItems,
-      total_amount:  orderTotal,
-      status:        'pending',
-      address:       address.trim(),
+      customer_name:  customerName,
+      customer_phone: customerPhone || 'N/A',  // shown in admin WhatsApp alert
+      items:          validatedItems,
+      total_amount:   orderTotal,
+      status:         'pending',
+      address:        address.trim(),
       payment_method,
-      created_at:    new Date().toISOString(),
+      created_at:     new Date().toISOString(),
     };
 
     try {
