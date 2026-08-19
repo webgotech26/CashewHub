@@ -194,6 +194,9 @@ app.use('/api/admin',      adminRoutes);  // /api/admin/stats alias
 // Razorpay payment — create order + verify signature
 app.use('/api/payment',    paymentRoutes);
 
+// Back-in-stock notification waitlist
+app.use('/api/notify-stock', require('./routes/stockNotificationRoutes'));
+
 // ─── 404 HANDLER ─────────────────────────────────────────────────────────────
 
 app.use((req, res) => {

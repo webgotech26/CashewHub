@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
-const { createOrder, getOrders, getOrderById, updateOrderStatus } = require('../controllers/orderController');
+const { createOrder, getOrders, getOrderById, updateOrderStatus, cancelOrder } = require('../controllers/orderController');
 const { generateManifest } = require('../controllers/manifestController');
 
 // All order routes require authentication
@@ -27,7 +27,10 @@ router.get('/manifest', adminOnly, generateManifest);
 // GET    /api/orders/:id    → Single order details
 router.get('/:id', getOrderById);
 
-// PATCH  /api/orders/:id/status → Admin-only: update order status
+// PATCH  /api/orders/:id/status  → Admin-only: update order status
 router.patch('/:id/status', adminOnly, updateOrderStatus);
+
+// PATCH  /api/orders/:id/cancel  → Customer: cancel own pending/confirmed order
+router.patch('/:id/cancel', cancelOrder);
 
 module.exports = router;

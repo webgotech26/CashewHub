@@ -311,6 +311,87 @@ function getGradeInfo(name = '') {
   return null;
 }
 
+/* ── Notify Me When Back in Stock ────────────────────────────── */
+function NotifyMeForm({ productId, productName }) {
+  const [email, setEmail]   = useState('');
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [msg, setMsg]       = useState('');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const addr = (email || user.email || '').trim();
+    if (!addr) return;
+    setStatus('loading');
+    try {
+      const res = await api.post('/api/notify-stock', {
+        product_id: productId,
+        email: addr,
+        name: user.name || null,
+      });
+      setMsg(res.data.message || "We'll notify you!");
+      setStatus('success');
+    } catch (err) {
+      setMsg(err.response?.data?.message || 'Something went wrong. Try again.');
+      setStatus('error');
+    }
+  };
+
+  if (status === 'success') return (
+    <div style={{
+      marginTop:16, padding:'14px 18px', borderRadius:12,
+      background:'#F0FDF4', border:'1px solid #86EFAC',
+      fontSize:13, color:'#15803D', fontWeight:600,
+      display:'flex', alignItems:'center', gap:8,
+    }}>
+      ✅ {msg}
+    </div>
+  );
+
+  return (
+    <div style={{
+      marginTop:16, padding:'18px 20px', borderRadius:14,
+      background:'#FDF8F3', border:'1px solid #F0E8D0',
+    }}>
+      <p style={{ fontSize:13, fontWeight:700, color:'#1A1A1A', margin:'0 0 4px' }}>
+        🔔 Get notified when it's back
+      </p>
+      <p style={{ fontSize:12, color:'#9CA3AF', margin:'0 0 12px' }}>
+        We'll send you an email as soon as {productName} is restocked.
+      </p>
+      <form onSubmit={handleSubmit} style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        <input
+          type="email"
+          required
+          placeholder={user.email || 'your@email.com'}
+          value={email || user.email || ''}
+          onChange={e => setEmail(e.target.value)}
+          style={{
+            flex:1, minWidth:180, height:40,
+            padding:'0 12px', border:'1.5px solid #E5E7EB',
+            borderRadius:10, fontSize:13, outline:'none',
+            background:'#fff', color:'#111',
+          }}
+          onFocus={e => { e.target.style.borderColor='#C9972B'; }}
+          onBlur={e  => { e.target.style.borderColor='#E5E7EB'; }}
+        />
+        <button type="submit" disabled={status === 'loading'} style={{
+          height:40, padding:'0 20px', borderRadius:10, border:'none',
+          background: 'linear-gradient(135deg,#C9972B,#F5C842)',
+          color:'#1a0a00', fontSize:13, fontWeight:700,
+          cursor: status === 'loading' ? 'not-allowed' : 'pointer',
+          opacity: status === 'loading' ? 0.7 : 1,
+        }}>
+          {status === 'loading' ? 'Saving…' : 'Notify Me'}
+        </button>
+      </form>
+      {status === 'error' && (
+        <p style={{ fontSize:12, color:'#DC2626', marginTop:8 }}>❌ {msg}</p>
+      )}
+    </div>
+  );
+}
+
 function ImageZoom({ src, alt, onClose }) {
   return (
     <div onClick={onClose} style={{
@@ -722,15 +803,22 @@ export default function ProductDetailPage() {
                 {outOfStock ? '✗ Out of Stock' : added ? '✓ Added to Cart!'
                   : inCart ? `🛒 Add More (${inCart.qty} in cart)` : '🛒 Add to Cart'}
               </button>
-              <button onClick={() => { handleAdd(); setTimeout(() => navigate('/home/checkout'), 300); }}
-                disabled={outOfStock} style={{
-                  padding:'14px 24px', borderRadius:12,
-                  border:'2px solid #1a0a00', background:'transparent',
-                  color:'#1a0a00', fontSize:15, fontWeight:700,
-                  cursor: outOfStock ? 'not-allowed' : 'pointer',
-                  opacity: outOfStock ? 0.4 : 1,
-                }}>⚡ Buy Now</button>
+              {!outOfStock && (
+                <button onClick={() => { handleAdd(); setTimeout(() => navigate('/home/checkout'), 300); }}
+                  disabled={outOfStock} style={{
+                    padding:'14px 24px', borderRadius:12,
+                    border:'2px solid #1a0a00', background:'transparent',
+                    color:'#1a0a00', fontSize:15, fontWeight:700,
+                    cursor: outOfStock ? 'not-allowed' : 'pointer',
+                    opacity: outOfStock ? 0.4 : 1,
+                  }}>⚡ Buy Now</button>
+              )}
             </div>
+
+            {/* ── Notify Me When In Stock ─────────────────── */}
+            {outOfStock && (
+              <NotifyMeForm productId={active?.id || product.id} productName={product.name} />
+            )}
 
             <div style={{ marginTop:20, padding:'12px 16px', borderRadius:10,
               background:'#F0FDF4', border:'1px solid #86EFAC',

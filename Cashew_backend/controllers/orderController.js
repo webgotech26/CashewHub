@@ -421,4 +421,75 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus };
+/**
+ * PATCH /api/orders/:id/cancel
+ * Customer-only: cancel their own pending or confirmed order.
+ * Restores stock for every item in the order.
+ */
+const cancelOrder = async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { id } = req.params;
+    const customerId = req.user.id;
+
+    // Fetch the order — must belong to this customer
+    const [orderRows] = await connection.query(
+      'SELECT id, status, customer_id FROM orders WHERE id = ?',
+      [id]
+    );
+
+    if (orderRows.length === 0) {
+      connection.release();
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    const order = orderRows[0];
+
+    if (order.customer_id !== customerId) {
+      connection.release();
+      return res.status(403).json({ success: false, message: 'You can only cancel your own orders.' });
+    }
+
+    const cancellableStatuses = ['pending', 'confirmed'];
+    if (!cancellableStatuses.includes(order.status)) {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled — current status is "${order.status}". Only pending or confirmed orders can be cancelled.`,
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // Restore stock for each item
+    const [items] = await connection.query(
+      'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
+      [id]
+    );
+
+    for (const item of items) {
+      await connection.query(
+        'UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?',
+        [item.quantity, item.product_id]
+      );
+    }
+
+    // Mark order as cancelled
+    await connection.query('UPDATE orders SET status = ? WHERE id = ?', ['cancelled', id]);
+
+    await connection.commit();
+    connection.release();
+
+    return res.status(200).json({
+      success: true,
+      message: `Order #${id} has been cancelled and stock has been restored.`,
+    });
+  } catch (error) {
+    await connection.rollback();
+    connection.release();
+    console.error('cancelOrder error:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, cancelOrder };

@@ -186,14 +186,21 @@ export default function MyOrders() {
     );
   }, [addToCart, showToast]);
 
+  /* ── Cancel order handler ─────────────────────────────────────── */
+  const handleCancel = useCallback(async (orderId) => {
+    try {
+      await api.patch(`/api/orders/${orderId}/cancel`);
+      showToast('Order cancelled. Stock has been restored.', 'success');
+      fetchOrders();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not cancel the order.', 'error');
+    }
+  }, [fetchOrders, showToast]);
+
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   return (
     <div className="acct-ns-page">
-
-     
-
-      {/* ── Horizontal nav ── */}
       <AccountNav active="orders" navigate={navigate} />
 
       {/* ── Content ── */}
@@ -260,6 +267,7 @@ export default function MyOrders() {
                   onView={id  => navigate(`/home/orders/${id}`)}
                   onTrack={id => navigate(`/home/orders/${id}`)}
                   onReorder={handleReorder}
+                  onCancel={handleCancel}
                 />
               ))}
             </div>

@@ -76,4 +76,73 @@ const getAdminStats = async (req, res) => {
   }
 };
 
-module.exports = { getAdmins, createAdmin, deleteAdmin, getAdminStats };
+/**
+ * GET /api/admin/charts
+ * Returns data for the admin dashboard charts:
+ *   - dailyRevenue: last 30 days revenue + order count
+ *   - topProducts: top 5 products by revenue
+ *   - ordersByStatus: count per status
+ */
+const getChartData = async (req, res) => {
+  try {
+    /* Last 30 days — one row per day */
+    const [daily] = await pool.query(`
+      SELECT
+        DATE(created_at) AS date,
+        COUNT(*)                                      AS orders,
+        COALESCE(SUM(total_amount), 0)                AS revenue
+      FROM orders
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        AND status != 'cancelled'
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `);
+
+    /* Top 5 selling products by revenue */
+    const [topProducts] = await pool.query(`
+      SELECT
+        p.name,
+        SUM(oi.line_total) AS revenue,
+        SUM(oi.quantity)   AS units_sold
+      FROM order_items oi
+      JOIN products p ON p.id = oi.product_id
+      JOIN orders o ON o.id = oi.order_id
+      WHERE o.status != 'cancelled'
+      GROUP BY oi.product_id, p.name
+      ORDER BY revenue DESC
+      LIMIT 5
+    `);
+
+    /* Orders by status */
+    const [byStatus] = await pool.query(`
+      SELECT status, COUNT(*) AS count
+      FROM orders
+      GROUP BY status
+    `);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        dailyRevenue: daily.map(r => ({
+          date:    r.date,
+          orders:  Number(r.orders),
+          revenue: parseFloat(r.revenue),
+        })),
+        topProducts: topProducts.map(r => ({
+          name:       r.name,
+          revenue:    parseFloat(r.revenue),
+          units_sold: Number(r.units_sold),
+        })),
+        ordersByStatus: byStatus.map(r => ({
+          status: r.status,
+          count:  Number(r.count),
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('getChartData error:', err.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = { getAdmins, createAdmin, deleteAdmin, getAdminStats, getChartData };

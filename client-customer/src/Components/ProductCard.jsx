@@ -22,7 +22,7 @@ import {
 } from '../pages/customer/WishlistPage';
 import './ProductCard.css';
 
-export default function ProductCard({ product, onView }) {
+export default function ProductCard({ product, onView, rating }) {
   const navigate                 = useNavigate();
   const { addToCart, cartItems } = useCart();
   const { showToast }            = useToast();
@@ -220,6 +220,22 @@ export default function ProductCard({ product, onView }) {
             <span className="pc-low-stock">Only {active.stock_quantity} left!</span>
           )}
         </div>
+
+        {/* ── Rating summary ─────────────────────────────── */}
+        {rating && rating.total_reviews > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            marginTop: 6, fontSize: 12, color: '#78716C',
+          }}>
+            <span style={{ color: '#F59E0B', fontSize: 13 }}>★</span>
+            <span style={{ fontWeight: 700, color: '#1A1A1A' }}>
+              {Number(rating.avg_rating).toFixed(1)}
+            </span>
+            <span style={{ color: '#9CA3AF' }}>
+              · {rating.total_reviews} review{rating.total_reviews !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Footer ───────────────────────────────────────────── */}

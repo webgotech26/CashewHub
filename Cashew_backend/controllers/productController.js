@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { getImageUrl } = require('../middleware/uploadMiddleware');
+const { triggerStockNotifications } = require('./stockNotificationController');
 
 /**
  * GET /api/products
@@ -292,6 +293,11 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found.' });
     }
 
+    /* If stock was just increased from 0, send back-in-stock emails */
+    if (stockNum > 0) {
+      triggerStockNotifications(id).catch(() => {});
+    }
+
     return res.status(200).json({ success: true, message: 'Product updated successfully.' });
   } catch (error) {
     console.error('updateProduct error:', error.message);
@@ -417,6 +423,12 @@ const reactivateProduct = async (req, res) => {
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    /* Fire back-in-stock email notifications asynchronously (don't block response) */
+    const newStock = stock_quantity !== undefined ? Math.max(0, Number(stock_quantity) || 0) : null;
+    if (newStock === null || newStock > 0) {
+      triggerStockNotifications(id).catch(() => {});
     }
 
     return res.status(200).json({ success: true, message: 'Product reactivated.' });

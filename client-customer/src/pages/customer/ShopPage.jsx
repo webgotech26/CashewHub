@@ -99,6 +99,7 @@ export default function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts]         = useState([]);
   const [categories, setCategories]     = useState([]);
+  const [ratings, setRatings]           = useState({});   // { product_id: { avg_rating, total_reviews } }
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -163,12 +164,14 @@ export default function ShopPage() {
     Promise.all([
       api.get('/api/products', { params: { limit: 100 } }),
       api.get('/api/categories'),
+      api.get('/api/reviews/ratings-summary').catch(() => ({ data: { data: {} } })),
     ])
-      .then(([pRes, cRes]) => {
+      .then(([pRes, cRes, rRes]) => {
         const rawProducts = pRes.data.data || [];
         setProducts(groupProductVariants(rawProducts));
         const cats = (cRes.data.data || []).filter(c => c.id && c.name);
         setCategories(cats);
+        setRatings(rRes.data.data || {});
         setRetryCount(0); // reset on success
 
         const catParam = (searchParams.get('category') || '').toLowerCase().trim();
@@ -611,7 +614,8 @@ export default function ShopPage() {
         {!loading && filtered.length > 0 && (
           <div className="pc-grid">
             {filtered.map(p => (
-              <ProductCard key={p.id} product={p} onView={setViewProduct} />
+              <ProductCard key={p.id} product={p} onView={setViewProduct}
+                rating={ratings[p.id] || (p.variants ? ratings[p.variants[0]?.id] : null)} />
             ))}
           </div>
         )}

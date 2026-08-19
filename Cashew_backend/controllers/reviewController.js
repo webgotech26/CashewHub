@@ -162,4 +162,32 @@ const getProductReviews = async (req, res) => {
   }
 };
 
-module.exports = { getReviews, moderateReview, submitReview, getProductReviews };
+/* ─────────────────────────────────────────────────────────────────
+   Public: bulk ratings summary for all products
+   Returns: { product_id, avg_rating, total_reviews }[]
+   Used by ProductCard to show ⭐ 4.3 · 12 reviews on the card.
+   ───────────────────────────────────────────────────────────────── */
+const getAllRatingsSummary = async (req, res) => {
+  try {
+    const hasStatus = await reviewsHasStatus();
+    const query = `
+      SELECT
+        r.product_id,
+        ROUND(AVG(r.rating), 1) AS avg_rating,
+        COUNT(*)                AS total_reviews
+      FROM reviews r
+      ${hasStatus ? "WHERE r.status = 'approved'" : ''}
+      GROUP BY r.product_id
+    `;
+    const [rows] = await pool.query(query);
+    /* Convert to a map keyed by product_id for fast O(1) lookup in frontend */
+    const map = {};
+    rows.forEach(r => { map[r.product_id] = { avg_rating: Number(r.avg_rating), total_reviews: Number(r.total_reviews) }; });
+    return res.status(200).json({ success: true, data: map });
+  } catch (err) {
+    console.error('getAllRatingsSummary error:', err.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = { getReviews, moderateReview, submitReview, getProductReviews, getAllRatingsSummary };

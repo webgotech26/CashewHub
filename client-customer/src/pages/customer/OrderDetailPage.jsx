@@ -140,9 +140,11 @@ function OrderTracker({ status }) {
 export default function OrderDetailPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
-  const [order,   setOrder]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [order,      setOrder]      = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   useEffect(() => {
     setLoading(true); setError(null);
@@ -151,6 +153,22 @@ export default function OrderDetailPage() {
       .catch(err => setError(err.response?.data?.message || 'Order not found.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleCancel = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      await api.patch(`/api/orders/${id}/cancel`);
+      // Refresh order data to show updated status
+      const res = await api.get(`/api/orders/${id}`);
+      setOrder(res.data.data);
+    } catch (err) {
+      setCancelError(err.response?.data?.message || 'Could not cancel order. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (loading) return (
     <div className="shop-content">
@@ -315,6 +333,40 @@ export default function OrderDetailPage() {
               background:'#fff', color:'#1A1A1A',
               fontSize:13, fontWeight:600, cursor:'pointer',
             }}>💬 Need Help?</button>
+
+            {/* Cancel button — only for pending or confirmed orders */}
+            {['pending', 'confirmed'].includes(order.status) && (
+              <div>
+                {cancelError && (
+                  <div style={{
+                    background:'#FEF2F2', border:'1px solid #FECACA',
+                    borderRadius:8, padding:'10px 14px', marginBottom:10,
+                    fontSize:12, color:'#B91C1C', fontWeight:600,
+                  }}>
+                    ⚠️ {cancelError}
+                  </div>
+                )}
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  style={{
+                    width:'100%', padding:'11px', borderRadius:10,
+                    border:'1.5px solid #FECACA',
+                    background: cancelling ? '#FEF2F2' : '#fff',
+                    color: cancelling ? '#9CA3AF' : '#B91C1C',
+                    fontSize:13, fontWeight:700, cursor: cancelling ? 'not-allowed' : 'pointer',
+                    transition:'all 0.2s',
+                  }}
+                  onMouseEnter={e => { if (!cancelling) { e.currentTarget.style.background='#FEF2F2'; }}}
+                  onMouseLeave={e => { if (!cancelling) { e.currentTarget.style.background='#fff'; }}}
+                >
+                  {cancelling ? '⏳ Cancelling…' : '✕ Cancel Order'}
+                </button>
+                <p style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', marginTop:6 }}>
+                  Stock will be restored automatically.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

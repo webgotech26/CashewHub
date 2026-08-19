@@ -129,12 +129,14 @@ function GhostBtn({ children, onClick, ariaLabel }) {
 }
 
 /* ── ActionButtons export ──────────────────────────────────────── */
-export default function ActionButtons({ orderId, status, onView, onAction, onReorder }) {
-  const isDelivered = status === 'delivered';
-  const isCancelled = status === 'cancelled';
+export default function ActionButtons({ orderId, status, onView, onAction, onReorder, onCancel }) {
+  const isDelivered   = status === 'delivered';
+  const isCancelled   = status === 'cancelled';
+  const isCancellable = status === 'pending' || status === 'confirmed';
 
   const [reorderLoading, setReorderLoading] = useState(false);
   const [reorderDone,    setReorderDone]    = useState(false);
+  const [cancelLoading,  setCancelLoading]  = useState(false);
 
   const handleReorder = async () => {
     if (!onReorder || reorderLoading || reorderDone) return;
@@ -142,15 +144,25 @@ export default function ActionButtons({ orderId, status, onView, onAction, onReo
     try {
       await onReorder(orderId);
       setReorderDone(true);
-      // Reset after 3 seconds so button is usable again
       setTimeout(() => setReorderDone(false), 3000);
     } finally {
       setReorderLoading(false);
     }
   };
 
+  const handleCancel = async () => {
+    if (!onCancel || cancelLoading) return;
+    if (!window.confirm('Cancel this order? Stock will be restored.')) return;
+    setCancelLoading(true);
+    try {
+      await onCancel(orderId);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+    <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
 
       {/* View Details — always visible */}
       <GhostBtn
@@ -177,13 +189,46 @@ export default function ActionButtons({ orderId, status, onView, onAction, onReo
       )}
 
       {/* Active orders → Track Order */}
-      {!isCancelled && !isDelivered && (
+      {!isCancelled && !isDelivered && !isCancellable && (
         <PrimaryBtn
           onClick={() => onAction(orderId)}
           ariaLabel={`Track order #${orderId}`}
         >
           Track Order →
         </PrimaryBtn>
+      )}
+
+      {/* Pending / Confirmed → Track + Cancel */}
+      {isCancellable && (
+        <>
+          <PrimaryBtn
+            onClick={() => onAction(orderId)}
+            ariaLabel={`Track order #${orderId}`}
+          >
+            Track Order →
+          </PrimaryBtn>
+          <button
+            onClick={handleCancel}
+            disabled={cancelLoading}
+            aria-label={`Cancel order #${orderId}`}
+            style={{
+              fontFamily: FONT,
+              padding: '11px 16px',
+              borderRadius: 10,
+              border: '1.5px solid #FECACA',
+              background: cancelLoading ? '#FEF2F2' : 'transparent',
+              color: cancelLoading ? '#9CA3AF' : '#EF4444',
+              fontSize: 13, fontWeight: 600,
+              cursor: cancelLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.18s ease',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => { if (!cancelLoading) e.currentTarget.style.background = '#FEF2F2'; }}
+            onMouseLeave={e => { if (!cancelLoading) e.currentTarget.style.background = 'transparent'; }}
+          >
+            {cancelLoading ? '⏳' : '✕ Cancel'}
+          </button>
+        </>
       )}
 
     </div>

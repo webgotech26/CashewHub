@@ -90,6 +90,7 @@ export default function HomePage() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [products, setProducts] = useState([]);
+  const [ratings, setRatings]   = useState({});  // { product_id: { avg_rating, total_reviews } }
 
   // Debug: log slide images on mount
   useEffect(() => {
@@ -108,8 +109,14 @@ export default function HomePage() {
     /* Fetch enough products so groupProductVariants has all sibling variants.
        The display is sliced to 8 cards below, but we need all variants in memory
        for the weight selector buttons to appear correctly. */
-    api.get('/api/products', { params: { limit: 100 } })
-      .then(r => setProducts(groupProductVariants(r.data.data || [])))
+    Promise.all([
+      api.get('/api/products', { params: { limit: 100 } }),
+      api.get('/api/reviews/ratings-summary').catch(() => ({ data: { data: {} } })),
+    ])
+      .then(([pRes, rRes]) => {
+        setProducts(groupProductVariants(pRes.data.data || []));
+        setRatings(rRes.data.data || {});
+      })
       .catch(() => {});
   }, []);
 
@@ -286,7 +293,12 @@ export default function HomePage() {
           {/* Products from DB — shared ProductCard component (same as ShopPage) */}
           <div className="home-products-grid" style={{ marginBottom: 40 }}>
             {products.slice(0, 8).map(product => (
-              <ProductCard key={product.id} product={product} onView={null} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onView={null}
+                rating={ratings[product.id] || (product.variants ? ratings[product.variants[0]?.id] : null)}
+              />
             ))}
           </div>
 
