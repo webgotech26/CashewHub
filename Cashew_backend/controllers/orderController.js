@@ -6,7 +6,7 @@ const createOrder = async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
-    const { items, address, payment_method } = req.body;
+    const { items, address, payment_method, coupon_code } = req.body;
     const customer_id = req.user.id;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -188,6 +188,43 @@ const createOrder = async (req, res) => {
         'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
         [item.quantity, item.product_id]
       );
+    }
+
+    // ── STEP 6: Increment coupon used_count (inside transaction) ──
+    // Only fires if the frontend passed a coupon_code with the order.
+    // Uses UPPER() match so it's case-insensitive, and guards with
+    // is_active + expiry checks so a race condition can't over-redeem
+    // a coupon that was deactivated between validate and order creation.
+    const normalizedCoupon = typeof coupon_code === 'string' ? coupon_code.trim().toUpperCase() : null;
+
+    if (normalizedCoupon) {
+      const [couponRows] = await connection.query(
+        `SELECT id, code, max_uses, used_count
+         FROM coupons
+         WHERE UPPER(code) = ?
+           AND is_active = 1
+           AND (expiry_date IS NULL OR expiry_date >= CURDATE())`,
+        [normalizedCoupon]
+      );
+
+      if (couponRows.length === 0) {
+        // Coupon was valid at checkout but is now inactive/expired — log and continue,
+        // don't block the order (payment already verified at this point).
+        console.warn(`[Coupon] ⚠️  Coupon "${normalizedCoupon}" not found or expired at order creation — skipping increment. Order #${orderId || '?'} will still be placed.`);
+      } else {
+        const coupon = couponRows[0];
+
+        // Guard: don't exceed max_uses even under concurrent requests
+        if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+          console.warn(`[Coupon] ⚠️  Coupon "${normalizedCoupon}" has already hit max_uses (${coupon.max_uses}) — skipping increment for Order #${orderId}.`);
+        } else {
+          await connection.query(
+            'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
+            [coupon.id]
+          );
+          console.log(`[Coupon] ✓ used_count incremented for coupon "${normalizedCoupon}" (id: ${coupon.id}) — now ${coupon.used_count + 1}/${coupon.max_uses ?? '∞'} uses. Order #${orderId}.`);
+        }
+      }
     }
 
     await connection.commit();

@@ -537,13 +537,15 @@ export default function Checkout() {
               }));
 
               const orderRes = await api.post('/api/orders', {
-                customer_id:    user.id,
+                customer_id:         user.id,
                 items,
-                address:        addressStr,
-                payment_method: payMethod,
-                total_amount:   parseFloat(grandTotal.toFixed(2)),
+                address:             addressStr,
+                payment_method:      payMethod,
+                total_amount:        parseFloat(grandTotal.toFixed(2)),
                 razorpay_order_id:   response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
+                // Pass the applied coupon code so the backend increments used_count
+                coupon_code:         appliedCoupon?.code ?? null,
               });
 
               const orderId = orderRes.data.data?.display_id || orderRes.data.data?.id || orderRes.data.id || '—';
