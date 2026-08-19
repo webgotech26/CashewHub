@@ -26,6 +26,30 @@ function formatDate(value) {
 }
 
 /**
+ * GET /api/coupons/active  — public, customer-facing
+ * Returns all active, non-expired coupons with available uses.
+ * Intentionally omits internal fields (max_uses, used_count).
+ */
+const getActiveCoupons = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         id, code, discount_type, discount_value,
+         min_order_amount, expiry_date
+       FROM coupons
+       WHERE is_active = 1
+         AND (expiry_date IS NULL OR expiry_date >= CURDATE())
+         AND (max_uses    IS NULL OR used_count < max_uses)
+       ORDER BY discount_value DESC`
+    );
+    return res.status(200).json({ success: true, data: rows });
+  } catch (err) {
+    console.error('getActiveCoupons error:', err.message);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+/**
  * GET /api/coupons  — admin list
  * Actual DB columns (confirmed from MySQL Workbench):
  *   id, code, discount_percentage, is_active, created_at,
@@ -237,4 +261,4 @@ const deleteCoupon = async (req, res) => {
   }
 };
 
-module.exports = { getCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon, deleteCoupon };
+module.exports = { getCoupons, getActiveCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon, deleteCoupon };

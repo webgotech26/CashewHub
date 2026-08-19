@@ -1,10 +1,11 @@
 const express = require('express');
 const router  = express.Router();
-const { getCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon, deleteCoupon } = require('../controllers/couponController');
+const { getCoupons, getActiveCoupons, validateCoupon, createCoupon, updateCoupon, patchCoupon, deleteCoupon } = require('../controllers/couponController');
 const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
 
-// Customer-facing: validate a coupon code (no admin gate)
-router.post('/validate', validateCoupon);
+// Customer-facing — no auth required
+router.get('/active',   getActiveCoupons);   // public list of valid coupons
+router.post('/validate', validateCoupon);    // validate + calculate discount
 
 // Admin only
 router.get('/',         verifyToken, adminOnly, getCoupons);

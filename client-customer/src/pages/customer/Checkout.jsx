@@ -13,6 +13,7 @@ import { useCart } from '../../context/CartContext';
 import { getProductVisual } from '../../utils/productVisual';
 import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import api from '../../services/api';
+import AvailableCoupons from '../../Components/AvailableCoupons';
 
 /* ─── Payment options ───────────────────────────────────────── */
 const PAYMENT_OPTIONS = [
@@ -596,50 +597,321 @@ export default function Checkout() {
 
   /* ── Success screen ──────────────────────────────────────── */
   if (success) {
+    /* Calculate delivery date: +5 business days from today */
+    const getDeliveryDate = () => {
+      const d = new Date();
+      let added = 0;
+      while (added < 5) {
+        d.setDate(d.getDate() + 1);
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) added++;
+      }
+      return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    };
+
+    const deliveryDate   = getDeliveryDate();
+    const itemCount      = cartItems.length; // already cleared, so use a snapshot if needed
+    const successOrderId = success.orderId;
+    const successPayId   = success.paymentId;
+
     return (
-      <div style={{ textAlign: 'center', padding: '80px 20px', maxWidth: 480, margin: '0 auto' }}>
-        <div style={{
-          width: 90, height: 90, borderRadius: '50%',
-          background: 'linear-gradient(135deg,#C9972B,#F5C842)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 42, margin: '0 auto 28px',
-          boxShadow: '0 8px 32px rgba(201,151,43,0.35)',
-        }}>
-          🎉
-        </div>
-        <h2 style={{
-          fontFamily: "'Playfair Display',serif", fontSize: 26,
-          fontWeight: 800, color: '#111', marginBottom: 10,
-        }}>
-          Order Confirmed!
-        </h2>
-        <p style={{ fontSize: 15, color: '#4B5563', marginBottom: 6 }}>
-          Order has been placed successfully.
-        </p>
-        <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>
-          Payment ID: <code style={{ background: '#F3F4F6', padding: '2px 6px', borderRadius: 4 }}>
-            {success.paymentId}
-          </code>
-        </p>
-        <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 36 }}>
-          We'll pack and dispatch your order soon.
-        </p>
-        <div className="checkout-success-actions" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/home/orders')} style={{
-            background: '#1A1A1A', color: '#fff', border: 'none',
-            borderRadius: 10, padding: '12px 28px', fontSize: 14,
-            fontWeight: 700, cursor: 'pointer',
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(160deg,#FAFAF8 0%,#FDF8F0 60%,#FBF6ED 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 'clamp(24px,4vw,48px) clamp(16px,4vw,32px)',
+        fontFamily: "'DM Sans','Inter',system-ui,sans-serif",
+      }}>
+        <div style={{ width: '100%', maxWidth: 560 }}>
+
+          {/* ── Success icon + headline ── */}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            {/* Animated checkmark circle */}
+            <div style={{
+              width: 88, height: 88, borderRadius: '50%',
+              background: 'linear-gradient(135deg,#C9972B,#F5C842)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 24px',
+              boxShadow: '0 12px 40px rgba(201,151,43,0.40), 0 4px 12px rgba(201,151,43,0.20)',
+              animation: 'cs-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                stroke="#1a0a00" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: '#F0FDF4', border: '1px solid #BBF7D0',
+              color: '#15803D', fontSize: 11, fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: 1.5,
+              padding: '5px 14px', borderRadius: 30, marginBottom: 16,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
+              Payment Successful
+            </div>
+
+            <h1 style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 'clamp(24px,4vw,32px)',
+              fontWeight: 800, color: '#1C1917',
+              lineHeight: 1.2, marginBottom: 10,
+            }}>
+              Order Confirmed! 🎉
+            </h1>
+            <p style={{ fontSize: 15, color: '#78716C', lineHeight: 1.7, maxWidth: 400, margin: '0 auto' }}>
+              Thank you for shopping with <strong style={{ color: '#1C1917' }}>Petrichor Naturals</strong>.
+              Your order is now being prepared fresh for you.
+            </p>
+          </div>
+
+          {/* ── Order Summary Card ── */}
+          <div style={{
+            background: '#fff',
+            borderRadius: 20,
+            border: '1px solid rgba(231,226,217,0.9)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)',
+            overflow: 'hidden',
+            marginBottom: 20,
           }}>
-            Track Order →
-          </button>
-          <button onClick={() => navigate('/home/shop')} style={{
-            background: 'transparent', color: '#1A1A1A',
-            border: '1.5px solid #E5E7EB', borderRadius: 10,
-            padding: '12px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            {/* Card header */}
+            <div style={{
+              background: 'linear-gradient(135deg,#1C1917,#2D2520)',
+              padding: '18px 24px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 8,
+                  background: 'rgba(201,151,43,0.2)',
+                  border: '1px solid rgba(201,151,43,0.35)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16,
+                }}>📋</div>
+                <div>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)',
+                    textTransform: 'uppercase', letterSpacing: 1.2, margin: 0 }}>
+                    Order Summary
+                  </p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: 0 }}>
+                    #{successOrderId}
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)',
+                color: '#4ADE80', fontSize: 11, fontWeight: 700,
+                padding: '4px 12px', borderRadius: 20,
+                textTransform: 'uppercase', letterSpacing: 0.8,
+              }}>
+                Confirmed
+              </div>
+            </div>
+
+            {/* Card body — detail rows */}
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+              {/* Order ID */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '13px 0', borderBottom: '1px solid #F5F5F3',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>🆔</span>
+                  <span style={{ fontSize: 13, color: '#78716C', fontWeight: 500 }}>Order ID</span>
+                </div>
+                <span style={{
+                  fontSize: 13, fontWeight: 700, color: '#1C1917',
+                  background: '#F5F5F3', padding: '3px 10px', borderRadius: 6,
+                  fontFamily: 'monospace', letterSpacing: 0.3,
+                }}>
+                  #{successOrderId}
+                </span>
+              </div>
+
+              {/* Payment ID */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '13px 0', borderBottom: '1px solid #F5F5F3',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>💳</span>
+                  <span style={{ fontSize: 13, color: '#78716C', fontWeight: 500 }}>Payment ID</span>
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 600, color: '#44403C',
+                  background: '#F5F5F3', padding: '3px 10px', borderRadius: 6,
+                  fontFamily: 'monospace', letterSpacing: 0.2,
+                  maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap', display: 'block',
+                }}
+                  title={successPayId}
+                >
+                  {successPayId}
+                </span>
+              </div>
+
+              {/* Amount paid */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '13px 0', borderBottom: '1px solid #F5F5F3',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>₹</span>
+                  <span style={{ fontSize: 13, color: '#78716C', fontWeight: 500 }}>Amount Paid</span>
+                </div>
+                <span style={{
+                  fontSize: 16, fontWeight: 800, color: '#1C1917',
+                }}>
+                  ₹{Number(grandTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* Payment method */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '13px 0', borderBottom: '1px solid #F5F5F3',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>🔒</span>
+                  <span style={{ fontSize: 13, color: '#78716C', fontWeight: 500 }}>Payment Method</span>
+                </div>
+                <span style={{
+                  fontSize: 13, fontWeight: 600, color: '#1C1917',
+                  textTransform: 'uppercase', letterSpacing: 0.5,
+                }}>
+                  {payMethod === 'upi' ? 'UPI' : payMethod === 'card' ? 'Card' : 'Net Banking'}
+                </span>
+              </div>
+
+              {/* Delivery address snippet */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                padding: '13px 0', borderBottom: '1px solid #F5F5F3', gap: 16,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <span style={{ fontSize: 16 }}>📍</span>
+                  <span style={{ fontSize: 13, color: '#78716C', fontWeight: 500 }}>Deliver To</span>
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 500, color: '#44403C',
+                  textAlign: 'right', lineHeight: 1.6,
+                  maxWidth: 240,
+                }}>
+                  {addr.name
+                    ? `${addr.name}, ${addr.house || ''} ${addr.area || ''}, ${addr.city || ''}`
+                    : 'Address as entered'}
+                </span>
+              </div>
+
+              {/* Expected delivery — highlighted row */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '15px 16px', margin: '8px 0 0',
+                background: 'linear-gradient(135deg,#FEF3C7,#FFFBEB)',
+                border: '1px solid #FDE68A',
+                borderRadius: 12, gap: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>🚚</span>
+                  <div>
+                    <p style={{ fontSize: 11, color: '#92400E', fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>
+                      Expected Delivery
+                    </p>
+                    <p style={{ fontSize: 12, color: '#78716C', margin: '2px 0 0', fontWeight: 500 }}>
+                      3–5 business days
+                    </p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#92400E', margin: 0 }}>
+                    By {deliveryDate}
+                  </p>
+                  <p style={{ fontSize: 11, color: '#A16207', margin: '2px 0 0', fontWeight: 500 }}>
+                    Free delivery included
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── What happens next banner ── */}
+          <div style={{
+            background: '#fff',
+            border: '1px solid rgba(231,226,217,0.9)',
+            borderRadius: 16,
+            padding: '16px 20px',
+            marginBottom: 24,
+            display: 'flex', gap: 16, alignItems: 'flex-start',
           }}>
-            Continue Shopping
-          </button>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>📦</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1C1917', margin: '0 0 4px' }}>
+                What happens next?
+              </p>
+              <p style={{ fontSize: 12, color: '#78716C', lineHeight: 1.7, margin: 0 }}>
+                We'll freshly pack your cashews and dispatch within 24 hours. You'll be able to track your
+                order from the My Orders page. Questions? Reach us on WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          {/* ── Action buttons ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={() => navigate('/home/orders')}
+              style={{
+                width: '100%', padding: '14px',
+                borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg,#1C1917,#2D2520)',
+                color: '#fff', fontSize: 15, fontWeight: 700,
+                cursor: 'pointer', letterSpacing: 0.2,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'opacity 0.18s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              📋 Track My Order →
+            </button>
+            <button
+              onClick={() => navigate('/home/shop')}
+              style={{
+                width: '100%', padding: '13px',
+                borderRadius: 12,
+                border: '1.5px solid rgba(231,226,217,0.9)',
+                background: '#fff', color: '#44403C',
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                letterSpacing: 0.1,
+                transition: 'border-color 0.18s, color 0.18s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#C9972B'; e.currentTarget.style.color = '#C9972B'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(231,226,217,0.9)'; e.currentTarget.style.color = '#44403C'; }}
+            >
+              🛍 Continue Shopping
+            </button>
+          </div>
+
+          {/* ── Support note ── */}
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#A8A29E', marginTop: 20, lineHeight: 1.6 }}>
+            Need help? <a href="/home/contact" style={{ color: '#C9972B', fontWeight: 600, textDecoration: 'none' }}>Contact us</a> or reach us on WhatsApp.
+            Order confirmation will be sent to your registered email.
+          </p>
+
         </div>
+
+        {/* Pop animation keyframe */}
+        <style>{`
+          @keyframes cs-pop {
+            0%   { transform: scale(0.6); opacity: 0; }
+            60%  { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -1062,6 +1334,29 @@ export default function Checkout() {
           {/* ── Coupon Code ── */}
           <Card>
             <SectionTitle icon="🎟">Promo Code</SectionTitle>
+
+            {/* ── Available coupons panel ── */}
+            {!appliedCoupon && (
+              <div style={{ marginBottom: 16 }}>
+                <AvailableCoupons
+                  orderTotal={subtotal + gst + deliveryCharge}
+                  appliedCode={appliedCoupon?.code || null}
+                  onApply={(code) => {
+                    setCouponCode(code);
+                    setCouponError(null);
+                    // Auto-trigger validation immediately
+                    setCouponLoading(true);
+                    api.post('/api/coupons/validate', {
+                      code,
+                      order_total: subtotal + gst + deliveryCharge,
+                    })
+                      .then(r => { setAppliedCoupon(r.data.data); setCouponCode(''); })
+                      .catch(err => setCouponError(err.response?.data?.message || 'Invalid coupon.'))
+                      .finally(() => setCouponLoading(false));
+                  }}
+                />
+              </div>
+            )}
 
             {appliedCoupon ? (
               /* Applied state */

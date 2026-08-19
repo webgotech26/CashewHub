@@ -77,28 +77,33 @@ const getAdminStats = async (req, res) => {
 };
 
 /**
- * GET /api/admin/charts
- * Returns data for the admin dashboard charts:
- *   - dailyRevenue: last 30 days revenue + order count
- *   - topProducts: top 5 products by revenue
- *   - ordersByStatus: count per status
+ * GET /api/admin/charts?range=7d|30d|6m
+ * Returns data for the admin dashboard charts.
+ * range defaults to 30d.
  */
 const getChartData = async (req, res) => {
   try {
-    /* Last 30 days — one row per day */
+    const range = (req.query.range || '30d').toLowerCase();
+
+    let intervalExpr;
+    if      (range === '7d')  intervalExpr = 'INTERVAL 7 DAY';
+    else if (range === '6m')  intervalExpr = 'INTERVAL 6 MONTH';
+    else                      intervalExpr = 'INTERVAL 30 DAY';  // default 30d
+
+    /* Daily revenue — one row per day for the selected range */
     const [daily] = await pool.query(`
       SELECT
-        DATE(created_at) AS date,
-        COUNT(*)                                      AS orders,
-        COALESCE(SUM(total_amount), 0)                AS revenue
+        DATE(created_at)               AS date,
+        COUNT(*)                       AS orders,
+        COALESCE(SUM(total_amount), 0) AS revenue
       FROM orders
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      WHERE created_at >= DATE_SUB(CURDATE(), ${intervalExpr})
         AND status != 'cancelled'
       GROUP BY DATE(created_at)
       ORDER BY date ASC
     `);
 
-    /* Top 5 selling products by revenue */
+    /* Top 5 selling products by revenue (all-time, unaffected by range) */
     const [topProducts] = await pool.query(`
       SELECT
         p.name,
@@ -113,7 +118,7 @@ const getChartData = async (req, res) => {
       LIMIT 5
     `);
 
-    /* Orders by status */
+    /* Orders by status (all-time) */
     const [byStatus] = await pool.query(`
       SELECT status, COUNT(*) AS count
       FROM orders
@@ -123,6 +128,7 @@ const getChartData = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
+        range,
         dailyRevenue: daily.map(r => ({
           date:    r.date,
           orders:  Number(r.orders),
