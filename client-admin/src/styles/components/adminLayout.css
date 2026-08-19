@@ -5,8 +5,6 @@
   overflow: hidden;          /* prevent body scroll; child scroll areas handle it */
   background: #f0f2f5;
 }
-
-/* ── Sidebar ──────────────────────────────────────────────────────── */
 .erp-sidebar {
   width: 240px;
   background: #1a3c2e;
@@ -800,10 +798,11 @@
 /* ── MOBILE BREAKPOINT ≤ 900px ────────────────────────────────── */
 @media (max-width: 900px) {
 
-  /* Layout becomes stacked — sidebar is off-canvas */
+  /* Layout: sidebar goes off-canvas, main fills full viewport */
   .erp-layout {
-    flex-direction: column;
-    overflow-x: hidden;
+    flex-direction: row;     /* keep row — sidebar is off-canvas, not in flow */
+    overflow: hidden;        /* still needed for sticky topbar */
+    height: 100vh;
   }
 
   /* ── Sidebar: fixed off-canvas, slides in from left ── */
@@ -868,11 +867,21 @@
     to   { opacity: 1; }
   }
 
-  /* ── Main area: full width, no sidebar offset ── */
+  /* ── Main area: full width, scrollable ── */
   .erp-main {
     width: 100%;
-    min-height: 100vh;
-    /* No margin-left — sidebar is off-canvas */
+    min-width: 0;
+    /* No margin-left — sidebar is off-canvas, not in flow */
+  }
+
+  /* erp-content must be scrollable with full height available */
+  .erp-content {
+    padding: 16px 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* explicit height so flex child can scroll */
+    height: calc(100vh - 56px); /* viewport minus topbar height */
+    box-sizing: border-box;
   }
 
   /* ── Topbar: show hamburger ── */
@@ -880,6 +889,7 @@
     padding: 0 12px;
     height: 56px;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .erp-topbar__hamburger {
@@ -917,11 +927,6 @@
     gap: 5px;
   }
 
-  /* ── Content padding ── */
-  .erp-content {
-    padding: 16px 14px;
-  }
-
   /* ── Stat cards: 2-col on tablet, keep readable ── */
   .erp-stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -941,6 +946,7 @@
   .erp-topbar {
     padding: 0 10px;
     gap: 6px;
+    height: 52px;
   }
 
   .erp-topbar__title {
@@ -963,6 +969,7 @@
 
   .erp-content {
     padding: 12px 10px;
+    height: calc(100vh - 52px); /* viewport minus 52px topbar */
   }
 
   /* Tables: ensure horizontal scroll */

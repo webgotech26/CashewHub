@@ -154,13 +154,13 @@ function LineChart({ data }) {
   const handleMouseLeave = () => { setHoverIdx(null); setTooltip(null); };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', overflowX: 'hidden' }}>
       <svg
         width={width}
         height={H}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{ display: 'block', cursor: 'crosshair', overflow: 'visible' }}
+        style={{ display: 'block', cursor: 'crosshair', overflow: 'visible', maxWidth: '100%' }}
       >
         <defs>
           {/* Gradient fill */}
@@ -300,33 +300,51 @@ function KpiRow({ data, range }) {
   ];
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: 12,
-      marginBottom: 20,
-    }}>
-      {kpis.map(k => (
-        <div key={k.label} style={{
-          background: '#f9fafb',
-          border: '1px solid #f0f0f0',
-          borderRadius: 12,
-          padding: '14px 16px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 16 }}>{k.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af',
-              textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              {k.label}
-            </span>
+    <>
+      {/* Responsive KPI grid — 3 cols on desktop, 1 col on mobile */}
+      <style>{`
+        .sa-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+        @media (max-width: 600px) {
+          .sa-kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+        }
+        @media (min-width: 601px) and (max-width: 900px) {
+          .sa-kpi-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+          }
+        }
+      `}</style>
+      <div className="sa-kpi-grid">
+        {kpis.map(k => (
+          <div key={k.label} style={{
+            background: '#f9fafb',
+            border: '1px solid #f0f0f0',
+            borderRadius: 12,
+            padding: '14px 16px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 16 }}>{k.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af',
+                textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                {k.label}
+              </span>
+            </div>
+            <p style={{ fontSize: 20, fontWeight: 800, color: '#1a3c2e', margin: 0 }}>
+              {k.value}
+            </p>
+            <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>{rangeLabel}</p>
           </div>
-          <p style={{ fontSize: 20, fontWeight: 800, color: '#1a3c2e', margin: 0 }}>
-            {k.value}
-          </p>
-          <p style={{ fontSize: 10, color: '#9ca3af', margin: '3px 0 0' }}>{rangeLabel}</p>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -516,14 +534,37 @@ export default function SalesAnalytics() {
 
   return (
     <div style={{ marginBottom: 32 }}>
+      {/* Responsive styles for analytics section */}
+      <style>{`
+        .sa-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+        .sa-bottom-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 16px;
+        }
+        @media (max-width: 640px) {
+          .sa-bottom-grid {
+            grid-template-columns: 1fr;
+          }
+          .sa-range-toggle {
+            width: 100%;
+            justify-content: stretch;
+          }
+          .sa-range-toggle button {
+            flex: 1;
+          }
+        }
+      `}</style>
 
       {/* ── Section header ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12,
-        marginBottom: 18,
-      }}>
+      <div className="sa-header">
         <div>
           <h2 style={{
             fontSize: 18, fontWeight: 800, color: '#1a3c2e', margin: 0,
@@ -537,7 +578,7 @@ export default function SalesAnalytics() {
         </div>
 
         {/* ── Time-range toggle ── */}
-        <div style={{
+        <div className="sa-range-toggle" style={{
           display: 'flex', background: '#f3f4f6',
           borderRadius: 10, padding: 4, gap: 2,
         }}>
@@ -549,9 +590,7 @@ export default function SalesAnalytics() {
                 padding: '6px 16px',
                 borderRadius: 8,
                 border: 'none',
-                background: range === r.key
-                  ? '#1a3c2e'
-                  : 'transparent',
+                background: range === r.key ? '#1a3c2e' : 'transparent',
                 color: range === r.key ? '#fff' : '#6b7280',
                 fontSize: 12,
                 fontWeight: range === r.key ? 700 : 500,
@@ -628,11 +667,7 @@ export default function SalesAnalytics() {
           </div>
 
           {/* Two-column row: Top Products + Status */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: 16,
-          }}>
+          <div className="sa-bottom-grid">
             <TopProducts  data={chartData.topProducts}     />
             <OrdersByStatus data={chartData.ordersByStatus} />
           </div>
