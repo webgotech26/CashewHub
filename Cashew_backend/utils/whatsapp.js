@@ -37,8 +37,8 @@
 const SEP = '─────────────────────────';
 
 /* ── Retry config ────────────────────────────────────────────────── */
-const MAX_RETRIES     = 2;   // number of retries after initial failure
-const RETRY_DELAY_MS  = 800; // base delay between retries (doubles each attempt)
+const MAX_RETRIES    = 2;   // number of retries after initial failure
+const RETRY_DELAY_MS = 800; // base delay between retries (doubles each attempt)
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -74,10 +74,10 @@ function getSender() {
 /**
  * Normalise any Indian phone number to whatsapp:+91XXXXXXXXXX
  * Accepts:
- *   "9876543210"         → whatsapp:+919876543210
- *   "+919876543210"      → whatsapp:+919876543210
- *   "919876543210"       → whatsapp:+919876543210
- *   "whatsapp:+91..."    → returned as-is
+ *   "9876543210"        → whatsapp:+919876543210
+ *   "+919876543210"     → whatsapp:+919876543210
+ *   "919876543210"      → whatsapp:+919876543210
+ *   "whatsapp:+91..."   → returned as-is
  * Returns null if the number is clearly invalid (not 10 digits after stripping).
  */
 function toWhatsApp(phone) {
@@ -135,19 +135,20 @@ function nowIST() {
  * Retries on network timeouts and Twilio 5xx errors.
  * Does NOT retry on 4xx errors (invalid number, template mismatch, etc.).
  *
- * @param {object} params  — Twilio messages.create() params
- * @param {string} label   — short identifier for log lines (e.g. "Admin alert")
+ * @param {object} params — Twilio messages.create() params
+ * @param {string} label  — short identifier for log lines
  */
 async function sendWithRetry(params, label) {
   let lastErr;
   for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
     try {
       const msg = await getTwilioClient().messages.create(params);
-      return msg;  // success
+      return msg; // success
     } catch (err) {
       lastErr = err;
-      const code   = err.status || err.code || 0;
-      const isRetryable = code >= 500 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+      const code = err.status || err.code || 0;
+      const isRetryable =
+        code >= 500 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
 
       if (!isRetryable || attempt > MAX_RETRIES) break;
 
@@ -158,7 +159,7 @@ async function sendWithRetry(params, label) {
       await sleep(delay);
     }
   }
-  throw lastErr;  // re-throw after exhausting retries
+  throw lastErr; // re-throw after exhausting retries
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -172,7 +173,9 @@ async function sendWhatsAppAlert(orderData) {
   const mode    = isLiveMode() ? 'LIVE' : 'SANDBOX';
 
   if (!from || !adminTo) {
-    console.warn(`[WhatsApp:${mode}] Admin alert skipped — TWILIO_WA_FROM or TWILIO_WA_TO not set.`);
+    console.warn(
+      `[WhatsApp:${mode}] Admin alert skipped — TWILIO_WA_FROM or TWILIO_WA_TO not set.`
+    );
     return;
   }
 
@@ -211,7 +214,10 @@ async function sendWhatsAppAlert(orderData) {
     `📞 Support: +91 82209 60887`,
   ].join('\n');
 
-  const msg = await sendWithRetry({ from, to: adminTo, body }, `Admin alert #${displayId}`);
+  const msg = await sendWithRetry(
+    { from, to: adminTo, body },
+    `Admin alert #${displayId}`
+  );
   console.log(
     `[WhatsApp:${mode}] ✓ Admin alert sent — Order #${displayId} | SID: ${msg.sid}`
   );
@@ -224,12 +230,9 @@ async function sendWhatsAppAlert(orderData) {
               otherwise falls back to free-form body text.
 
    PRODUCTION COMPLIANCE:
-   WhatsApp requires an approved Business Manager template for any
-   outbound message outside the 24h service window.
-   Always set TWILIO_CONTENT_SID in live mode.
-   Template example (create in Twilio Content Template Builder):
-     "Hi {{1}}, your order #{{2}} for ₹{{3}} has been confirmed!
-      We'll dispatch it soon. Thank you for choosing Petrichor Naturals 🌿"
+   WhatsApp requires a Meta-approved template for outbound messages
+   outside the 24-hour customer service window. Set TWILIO_CONTENT_SID
+   or TWILIO_CUSTOMER_SID with an approved template SID in live mode.
    ═══════════════════════════════════════════════════════════════════ */
 async function sendCustomerWhatsApp({ to, customerName, orderData }) {
   const from   = getSender();
@@ -237,7 +240,9 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
   const mode   = isLiveMode() ? 'LIVE' : 'SANDBOX';
 
   if (!from) {
-    console.warn(`[WhatsApp:${mode}] Customer notification skipped — sender number not configured.`);
+    console.warn(
+      `[WhatsApp:${mode}] Customer notification skipped — sender number not configured.`
+    );
     return;
   }
   if (!custTo) {
@@ -245,13 +250,14 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
     return;
   }
 
-  const displayId   = orderData.display_id || orderData.id;
+  const displayId      = orderData.display_id || orderData.id;
   const totalFormatted = Number(orderData.total_amount).toLocaleString('en-IN');
-  const name        = customerName || 'there';
+  const name           = customerName || 'there';
 
   // ── LIVE mode + Content API template (production-compliant) ──────
   // Uses TWILIO_CUSTOMER_SID if set, falls back to TWILIO_CONTENT_SID.
-  const contentSid = process.env.TWILIO_CUSTOMER_SID || process.env.TWILIO_CONTENT_SID;
+  const contentSid =
+    process.env.TWILIO_CUSTOMER_SID || process.env.TWILIO_CONTENT_SID;
 
   if (isLiveMode() && contentSid) {
     /*
@@ -259,9 +265,7 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
      * Standard 3-variable order confirmation template:
      *   {{1}} = customer first name
      *   {{2}} = order ID
-     *   {{3}} = total amount (₹ formatted)
-     *
-     * Adjust keys below if your approved template uses more/fewer variables.
+     *   {{3}} = total amount (formatted)
      */
     const contentVariables = JSON.stringify({
       '1': name,
@@ -280,8 +284,6 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
   }
 
   // ── Sandbox OR Live without Content SID → free-form body ─────────
-  // Note: free-form messages in live mode will only deliver if the
-  // customer has messaged you within the last 24 hours.
   if (isLiveMode() && !contentSid) {
     console.warn(
       `[WhatsApp:LIVE] ⚠️  TWILIO_CONTENT_SID not set — sending free-form body. ` +
@@ -340,7 +342,10 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
     `Thank you for choosing Petrichor Naturals! 🌿❤️`,
   ].join('\n');
 
-  const msg = await sendWithRetry({ from, to: custTo, body }, `Customer msg #${displayId}`);
+  const msg = await sendWithRetry(
+    { from, to: custTo, body },
+    `Customer msg #${displayId}`
+  );
   console.log(
     `[WhatsApp:${mode}] ✓ Customer message sent — ${custTo} | Order #${displayId} | SID: ${msg.sid}`
   );
@@ -349,254 +354,6 @@ async function sendCustomerWhatsApp({ to, customerName, orderData }) {
 /* ── Backward-compat helper ──────────────────────────────────────── */
 function formatWhatsAppNumber(phone) {
   return toWhatsApp(phone);
-}
-
-module.exports = { sendWhatsAppAlert, sendCustomerWhatsApp, formatWhatsAppNumber };
-
-'use strict';
-
-const SEP = '─────────────────────────';
-
-/* ── Lazy Twilio client ──────────────────────────────────────────── */
-let _client = null;
-
-function getTwilioClient() {
-  if (_client) return _client;
-  const sid   = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  if (!sid || !token) {
-    throw new Error(
-      'Twilio credentials missing. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env'
-    );
-  }
-  _client = require('twilio')(sid, token);
-  return _client;
-}
-
-/* ── Mode detection ──────────────────────────────────────────────── */
-function isLiveMode() {
-  return (process.env.TWILIO_MODE || 'sandbox').toLowerCase() === 'live';
-}
-
-/* ── Sender number (sandbox or live) ────────────────────────────── */
-function getSender() {
-  const raw = isLiveMode()
-    ? (process.env.TWILIO_WA_FROM_LIVE || process.env.TWILIO_WA_FROM || '')
-    : (process.env.TWILIO_WA_FROM || '');
-  return raw.startsWith('whatsapp:') ? raw : `whatsapp:${raw}`;
-}
-
-/* ── Normalise any phone to whatsapp:+91XXXXXXXXXX ──────────────── */
-function toWhatsApp(phone) {
-  if (!phone) return null;
-  if (String(phone).startsWith('whatsapp:')) return phone;
-  const digits = String(phone).replace(/[\s\-]/g, '').replace(/^\+?91/, '');
-  return `whatsapp:+91${digits}`;
-}
-
-/* ── Format items for free-form messages ────────────────────────── */
-function formatItems(items) {
-  if (!items || items.length === 0) return '   (no items)';
-  return items
-    .map((item, idx) => {
-      const name  = item.product_name || 'Item';
-      const qty   = item.quantity || 1;
-      const total = item.line_total
-        ? `₹${Number(item.line_total).toFixed(2)}`
-        : item.unit_price
-          ? `₹${(Number(item.unit_price) * Number(qty)).toFixed(2)}`
-          : '';
-      return `   ${idx + 1}. ${name}\n      Qty: ${qty}  |  Total: ${total}`;
-    })
-    .join('\n');
-}
-
-/* ── IST timestamp ───────────────────────────────────────────────── */
-function nowIST() {
-  return new Date().toLocaleString('en-IN', {
-    timeZone:  'Asia/Kolkata',
-    day:       '2-digit',
-    month:     'short',
-    year:      'numeric',
-    hour:      '2-digit',
-    minute:    '2-digit',
-    hour12:    true,
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   FLOW 1 — ADMIN ALERT
-   Always free-form. Sent to TWILIO_WA_TO on every new order.
-   Works in both sandbox and live mode.
-   ═══════════════════════════════════════════════════════════════════ */
-async function sendWhatsAppAlert(orderData) {
-  const from    = getSender();
-  const adminTo = process.env.TWILIO_WA_TO;
-  const mode    = isLiveMode() ? 'LIVE' : 'SANDBOX';
-
-  if (!from || !adminTo) {
-    console.warn(`[WhatsApp:${mode}] Admin alert skipped — TWILIO_WA_FROM or TWILIO_WA_TO not set.`);
-    return;
-  }
-
-  const body = [
-    `🔔 *NEW ORDER ALERT*`,
-    `🌿 *Petrichor Naturals — Admin Panel*`,
-    SEP,
-    ``,
-    `📋 *Order Details*`,
-    `   🆔 Order ID    : #${orderData.id}`,
-    `   📅 Date & Time : ${nowIST()} IST`,
-    `   💳 Payment     : ${(orderData.payment_method || 'N/A').toUpperCase()}`,
-    `   💰 Order Total : ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
-    ``,
-    SEP,
-    ``,
-    `👤 *Customer Info*`,
-    `   Name : ${orderData.customer_name || `Customer #${orderData.customer_id}`}`,
-    ``,
-    SEP,
-    ``,
-    `🛍️ *Items Ordered*`,
-    formatItems(orderData.items),
-    ``,
-    SEP,
-    ``,
-    `📍 *Delivery Address*`,
-    `   ${orderData.address || 'Not provided'}`,
-    ``,
-    SEP,
-    ``,
-    `✅ Please confirm & process this order promptly.`,
-    `📞 Support: +91 82209 60887`,
-  ].join('\n');
-
-  const msg = await getTwilioClient().messages.create({ from, to: adminTo, body });
-  console.log(
-    `[WhatsApp:${mode}] ✓ Admin alert → Order #${orderData.id} | To: ${adminTo} | SID: ${msg.sid}`
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   FLOW 2 — CUSTOMER CONFIRMATION
-   Sandbox  → free-form body text (no template needed)
-   Live     → Content API template if TWILIO_CONTENT_SID is set,
-              otherwise falls back to free-form body text
-   ═══════════════════════════════════════════════════════════════════ */
-async function sendCustomerWhatsApp({ to, customerName, orderData }) {
-  const from   = getSender();
-  const custTo = toWhatsApp(to);
-  const mode   = isLiveMode() ? 'LIVE' : 'SANDBOX';
-
-  if (!from) {
-    console.warn(`[WhatsApp:${mode}] Customer notification skipped — sender number not set.`);
-    return;
-  }
-  if (!custTo) {
-    console.warn(
-      `[WhatsApp:${mode}] Customer notification skipped for Order #${orderData.id} — no phone.`
-    );
-    return;
-  }
-
-  // ── LIVE mode + Content API template ─────────────────────────────
-  const contentSid = process.env.TWILIO_CONTENT_SID;
-
-  if (isLiveMode() && contentSid) {
-    /*
-     * Content API (approved template) — required for live numbers when
-     * messaging users who have NOT initiated a conversation in the last 24h.
-     *
-     * Template variables are passed as contentVariables (JSON string).
-     * Adjust the variable keys to match your approved template in Twilio.
-     *
-     * Example template text (create in Twilio console):
-     *   "Hi {{1}}, your order #{{2}} for ₹{{3}} has been confirmed! 🌰"
-     */
-    const contentVariables = JSON.stringify({
-      '1': customerName || 'there',
-      '2': String(orderData.id),
-      '3': Number(orderData.total_amount).toLocaleString('en-IN'),
-    });
-
-    const msg = await getTwilioClient().messages.create({
-      from,
-      to:               custTo,
-      contentSid,
-      contentVariables,
-    });
-
-    console.log(
-      `[WhatsApp:${mode}] ✓ Customer template → ${custTo} | Order #${orderData.id} | SID: ${msg.sid}`
-    );
-    return;
-  }
-
-  // ── Sandbox mode OR Live without Content SID → free-form body ────
-  const itemSummary = (orderData.items || [])
-    .map(i => {
-      const qty   = i.quantity || 1;
-      const total = i.line_total
-        ? `₹${Number(i.line_total).toFixed(2)}`
-        : i.unit_price
-          ? `₹${(Number(i.unit_price) * Number(qty)).toFixed(2)}`
-          : '';
-      return `   • ${i.product_name || 'Item'} × ${qty}  ${total}`;
-    })
-    .join('\n');
-
-  const body = [
-    `✅ *ORDER CONFIRMED!*`,
-    `🌿 *Petrichor Naturals*`,
-    SEP,
-    ``,
-    `Hi *${customerName || 'there'}!* 👋`,
-    `Your order has been placed successfully.`,
-    `We'll pack & dispatch it soon! 🚀`,
-    ``,
-    SEP,
-    ``,
-    `📋 *Order Summary*`,
-    `   🆔 Order ID    : #${orderData.id}`,
-    `   📅 Date & Time : ${nowIST()} IST`,
-    `   💳 Payment     : ${(orderData.payment_method || 'N/A').toUpperCase()}`,
-    `   💰 Amount Paid : ₹${Number(orderData.total_amount).toLocaleString('en-IN')}`,
-    ``,
-    SEP,
-    ``,
-    `🛒 *Items in Your Order*`,
-    itemSummary || '   (no items)',
-    ``,
-    SEP,
-    ``,
-    `📍 *Delivery Address*`,
-    `   ${orderData.address || 'Not provided'}`,
-    ``,
-    SEP,
-    ``,
-    `📦 You'll receive a shipping update once dispatched.`,
-    ``,
-    `💬 *Need Help?*`,
-    `   📞 Call / WhatsApp: *+91 82209 60887*`,
-    `   🕘 Hours: 9 AM – 10 PM (Mon – Sat)`,
-    ``,
-    `Thank you for choosing Petrichor Naturals! 🌿❤️`,
-  ].join('\n');
-
-  const msg = await getTwilioClient().messages.create({ from, to: custTo, body });
-  console.log(
-    `[WhatsApp:${mode}] ✓ Customer msg → ${custTo} | Order #${orderData.id} | SID: ${msg.sid}`
-  );
-}
-
-/* ── Backward-compat helper ──────────────────────────────────────── */
-function formatWhatsAppNumber(phone) {
-  if (!phone) return null;
-  if (phone.startsWith('whatsapp:')) return phone;
-  let digits = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
-  if (/^\d{10}$/.test(digits)) digits = '+91' + digits;
-  if (!digits.startsWith('+')) digits = '+' + digits;
-  return `whatsapp:${digits}`;
 }
 
 module.exports = { sendWhatsAppAlert, sendCustomerWhatsApp, formatWhatsAppNumber };
