@@ -371,7 +371,7 @@ export default function ShopPage() {
               onBlur={e  => { e.target.style.borderColor='#E7E2D9'; e.target.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'; }}
               aria-label="Filter by category"
             >
-              <option value="all">All ({products.length})</option>
+              <option value="all">All </option>
               {categories.map(cat => (
                 <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
               ))}
